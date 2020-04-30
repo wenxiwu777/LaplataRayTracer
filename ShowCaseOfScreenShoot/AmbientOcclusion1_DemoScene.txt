@@ -1,0 +1,109 @@
+#pragma once
+
+#include "./source/Console.h"
+#include "./source/MemBuffer.h"
+#include "./source/Scene.h"
+
+using namespace LaplataRayTracer;
+
+class CDemoScene : public Scene
+{
+public:
+	CDemoScene()
+		: mnEyeX(0), mnEyeY(0)
+	{
+
+	}
+
+	virtual ~CDemoScene()
+	{
+
+	}
+
+public:
+	inline void SetSurface(CDC *pDC) { Scene::SetDrawingSurface(pDC); }
+
+public:
+	virtual void Setup()
+	{
+		mpRayTracer = new WhittedTracer;
+
+		mpViewPlane = new ViewPlane;
+
+		mpBackground = new DirYTexture;
+
+		mpCamera = new PerspectiveCamera;
+		mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
+		mpCamera->SetEye(Vec3f(mnEyeX, mnEyeY+200, 500));
+		mpCamera->SetLookAt(Vec3f(0, 0, 0));
+		mpCamera->SetUpVector(Vec3f(0, 1, 0));
+		// as d goes larger, objects becomes larger because the screen is away from the eye
+		// you need to change the z distance to actually move the object close or far from you.
+		((PerspectiveCamera *)mpCamera)->SetDistance(500); 
+		mpCamera->Update();
+
+	}
+
+	virtual void UpdateScene(float fElapse)
+	{
+		mnEyeX += 10;
+		mnEyeY += 10;
+		mpCamera->SetEye(Vec3f(mnEyeX, mnEyeY, 500));
+
+		mpCamera->Update();
+	}
+	
+	virtual void BuildScene()
+	{
+	//	MaterialSphere *pShpere = new MaterialSphere(Vec3f(-45, 45, 40), 50, new NormalMaterial);
+	//	pShpere->SetColor(Color3f(1, 1, 0));
+	//	SimpleSphere *pShpere2 = new SimpleSphere(Vec3f(0.0, -60, 0), 60);
+
+   	//	SimplePlane *pPlane = new SimplePlane(Vec3f(0,-30,0), Vec3f(0,1,0));
+   	//	pPlane->SetColor(Color3f(0, 0, 1));
+
+  	//	SimpleRectangle *pRect1 = new SimpleRectangle(
+  	//		Vec3f(-40, 30, 100), Vec3f(0, 1, 0), 
+  	//		Vec3f(80, 0, 0), Vec3f(0, 0, -100));
+  	//	pRect1->SetColor(Color3f(0.0F, 0.0F, 1.0F));
+ 
+ 	//	SimpleRectangle *pRect2 = new SimpleRectangle(
+ 	//		Vec3f(-80, -30, 80), Vec3f(0, 1, 1),
+ 	//		Vec3f(100, 0, 0), Vec3f(0, 0, -100));
+ 	//	pRect2->SetColor(Color3f(1.0F, 0.0F, 0.0F));
+		
+	//	SimpleTraingle *pTri = new SimpleTraingle(Vec3f(-110, -85, 80), Vec3f(120, 10, 20), Vec3f(-40, 50, -30));
+	//	pTri->SetColor(Color3f(1, 0, 0));
+
+	//	BBox *pBBox = new BBox(20, 90, -101, 100, -100, 20);
+	//	pBBox->SetColor(Color3f(0, 0, 1));
+
+	//	SimpleDisk *pDisk = new SimpleDisk(Vec3f(-30, 20, 100), Vec3f(1,1,1), 40);
+
+	//	mvecObjects.push_back(pShpere);
+	//	mvecObjects.push_back(pRect1);
+	//	mvecObjects.push_back(pRect2);
+	//	mvecObjects.push_back(pPlane);
+	//	mvecObjects.push_back(pShpere2);
+	//	mvecObjects.push_back(pTri);
+	//	mvecObjects.push_back(pBBox);
+	//	mvecObjects.push_back(pDisk);
+
+ 		MaterialSphere *pShpere = new MaterialSphere(Vec3f(0, 30, 80), 60, new LambertianMaterial(Color3f(0.4,0.4,0.6)));
+		MaterialSphere *pShpere2 = new MaterialSphere(Vec3f(0, -3830, 0), 3800, new LambertianMaterial(Color3f(0.6, 0.6, 0.4)));
+	//	pShpere2->SetColor(Color3f(0, 0, 1));
+ 
+ 		mvecObjects.push_back(pShpere);
+ 		mvecObjects.push_back(pShpere2);
+
+//		MaterialSphere *pSphere = new MaterialSphere(Vec3f(0, 1, 0), 1, new NormalMaterial);
+
+//		mvecObjects.push_back(pSphere);
+
+	}
+
+private:
+	int mnEyeX;
+	int mnEyeY;
+
+};
