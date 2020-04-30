@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Source">
+      <UniqueIdentifier>{852c4156-110e-4d0e-9c53-18523d8356a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ext">
+      <UniqueIdentifier>{138f0fc4-3db6-4101-b253-b8e81f7be209}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ext\img">
+      <UniqueIdentifier>{a81383a7-b5c5-46db-93d0-9025a316dd34}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RayTraceDemo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTraceDemoDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Vec3.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Ray.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Console.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ViewPlane.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\HitRecord.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Material.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RayTracer.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Scene.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Camera.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Common.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MemBuffer.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="DemoScene.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Point2.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Texture.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Random.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WindowSink.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ImageProc.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Sampling.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Surface.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AABB.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ResourcePool.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MeshObject.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MeshDesc.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Utility.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MeshTriangle.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PLYFileReader.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\IMeshFileReaderSink.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\IGeometricAcceleration.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GeometricObject.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShadeObject.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Volume.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ImageIO.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ImageTextureDesc.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\img\lodepng.h">
+      <Filter>Source Files\ext\img</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\img\stb_image.h">
+      <Filter>Source Files\ext\img</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ImageTextureMapping.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ICloneable.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\BRDF.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\LightObject.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Light.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WorldObjects.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Transform.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Matrix.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Instance.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MovingObject.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GeometryObjectPlus.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PDF.h">
+      <Filter>Source Files\Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="RayTraceDemo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RayTraceDemoDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MemBuffer.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PLYFileReader.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ResourcePool.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MeshObject.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Texture.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\img\lodepng.cpp">
+      <Filter>Source Files\ext\img</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Sampling.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Console.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Matrix.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Transform.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Instance.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utility.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PDF.cpp">
+      <Filter>Source Files\Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RayTraceDemo.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\RayTraceDemo.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\RayTraceDemo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

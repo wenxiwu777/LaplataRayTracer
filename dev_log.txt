@@ -1,0 +1,750 @@
+2018-10-05
+created new project, built up the basic rendering framework including ViewPlane/Camera/Scene/RayTracer and some primary classes(Vec3, Ray, HitRecord) 
+(can render very few geometry flat-color shaded objects, like shpere/rectangle/plane)
+
+2018-10-06
+tried to fix the hit function bugs among multiply objects and failed.
+
+2018-10-07
+riched the geometry objects in library, added triangle, bbox hit functions.
+
+2018-10-08
+built up and tested the scene from <<Ray tracing from the ground up>>, figure 9.9(b)
+fixed multiply objects hit function bugs.
+
+2018-10-10
+tested the movable camera effect in real-time rendering(still by using CDC SetPixel through double buffer on Windows7)
+added new virtual function UpdateScene in Scene class to prepare for the camera animation
+
+2018-10-11
+added namespace called LaplataRayTracer to each class
+added ShadeObject.h and moved the NormalShpere class in. Further will support other objects with a variety of materials.
+added/supported log mechanism, just this one.
+
+2018-10-18
+added Point3 and Point2 classes to distinguish the vector3 from them.
+
+2018-10-19
+removed Point3 and confirmly decided to use Vec3T class to represent Point and Vector both, cause a point is a vector whose origin point is 
+located at origin(0,0,0)
+changed the CMemBuffer class, added Load and Unload functions to maintain the underline BITMAP handle inside, in this way, we can benifit from being able to remove the HBITMAP outside this class.
+added SquareDistance and Distance for both Vec3 and Point2 classes.
+added texture class to support the scene background when a ray hit anything in the world.
+
+2018-10-20
+changed RayCastTracer directly to WhittedTracer to support recursively trace those reflected rays by the specified maxDepath.
+added new gemoetry object, the Disk object
+added Random class (adopted drand48() and srand48() transported from unix)
+build up a scene to prepare for next step of material shader.
+
+2018-10-23
+2018-10-24
+added lambertian diffuse material and tested matte-like material by implemented the ambient occlusion
+(the first ever shading image produced)
+result image is in ./ShowCaseOfScreenShoot/AmbientOcclusion1.png
+and also, added metal(perfect reflection) material to material system, output image in ./ShowCaseOfScreenShoot/MetalShading1.jpg
+
+2018-11-04
+added rendering process callback function to scene class to notify outside something during the rendering process.
+and added rendering process percentage prompt message to the main window title based on the callback function
+tried to build up a image texture sub-class, but didn't make it becase still need to smooth the interfaces among varieties of 
+texture sub-classes such as const texutre, image texture and so forth, feel a bit messy about it.
+
+2018-11-06
+added constant texture class
+
+2018-11-08
+changed DirYTexture to SimpleSkyTexture
+defined ImageTexutre class (members data and functions) not implement yet.
+
+2018-12-19
+changed WhittedTracer to PathTracer
+the previous implementation of OrthoCamera was definitely wrong, so I re-wrote it again.
+removed MaterialShpere/MaterialRectangle... designation, because it's sub classes are uncountable, instead, we use MaterialObject(GeometryObject *, Material *) to hold a bunch of exisitent Simple Geomerty Objects in addition to a pointer of Material class, in this way we do the re-use through
+aggregation/compsition object into MaterialObject. It dramatically reduses the number of material sub classes.
+changed the RenderCallback function to IRenderWindowSink interface classes to inhance its cohesion. Rather than just leave some seperated callback
+functionss everywhere, we collect those functions to the concrete class of IRenderWindowSink, in this case, it's in RayTraceDemoDlg.cpp.
+
+2018-12-20
+changed LambertianMaterial to MatteMaterial, because Lambertian is the feature of BRDF which is the underlying implementation of a certain material object.
+added SimpleBox to Geomerty set
+added SimpleRing to Geomerty set
+built up a very interesting scene including a plane with MatteMertial and a box with the same material in Matte to adjust the envrionment light from dark(like (0.1,0.1,0.1)) to brighter.
+Still, I found out that the OrthoCamera was wrong, so I fixed it a bit.
+assigned all pointers related to ray tracer to nullptr rather NULL.
+ 
+2018-12-24
+changed different parameters to see the scene changes to clear the confustion about the shadow on path tracing.
+added xy xz yz reactangle utilities objects in order to build up the Cornell Box's walls, but the flip normal deosn't work
+
+2018-12-25
+got a huge success tonight. finshed to setting up the Cornel Box single-handed, which is as the same as the one in <<RTGU>> and <<Next Week>>, thus it proves the accuracy of the pin-hole camera and also paved the way for the next excited thing, a glass ball upon the floor then we will see the caustics produced by the top light transimitting through the ball.
+understood the flip normal and how it works, figured out that our previous implementation was right, the reason why you still can see the rect regardless of it's normal's direction, it's because that the bottom rectangle plane is not dark, in the cases of XY rect and YZ rect, it still can absorb the lights from the varities of the directions of the bottom plane, and because the bottom plane was with the constant color, so no matter the normal is (1,0,0) or (-1,0,0) for YZ rect, the color rendered was always the same, and it's same for XY plane. But the XZ plane is a exception.
+The real funy thing is because the ambient occlusion which takes place between the XZ plane and the bottom plane is dark, so when its normal is (0, -1, 0) the MatteMaterial's shade function in which it uses the normal returned from HitTest function, the normal will determine the direction which the light should sample to, therefore, if it samples the environment sky, we can see its color then, otherwise, it samples the ambient occlusion, so,
+we see its dark color.
+and there is another mistake during the debug, that is, if you sample 10X10, then you change the times, everything else related must have to be changed too. Like, you change sample to 16X16, then color /= 100 should be changed to color /= 256. Be careful with that.
+
+2018-12-26
+created new class, Light, to represent the encapuslation object of GeometryObject and Texture rather use MateralObject directly, which may not be obvious, in addition to define some functions related to Light such as TurnON/TurnOFF
+modified the scene set up yesterday to create a dymanic lightting effect through a timer to control the logic for the three lights in the scene with
+a circle from completely dark to one light, then two lights and three lights
+
+2018-12-27
+added dielectrics material to RT engine
+added a glass ball in the middle of the cornel box with 500x500x50 sampling which took the rendering time about 60 mins
+added a mirror upon the back wall
+
+2018-12-28
+added two of very primary tone-mapping operators: max_to_one and clamp_to_one, in this way, currently our engine allows us to set up
+the light with brighter lighting bigger than 1.0,1.0,1.0, the final image whill handle it, so it looks like HDR
+
+2019-01-01
+introduced the IConable interface and let Texture/Material/GeometryObject be cloneable as well as implemented the copy constructor and
+assign operator = for relavent classes.
+added CompoundObject prepared for implementation of the RegularGrid to tracarge number of objects.
+copied ext folder, so far it contains PNG image process files used for texutre mapping later.
+
+2019-01-03
+added a new ray tracer, RayCastTracer, prepare for implmentation of RTGU style rendering
+completed to implement CompoundObject class, parpare for Regular Grid object
+moved the function SetRayTraceEnv to its base class and made the member mEnv object to be protected data member
+
+2019-01-05
+changed float to double for all geomerty properties and some material properties, like RefIdx for dielectric and Fuzz for metal, BUT keep
+all color3f or pixel related things still be float, most importantly, all Textures are float members; and tested lots of previous scenes to
+make sure the intersection and everything is all right.
+added BBox class prepared for Regular Grid;
+minorly modified the MetalMaterial class to support fuzz feature or as we known it is glossy material, but it's implementation is quite differant
+to RTGU;
+added Math.h Sampling.h Utility.h and removed some math functions like reflect/refract functions to Math class and before sample_upon_unit_shpere
+to Sampling class, and our BBox was placed in Utility class.
+
+2019-01-12
+added Length and SqureLength functions to Point2d
+added SampleUponUnitDisk samping function
+designed the mesh/grid/mesh uv triangle classes blue print
+
+2019-01-13
+added MeshObject.h PLYReader.h ResourcePool.h
+changed names, math.h to surface.h, BBox to AABB;
+added GetBoundingBox interface to all objects on the geomertyobject class tree
+ 
+2019-01-14
+implemented the GetBoundingBox interface for all of geomerty objects;
+minorly modified the AABB class to add new funciton - SurroundingBox to calc the bounding box between two AABB boxes passed from parametaers.
+
+2019-01-19
+changed tmin to tmax in RayTracer.h
+added MeshDesc.h and MeshDesc struct
+worked on PLYFileReader, 20%
+
+2019-01-20
+worked on PLYFileReader, 50%
+
+2019-01-21
+added IPLYFileReaderSink;
+reviewed the whole algorithm for ply file reader;
+worked on PLYFileReader, 60%
+
+2019-01-24
+worked on PLYFileReader, 70%
+
+2019-01-26
+finished PLYFil,Reader, 100%
+finished ResourcePool class implementation, singleton pattern, (currently supports MeshDesc Allocate/Free/Query);
+added MeshTriangle.h, defined heriarchy and memebers of mesh triangle
+
+2019-01-27
+added Update interface to GeomeryObject abc
+changed MetalMaterial to MirrorMaterial, DielectricMaterial to GlassMaterial
+extract triangle HitTest, GetBoundingBox, ComputeNormal, ComputeArea to HitTestImpl, GetBoundingBoxImpl, ComputeNormalImpl, ComputeAreaImpl
+so that we can share the codes between SimpleTriangle and MeshTriangle
+finished MeshTriangle, FlatShadingMeshTriangle, SmoothShadingMeshTriangle, FlatShadingUVMeshTriangle, SmoothShadingUVMeshTriangle classes
+defined all the member datas and functions for MeshObject and RegularGridMeshObject
+
+2019-01-29
+worked on RegularGridMeshObject, 30%
+
+2019-01-30
+changed SampleUponUnitShpere to SampleInUnitShpere, SampleUponUnitDisk to SampleInUnitDisk, it was cleary mistake;
+added vector<TriFace>	mesh_face_datas; to MeshDesc, as well as added codes to fill it up, see the comment for details of the reason.
+worked on RegularGridMeshObject, 70%
+
+2019-01-31
+worked on RegularGridMeshObject, 100%
+added RTMath class
+extracted AABB HitTest functions code to HitTestImpl and supported to RegularGridMeshObject
+left a big problem, should I added Material * to GeomeryObject ??? otherwise, I can't set the single object's material for huge objects, like
+RegularGridMeshObject, therefore, all the sub objects in it only can use the same Material *;if I use a map to record each sub object's material,
+it definetly is time cosuming; 
+
+2019-02-01
+fixed the problem, referenced to the PBRT, they do the same way like I do, which is that using another wrapper class(like MaterialObject) to hold
+the underlying material and geometric objects inside to keep the single geometric shape clean and light; so when generates the mesh triangle I put it to MaterialObject then it can support the SetSubObjectMaterial function to set each single material mesh triangle, and also when it gets hit, we can directly access its material via GetMaterial() function call by the object.
+modified the CompoundObject HitTest logic code.
+modified the check code, t < tmin + EPsilon(), prepare for the constant medium isotropic volume rendering
+
+2019-02-02
+added constant medium isot3 yet)
+
+2019-02-03
+added SampleUponUnitShpere samping method.
+worked on Texture facilities, added TextureDesc.h/ImageIO.h/
+In Scene.h added RenderText/RednerImage functions
+modified ResourcePool, added map to hold TexutreDesc
+
+2019-02-06
+replaced all in_ray with inRay;
+changed TexutreDesc to ImageTextureDesc as well as the include file name
+redifend ImageTexture class;
+worked on ImageTexutre class implementation, 100%, still, no testing on it yet
+impl RenderText function in Scene class.
+creatively introduced macro TEXTURE_STREAM_RAW to allow us to load texture stream as both RGB object or unsigned char byte RAW stream.
+integrated renowed image process lib stb_master(from github), but only used stb_image.h, then supported load JPG file;
+impl RenderImage function in Scene class.
+added GetPixelColor interface to Texture class;
+tested for both raw texture stream mode and RGB Color3f object vector mode for PNG and JPG image file, testing passed.
+tested both raw texture stream mode and RGB Color object vector mode
+
+2019-02-07
+changed image texture related word pixel to texel, like GetPixelColor, GetTexelColor;
+
+2019-02-08
+modified LoadJPGFromFile, LoadPNGFromFile in Texture.cpp, it supports to directly and automatically create and allocate a texutre desc 
+struct without creating and allocating it before calling the LoadXXXFromFile functions.
+fixed memory bugs in Texutre.cpp, AttachXXX should check to see if it releases first.
+added ImageTexutreMapping.h and class, not impl yet.
+finished the architecture design and coding for Texture inverse mapping/Texture/Material
+added and impl GetColor interface function in ImageTexture class;
+added SetInverseMapping function in Texture class;
+
+2019-02-09
+finished ShpereicalTextureMapping;
+finished XY XZ YZ regualr rectangle texture mapping (calc UV coordinate); (arbitrary rectangle is still not complete, it really needs to use the convex polygon general derivation to do that which fit to triangle and polygon, so the rectangle is natrually included)
+finished TextureOnlyMaterial class (a new material class) is used to only test texture mapping
+
+2019-02-10
+fixed one bug in Volume.cpp ConstanMedium::HitTest, added the line of code: tmax = rec.t; rec.hit = true;
+
+2019-03-02
+added PlaneCheckerTexture, supported XOZ, XOY, YOZ plane procedural texture mapping, and tested on it, the image generated was amazing!;
+tidy up the DemoScene in order to set up varieties of test scenes clearly and seperately
+changed GetMappingTexelColor 1st paramter to HitRecord&
+tested ImageTexture mapping and ShpereicalTextureMapping, rendered a shpere with the global image on it, implemented the first image based texture mapping in my life!! 
+
+2019-03-03
+debuged and tested volume rendering, unsuccessful yet (80%).
+modified the code in previous NormalMaterial::Shade to adjust the current version of RayCastTracer;
+added RandomTexture class to observe the volume rendering inside the boundary with different colors.
+
+2019-03-06
+found a minor error in Volume HitTest, changed if(rec2.t > tmax) to if (rec1.t > tmax) { rec2.t = tmax };
+
+2019-03-09
+changed MatteMaterial albedo from Color3f to Texture * as well as remaining the constructor and interface with Color3f as its 
+parameter so that it can remain the current codes unchanged.
+changed Texture interface GetMappingTextureColor to GetTextureColor to hide the inner details.
+added CheckerTexture which is a common approach to render checker texture applied for both the shpere and plane and so forth.
+
+2019-03-11
+changed Sampling to SamplerBase, and designed the Sampler heirachy, and defined 4 types of samplers, RegularGrid/PureRandom/Jittered/Hammersley,
+parepare to implement RTGU(phone light model/shadow/ambient occlution/area light/whitted tracer(reflective/glossy)/simple transparency/realistic transparency which involoves to in terms of fresnel reflection and transimission)
+typedef Vec3<double> Point3d; since we have alread had Point2d, we can use Vec3 class to redefine Point3d;
+tested Rectangle texture mapping and it turned out that the result is amzaing but it was upsidead down... need to debug it later.
+
+2019-03-15
+added SetSeed/RandInt/RandFloat functions to Random class based on CRT in stdlib.h
+decided to port RTGU sampler architecture into our ray tracer.
+started to port RTGU sampler codes, about 10%
+
+2019-03-16
+changed file MetaData.h to ICloneable.h
+Port sampler implementation from RTGU, about 30%
+
+2019-03-17
+finished the porty of sampler implementation from RTGU, 100% (currently the code: 6000 Lines)
+be about to implement RTGU phone shading model next!
+
+2019-04-15
+added BRDF.h and Material2.h;
+defined BRDF base calss, prepare to implment RTGU shading.
+
+2019-04-22
+moved UpdateUVM in Camera class to PerspectiveCamera, cause no other sub classes of camera would use it;
+finished BRDF base class implemntation;
+finished Lambertian BRDF implemntation;
+
+2019-04-24
+finished PhongGlossySpecular BRDF class implementation;
+finished BlinnPhongGlossySpecular BRDF class implementation;
+ 
+2019-04-26
+added VEC_ORIGIN AXIS_X_BIAS AXIS_Y_BIAS AXIS_Z_BIAS macros
+defined Light base class according to RTGU
+
+2019-04-27
+added BLACK WHITE color3f macros;
+finished AmbientLight/DirectionLight/PointLight implementations.
+defined Mateial2 abstract class
+
+2019-04-28
+created a SceneLights class to hold all lights in the scene;
+implemented 70% of Matte2 material class.
+
+2019-04-29
+finished Matte2 material implementation;
+finished Phong material implementation;
+
+2019-04-30
+2019-05-01
+changed the architecture of Phong shading material, make them all be the sub classes of PlasticMaterial, finished PlasticMaterial/PhongMaterial/BilnnPhongMaterial;
+removed Material2 classes, the material all inherit from Material class, so changed the original Shade interface to PathShade, plus added the new one, Shade for RayCastTracer,
+in this way, all the codes from RTGU and One weekend can be compatible very well so far.
+chaned Light2.h to Light.h, the old Light.h to LightObject.h, all the lights from RTGU are implemented in Light.h;
+added SceneLights objects to Scene.h and added it the the RayTracer Env parameters
+modified the RayCastTracer to support the shading;
+added constructor for HitRecord;
+
+2019-05-02;
+changed Light2 to Light for all classes and their sub classes;
+tested RTGU chater 14 and 15 in our own RT engine, evrything is working fine after fixed the following bugs.
+fixed one important hidden bug, that is: the Vec3 class constructor didn't initialize the 3 x y z members which lead to rendering error
+for glossy brdf as long as the glossy brdf's F() was calling, the L was a random value, so if ndotwi fit the condtion, then 
+this case is fine, cause L will be assigned to a proper value otherwise the L is always a random and of course a wrong value.
+the result is for the phong-like material on the glossy specular area, it's OK, but other areas are wrong.
+fixed one important hidden bug, that is: for directional light, the direction vector must have to be normailzed after setting, not like 
+point light, or the L luminace will be very large.
+
+2019-05-06
+added interface IntersectP to GeomertyObject and all its sub classes;
+implemented the IntersectP interface for all related classes;
+added const GeomertyObject *At(int idx) const to CompoundObjects so that the IntersectP can be defined as const member function, and
+actucally it really is;
+hard shadow compelet about 50%;
+found a bug, the IntersecP should add the paramter of tvalue, to indicate the t value used to compare with the distance between
+the hit point and the light position;
+
+2019-05-07
+2019-05-08
+added WorldObjects.h to hold SceneObjects;
+added CastShadow/ShadowHit interfrace to Light and implemented them in DirectionLight and PointLight;
+modified Matte2Material and PlasticMaterial to support generating shadow ray and doing the shadow hit test among each objects in the scene;
+built up a test scene tested all cases including two types of light and the materials, testing passed.
+
+2019-05-11
+tested BlinnPhongMaterial in PointLight;
+implemented AmbientOcclusionLight, completion percentage: around 60%;
+
+2019-05-12
+added SceneObjects& sceneObjects to Light::Li interface;
+completed AmbientOcclusionLight, 100%;
+pass the test for it as well as the sythentic scene mixed with DirectionLight and Shadow
+the sampler of multijitted, EXP is a critical parameter, it should set samll, like 1 - 10 for ambient occlustion, because the EXP is larger, the curve is shaper, so 
+the direction for ambient occlusion is more likely to the same direction in a certain range so it always hit some object then it is considerated as in the shadow.
+completed PerfectSepcular BRDF for ReflectiveMaterial;
+fixed a careless bug in BlinnPhong BRDF, that is: Vec3d		h = (wi + wo); NOT the Vec3d		h = (-wi + wo); which leads to no high light specular upon the shpere.
+
+2019-05-13
+opitimzation Ray shadowRay(hitRec.pt, wi,/*light->GetDirection(hitRec),*/ 0.0); in Plastic and Matee material;
+completed ReflectiveMaterial, about 90%, stuck in the WhittedTracer, the code structure is diffirent from the eariler tracers, it uses
+steal recursive to accumlates the L value in each depth;
+added RayTracer to HitRecord structure to support the implementation of WhittedTracer;
+after 4 hours hard working, I finished the ReflectiveMaterial and WhittedTracer and put them together; but not test yet.
+added WhittedShade for Material ABC class, the implementation of WhittedTracer is very differient from RTGU;
+
+2019-05-15
+added and defined RectangleAreaLight and DiskAreaLight classes;
+added Area intereface to GeometryObject ABC class and to its all sub classes, but only implemented for Disk and Rectangle, left others to be implemented later.
+reordered the functions in GeometryObject and its sub classes according to the sequence of its base class.
+made a decision that is added the mArea data member in each GeometryObject classes to hold its area when in its construction or the Update being called rather than calculate it each time, and modified most of the Update functions to support this change.
+implemented Emissive2Material;
+
+2019-05-18
+fixed Light Clone and Emissive2Material error, not passed parameters when constructing, so it just created a new object without the existent object's data members;
+changed mLs,mLc for Emissive2Material to mKe and mCe;
+created a new class EmissiveTextureMaterial to hold a texture * as the reprensentation of mCe;
+defined AreaLight class architecture;
+
+2019-05-19
+fixed one crucial bug in PointLight: 
+old: double dist = shadowRay.D().Distance(mLightPos);
+new: double dist = shadowRay.O().Distance(mLightPos); 
+
+fixed one crucial bug in Vec3:
+old: 
+inline double Distance(const Vec3& rhs) const
+{	
+	return this->SquareDistance(rhs);
+}
+
+new:
+inline double Distance(const Vec3& rhs) const
+{	
+	return std::sqrt(this->SquareDistance(rhs));
+}
+
+unbelieveable !!!
+
+it arouses one quetion: we should use Vector Point Normal to represent the different things instead o
+f using the Vec3 all the time.
+completed AreaLight base class;
+changed the EnvironmentLight as the Light's sub class; changed EnvrionmentTextureLight as the EnvironmentLight's sub class;
+
+2019-05-21
+added SetLightShape to AreaLight;
+removed mLightPos from AreaLight which can be replaced by mpLightShape object;
+completed RectangleAreaLight about 80%;
+
+2019-05-25
+completed AreaLight 100%;
+removed the const from Light::GetDirection(), cause the AreaLight::GetDirection need to set the mLightNormal and mWi data member;
+reajusted the architecture of AreaLight, added GetNormal() and RandomSample() to the GeomertyObject ABC, implemented only for 
+Rectangle and its Subclasses and Disk currently; in this way, removed previously classes RectangleAreaLight and DiskAreaLight,
+changed RectangleAreaConsLight to AreaConstLight and so as Disk Area Light;
+completed AreaConstLight 100%;
+added TextureLambertian;
+created Transform.h to add UVW and ONB class to help set up bias and translate the vector into it.
+
+2019-05-26
+added SetAutoDelete to ImageTexture;
+removed const from Li function in Light class;
+implemented AreaTextureProjectLight 100%;
+implemented EnvironmentLight 100%;
+implemented EnvironmentConstLight 100%;
+implemented EnvrionmentTextureLight 100%;
+
+2019-05-29
+added MaterialBase class to support all the default implementations for Material interface class, therefore all its 
+sub material classes are able to only focus on its related virtual shade*** functions;
+completed AreaLightShade for all related metarial classes 100%;
+completed AreaLightTracer 100%;
+
+2019-06-02
+finished PhongGlossySpecular::Sample_f_pdf and Sample_f implementation;
+modified BRDF::SetSampler to detect if the mpSampler is null, otherwise it should be released before being used;
+added AreaLightShade to Material ABC class, and implemented it in GlossyReflectiveMaterial;
+finished GlossyReflectiveMaterial class implementation;
+finally, completed AreaLightTracer, 100%, and so far I've implemented about 80% of RTGU except for the Glass and dielectrics chapters, prepare to implement SpotLight and Instance, then BART;
+
+2019-06-04
+fixed one minor bug in AmbientOcclustionLight: L = mFraction * mLs * mLs; => L = mFraction * mLs * mLc;
+defined SpotLight class; not implement yet.
+intended to define FastSpotLight also introduced in <<3d game programming guru>>, but can't understand the term (l dot s) in
+the formula;
+
+2019-06-05
+fixed AreaLight::Li, didn't take widotn into consideration before; the light could be black if widotn is less than or equal to 0.0;
+added ANG2RAD to Common.h;
+completed SpotLight implementation, 100%;
+
+2019-06-09
+changed the vector<GeomertyObject *> to SceneObjects in RTEnv class;
+did lots of time to debug the volumne rendering again, the interesting thing is:
+I found a very serious bug:
+1. Volumne::HitTest: test logic:
+if (rec1.t < tmin) { rec1.t = tmin; }
+if (rec2.t > tmax) { rec2.t = tmax; }
+if (rec1.t > tmax) { rec2.t = tmax; }
+if (rec1.t >= rec2.t) { return false; }
+if (rec1.t < 0.0) { rec1.t = 0.0; }
+all the fives line are necessary
+
+2. if the ray tracer loop for finding the closest intersection among the objects like this:
+if (t < tmax) {
+	tmax = t;
+	hitRec = hitTempRec;
+	bHitAnything = true;
+}
+the volumne render will be the problem, because the the ray inside the volumne object, the hitRec.t is always larger than the boundary
+object itself, so, the "if" will never be execuated;
+so I tried to fix this like this:
+if (bHit)
+{
+	hitRec = hitTempRec;
+	bHitAnything = true;
+}
+the logic itself is OK, because we alread have assigned the tmax inside the HitTest procedure, so it dont' have to 
+find the minimal value outside the HitTest, but due to hit test logic is diffierent between <<RTGU>> and <<OneWeekend>>,
+the tmin in RTGU is used as the tmax in OneWeekend, and the tmin in OneWeekend is not existent in RTGU, because the RTGU
+always use KEpsilon as the minimal value, plus, even the HitTest didn't set the tmax, it's fine, the outer will do the comparison again, which means it will use the t to compare with the tmax in the outer, and I guess in triangle HitTest, it missed the comparison for tmax, and when I wrote(copy) the HitTest code from RTGU, I missed it too.
+so the outer comparison is not neccessarily, I also changed it for other RayTracers;
+
+2019-06-16
+missed the AreaLightShade in both Emissive2Material and EmissiveTextureMaterial;
+fixed a critial bug, AreaConstLight::Li(), 
+before was error: float ndotwi = Dot(-mWi, hitRec.pt);
+and now I fixed it like this: float ndotwi = Dot(-mLightNormal, mWi);
+and the same for AreaTexutreLight::Li()
+tested on Area Light shading, and it's completed I tested it with my own scene and the scene in RTUG, 18.04; the result is correct.
+and tested the AreaLight::ShadowHit()
+double dist = Dot(oa, shadowRay.D()); 1
+double dist = oa.Distance(mSamplePoint); 2
+and when I use 2, the noisy is really less than 1 does. the look is better, which indicates that the two are not the same thing acually.
+finally, I tried it again, it turned out that I make a mistake, acually, they are the same thing.
+It should be like this: double dist = shadowRay.O().Distance(mSamplePoint); not the 2.
+and I compared them again, the 2 is better, the image looks lighter and less noise
+
+2019-06-19
+set up a scene to test projective texture light, but it turned out that this kind of light is far complicated than I thought,
+it failed for the testing;
+so I changed AreaProjectTextureLight to AreaTextureLight;
+but I found one error in AreaTextureLight::Li(), that is: the hitRec.pt is the hit point upon the object rather than the point 
+upon the area light, so I can't sample the light color, so I use the mSamplePoint already sampled upon the light to get the texture color
+(sample the texture) from the texture light; and the same mistake for environment light Li();
+tested the texutre light, it works fine.
+
+2019-06-20
+fixed one bug which I found about 3 months ago, the image texture is upside-down when is rendering on the objects;
+the reason is that when calculate the u v texture coordinates the origin for u v starts from the left-down corner of one image(you can see that from the codes in YZRect::HitTest()) while when we store the texture texels the u v starts from the left-up corner of one image,
+so the ImageTexture::Sample() needs a minor change, like this:  int texel_y = (int)((1.0F - v) * (mpImgTexData->height - 1));
+next goal: guess what ?? The Stanford Bunny !!!
+
+2019-06-21
+tested PLYFileReader loading from a ply format model file, it was ok;
+tested RegualrGridMeshObject, found something needed to be changed. The problem was in RegularGridMeshObject::HitTest(),
+when a cell which has more than one geomerty object, it should be replaced with the compound object, but this object is allocated by "new",
+so the memory for compound object would never have the change to deallocate. I planned several schemes about this, finally, I did it like
+this: Add a IsCompound interface to GeometryObject as well as the mnHitIdx in CompoundObject to represent which sub-object in CompoundObject is currently being hit, and use the GeomertyObject * base class to do the HitTest, when a object within the cell is hit,
+calling IsCompound to see if it is a compound object, if it's true, then we use the mnHitIdx to access the sub-object in the cell and get its pMaterial object, otherwise we don't know the pMaterial because we just stored the CompoundObject to the cells rather than the MaterialObject, even if we create a new MaterialObject and store it to one of the cells, we can't get the sub-object material, because we allow the user to set each different Material to each sub-object in one cell. After doing this, a pure color model object was showed upon the screen, it's amazing, the dragon/bunny/horse all can be rendered with the material, looks like a oil paint, very art.
+Next move: use the material and add some lights in the scene to render them.
+
+2019-06-23
+tested mesh triangle object, when render with material, it turned out that many things needed to be changed.
+1. memory leakage occurs, that is: when a cell has more than one object, it should allocate a compound object first, so in the previous
+version, it never deallocates it, because we added IsCompound interface, so when release the mesh object, we can check if it is a compound object, if it is true, we call delete to release its memory, otherwise, we don't, because the real GeometryObject stored in MeshObject base class will be responsible to do this.
+2. As we can see, the compound object in mvecCells may be deleted, but the fact is that: the element in mvecCells is only a pointer which 
+points to the real geometry object, so when delete its sub-objects shouldn't be deleted, so we add a member mbAutoDelete for CompoundObject class, if it is false then we don't release its sub-objects. And in this case, in MeshObject, when we set up cells, we always set it to
+false, so when the MeshObject is deleted, the order is:  base class::mvecSubObjects release -> MeshObject::mvecCells released;
+3. The LightObject and ShaderObject have the same bug, we added the  mbAutoDelete but we don't use it when perform the copy constructor,
+if mbAutoDelete is set, we use the deep copy (Clone) otherwise we just use the shallow copy, like this:
+if (mbMaterialAutoDelete)
+{	
+	release_material_object();
+	mpMaterial = (Material *)other.mpMaterial->Clone();
+}
+else
+{
+	mpMaterial = other.mpMaterial;
+}
+4. The RegularGridMeshObject::HitTest only perform for the primary ray, but when a hit point send a shadow ray, it doesn't work.
+So we added another function RegularGridMeshObject::IntersectP to test the hit for shadow ray.
+5. This one is tricky, I spent lots of thime for debugging it.
+in RegularGridMeshObject::update_mesh_normals(), when we get the normal from the geomerty object in base class's mvecObjects,
+it easily gets wrong, because we created a material object before we store it, so we have to cast it to material object and
+continuely call GetProxyObject() to get its real underlying geomerty object. Like this:
+MaterialObject *meshTriMaterialObj = (MaterialObject *)(mvecObjects[meshDesc->mesh_vertex_faces[i][j]]);
+const Vec3d face_normal = ((MeshTriangle *)meshTriMaterialObj->GetProxyObject())->GetNormal();
+6. In order to reuse the mpMaterial in MaterialObject, we changed the SetMaterial to SetMaterial(Material *pMaterial, bool autoDelete = true), added autoDelete paramter, so if it set to false, one Material pointer can be shared among multiply MaterialObjects.
+Like this:
+PhongMaterial *pPhongMaterial = new PhongMaterial;
+MaterialObject *pObj1 = new MaterialObject(pShape1, pPhongMaterial, true, false);
+MaterialObject *pObj2 = new MaterialObject(pShape1, pPhongMaterial, true, false);
+MaterialObject *pObj2 = new MaterialObject(pShape1, pPhongMaterial, true, true);
+This trick is useful.
+7. rewrote the mpProxyObject and mpMaterial management for MaterialObject, added  release_proxy_object/release_material_object/copy_constructor functions.
+
+
+2019-06-24
+after all these changes, I successfully tested all the scenes and models(bunny,horse,dragon) from the <<RTGU>>, it's soooooooooooo
+beautiful. Amazing.
+The feature: whitted tracer + phong material + directional/point light + occlusion ambient + reflective material(ground plane)
++ smooth (vertex-based normal) shading. And the rendering effect is totaly equal to <<RTGU>>.
+
+And I've done the Mesh Traingle / Regular Grid functions test.
+Next move: Fish Eye + Thin Len camera -> Spot Light + Projective Texture Spot Light -> Instance -> BART
+
+2019-06-29
+changed: Ray Camera::ShootRay(x,y,t) to bool Camera::GenerateRay(x,y,Ray&,t) in order to support FishEye camera;
+so the code in Scene::RenderScene also needs to change like this:
+Ray ray;
+if (mpCamera->GenerateRay(x, y, ray))
+{
+	color += mpRayTracer->Run(ray, 0, 10);
+}
+implemented FishEyeCamera; 100% now we support three types of camera;
+
+changed AmbientOcclusionLight::SetSampler(SamplerBase *sampler) to SetSampler(SamplerBase *sampler, float exp);
+to reduce one line of code for calling MapSamplesToHemiShpere from the caller, which performances it inside the SetSampler now.
+
+implemented ThinLenCamera, 100%, now we support four types of camera.
+
+tested on SpotLight, it failed.
+
+2019-06-30
+changed CConsole to OutputConsole;
+in order to easily debug, I moved g_Console from RayTraceDemoDlg.cpp to Console.h as an extern global variable.
+finished test on SpotLight, it works very well, cool~~~. This type of light is not introduced in <<RTGU>>, I wrote it totaly
+based on my understanding from <<3G Game Programming Guru>>, plus there is no any codes in this book which can be used as the 
+reference.
+during the debugging for SpotLight, I fixed several bugs, indeed. They all hanppened in Li() function.
+double sdotdir = Dot(-mSurfaceDir, mLightDir); should be double sdotdir = Dot(mSurfaceDir, mLightDir);
+sdotdir > 0.0 need to test to see if the dot product between the light direction and the surface direction is valid.
+finished the test on ThinLenCamera, no bug.
+finished the test on FishEyeCamera, found one bug, that is: after the creation of any types of camera, it should call
+SetViewPlane to set the width and height for the camera, some types of camera may not need them, but FishEyeCamera really
+needs it, so in the beginning, I didn't set it. No other bugs yet.
+Next goal: Projective Texture Spot Light;
+
+2019-07-09
+implemented ProjectiveTextureLight, completed its definition and about 30% in total.
+
+2019-07-10
+implemented ProjectiveTextureLight, completed its definition and about 80% in total(only left Li not implemented).
+fixed one bug in SpotLight::Li(), when calculate sdotdir, the mSurfaceDir should be negative, the result was right in the
+former test, because the light direction was also wrong, so "two negative makes it positive", it should be like this:
+double sdotdir = Dot(-mSurfaceDir, mLightDir); and the light direction in test scene should be 
+pSpotLight->SetLightDirection(Vec3d(-0.5, -1, -0.75)); not (0.5, 1, 0.75)
+
+2019-07-11
+complete ProjectiveTextureLight, 100%
+result is not good, still need to debug
+after some debugging, the result is acceptable somehow.
+
+2019-07-12
+changed the name pProjectiveTextureLight to pProjectiveTextureSpotLight, I realized that the current implementation is based ob spot light,
+later I will implement the rectangle projective texture light.
+
+2019-07-13
+completed ProjectiveTextureAreaLight, but cannot pass the test. There are many problems needed to debug.
+
+2019-07-14
+during the debugging process for ProjctiveTextureAreaLigh, fixed one critial bug in Transform.h ONB::operator[](int i),
+since you want to modify its member value, you should return its reference instead of the value copy, so it should like this:
+inline Vec3d& operator[](int i) { return axis[i]; }
+keep debugging the ProjctiveTextureAreaLigh, the result can be acceptable, sorta, for now, compared its implementation with the one in
+<<PBRT>>, it's rough. Further will work on this.
+
+2019-07-25
+reviewed codes, fixed one minor bug: ThinLenCamera::GenerateRay(), the direction vector didn't normalize
+
+2019-10-19
+fixed one bug at RegularMeshObject::HitTest(), when the mEnableAcceleration is disabled it just returned m_pAllMaterial before without considerating 
+the case that each sub object can have its own material, so we need to get the target hit object according to LastHit() then access its
+own material.
+implemented the entire Instance/Animation architecture, including Matrix42019x4/Instance/Specific shapes which do their intersection test at the 
+univeral object space, added new one Matrix.h;
+
+2019-10-20
+the calculation precision changed from double to float(considerating <<PBRT>> and <<one weekend>> both do the same) like before as well as modified all aspects related to it, and also made all the float number postfix be 'f'instead of 'F', did a overall midification.
+finished the implementation for Matrix4x4 class;
+finished the designation for Transform class, including the transformation creation ans functionns as well as implemented Translate and Scale transform creation functions, total about 30% of the transform/instance process. 
+
+2019-10-21
+in Common.h, it was a low-level bug, PI_OVER_180 was named to PI_UNDER_180, but the value was right, so I renamed PI_UNDER_180 to PI_OVER_180, 
+besides I added PI_UNDER_180 macro for the further use
+added Matrix.cpp and Transform.cpp code files to project, because the newly added funciton Inverse in Matrix4x4, also the code for 
+implementation of functions Rotate and LookAt contain dozens of lines of code, inline is not suitable in this case, further more, I moved the
+all tge inline functions in Transform.h to Transform.cpp
+implemented Transform series functions in Transform class
+implemented Apply*** series functions, thus the implementation for Transform and Matrix classes are all completed.
+total about 50% of the transform/instance process. 
+
+2019-10-23
+added Instance.h/.cpp to project, and finished the designation for Instance class, not implemented yet, though.
+
+2019-10-24
+implemented Instance.cpp, about 20%
+Got a issue, which is that should I delete the proxy object when the instance is released itself ? especially when the proxy object is 
+a mesh object.
+
+2019-10-25
+2019-10-27
+modified the Transform operator*(Transform const& rhs) the parameter from rhs to mat, which doesn't make the sence for the name rhs here.
+in Instance class finally I decided to use Transform to encapulate the Forward and Inverse matrix to make our codes neat and clean, besides,
+they are equally in essential implementation.
+Again, modified the Transform operator*, reversed the order of matrix multiplication for Forward and Inverse, because in our render the sequence is 
+different from PBRT.We are in Matrix * [point/vector/normal/ray] instead of [point/vector/normal/ray] * Matrix, the PBRT is the latter one.
+added the InverseApplyRay and apply_xxx_xxx private functions for the efficient purpose.If not, In HitTest() function, we have to constructor
+a Transform to hold the invMatrix and matrix in reverse oder compared to the mTransform each time, the worse case is that we have to do the 
+same thing in IntersectP() function for shadow test, so it costs a lot in terms of efficiency.Now we just call InverseApplyRay to reuse the 
+mTransform which is alread as the data member, then encapulated the apply*** codes to the apply_***_*** functions, these functions do the same
+things according to the matrix parameter, so in InverseApplyRay for example, we just need to pass the invMatrix to the apply_ray_impl.
+Modifed the Apply*** and apply_***_impl functions to be the const member functions.
+Now we completed the transform/instance implementation 100%.
+
+2019-12-05
+While I was revewing the code, occasionally I found a low-level bug, which is in Instance::ComputeBoundingBox(), after the cumputation, the result
+bbox object is assigned to the local variable bounding_box instead of mBoundingBox, the class data member.
+
+2019-12-21
+after having been changed the precision of double to float, I found that the DBL_MAX was still reserved, so I changed all DBL_MAX to FLT_MAX.
+
+2020-04-17
+modified the camera class, GenerateRay function, removed its third paramter, float t = 0.0, because it's generated in this function rather than
+pass by outside
+implemented the motion blur for moving objets, currently only support sphere object
+added a new file, the MovingObject.h, and implemented the MovingShpere class.
+modified the SimpleShpere class, added virtual getPos(float t) function to get the center vector so it can be used for MovingShpere sub-class to calculate its own center vector when moving. 
+in RayTracer.h and Material.h, when generate a new ray, filled in the third paramter t which is just the copy of the inRay, previously it just be
+set to 0.0f, cause we now attached the time information to a ray, so the secondary ray should also be set with it.
+accidently noticed a bug in the NormalMaterial in Material file, it should be implemented in Emissive function instead of PathShade funciton,
+cause its just a feature of self-reflectioin, cannot be applied in PathTracer.
+Not tested motion blur yet.
+
+2020-04-19
+added SetExpTime for Camera, since we have mTime0 and mTime1 to represent the camera exposure time, otherwise the motin blur couldn't work.
+added NormalMaterial::Shade() for RayCastTracer
+tested NormalMaterial
+tested motion blur for moving objects, it works fine.(not debugged yet)
+
+2020-04-22
+implemented disk texture mapping for SimpleDisk and SimpleRing geomoerty shapes in the cases of disk or ring in the XOZ/YOZ/XOY plane
+added IsZero utility static function to RTMath;
+
+2020-04-23
+implemented y-axis aligned cylinder geometry referenced to RTGU chapter 19 and tested its NormalMaterial
+but the opposite of the cylinder is missing, still need to debug it.
+
+2020-04-24
+fixed the cylinder render bug, now it looks good
+added new cpp file, Utility.cpp, added quadratic / cubic / quaratic equation sloving functions to it.
+
+2020-04-25
+implemented SimpleCone geometric object, succeeded with just one shot
+added calc_uv for calculating texture uv for cylinder and cone
+implemented SimpleTorus geometric object, but it failed to render, not fix it yet.
+
+2020-04-26
+fixed the torus bug, now it can be rendered correctly.
+added anotherlveCubic/SolveQuartic) to calculate quadric/cubic/quratic functions.
+implemented ellipsoid geometric object;
+implemented SimpleQuadratic, about 50%;
+changed the way to calculate the normal of SimpleCylinder, that is if Dot(rec.n, 0.0f, which means the ray hits the inside of the 
+cylinder, but the normal of cylinder is always out-faced, so it should be negative.
+
+2020-04-27
+implemented SimpleQuadratic / SimpleParaboloid / SimpleHyperboloid three new kinds of geometric objects in our ray trace.
+I'm illustrated from the blog, and added mCenter to Cylinder / Cone / Torus like I did for SimpleQuadratic and so on, it's nothing special but just the initial position is a bit offsetoff the original point, and the whole process demostrates how the Instance translate in the world, which totally matches the process instroduced in RTGU.
+added new H file, GeometryObjectPlus for other kind of more complex objects, such as Blob/teardrops(shape like rain)/join blend/bezier curves
+/sweeping objects and such on...
+implemented teardrop geometric object
+
+2020-04-29
+reviewed the entire book and cleared out the relationship among the classes in the <<Ray Tracing in One weekend>> series, the volume III, <<the rest of your life>>, tried to implement PBR based samping in our ray tracer
+added PathShade2/PathShade2_pdf in Material
+added ScatterRecord in HitRecord.h
+added new .H file, the PDF.h and implemented its relative pdf sub-classes, like CosinePDF, LightShapePDF, MixturePDF
+added RandomConsineDirection/RandomToShpere to Random class
+added De_NAN to ImageProc class
+added PDFValue pure virtual function to GeometricObject and implmented it for all its sub-classes, but most of them are empty for now
+
+2020-04-30
+continue to work on PBR-based sampling
+the current RandomSample samples a point upon the geometry, but in PBR-based sampling we need the random direction between the random point upon
+the geomerty and a relative point, and surely I can modify the current version of RandomSample to adapt to it, but in the consideration that in
+some occasions we might need the random point instead of the random direction, so I decide to keep it, besides the current codes remain unchanged,
+but I changed its name, the RandomSamplePoint as well as added a new one, the RandomSampleDirection
+implemented PDFValue and RandomSampleDirection for rectangle and shpere geometry
+implemented PathShade2/PathShade2_pdf for relative material classes
+implemented PathTracer2 for PBR-based sampling
+prepare to test PBR sampling using cornell box again and upload the current version of entire code to github.
+debuged it, the real tricky problem is at GlassMaterial, initially, I didn't implement the PathShade2 so it derived from the base class, so it didn't do the render at all, so it should be like this:
+virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
+{
+	this->PathShade(inRay, hitRec, scatterRec.alebdo, scatterRec.specular_ray);
+	scatterRec.is_specular = true;
+
+	return true;
+}
+call the original PathShade to do the render work, most importantly, it actually is a kind of specualr light, so set the is_specular to true and in this way PathShade2_pdf shouldn't be implemented because in the PathTracer_PBRS, if (srec.is_specular) this function will never be called.
+and finally, I made it, now my ray tracer supports physically based sampling the picture looks very smooth and clean, has much less noise than it was before. (15:58)
