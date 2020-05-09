@@ -74,21 +74,26 @@ namespace LaplataRayTracer
 				for (int col = 0; col < w; ++col)
 				{
 					Color3f color(0.0f, 0.0f, 0.0f);
-					for (int m = 0; m < 30; ++m)
+				//	for (int m = 0; m < 30; ++m)
+				//	{
+				//		for (int n = 0; n < 30; ++n)
+				//		{
+					for (int k = 0; k < 100; ++k)
 					{
-						for (int n = 0; n < 30; ++n)
-						{
-							float x = (col - 0.5f * w + (float)m/30);
-							float y = (row - 0.5f * h + (float)n/30);
+					//	float x = (col - 0.5f * w + (float)m / 30);
+					//	float y = (row - 0.5f * h + (float)n / 30);
+						float x = (col - 0.5f * w + (float)Random::drand48());
+						float y = (row - 0.5f * h + (float)Random::drand48());
 
-							Ray ray;
-							if (mpCamera->GenerateRay(x, y, ray))
-							{
-								color += mpRayTracer->Run(ray, 0, 16);
-							}
+						Ray ray;
+						if (mpCamera->GenerateRay(x, y, ray))
+						{
+							color += mpRayTracer->Run(ray, 0, 10);
 						}
 					}
-					color /= 900.0f;
+				//		}
+				//	}
+					color /= 100.0f;
 
 					ImageProc::De_NAN(color);
 					ImageProc::HDR_Operator_MaxToOne(color);

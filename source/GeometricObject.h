@@ -370,6 +370,212 @@ namespace LaplataRayTracer
 
 	};
 
+	class SimpleShpere2 : public GeometricObject
+	{
+	public:
+		SimpleShpere2()
+			: mCenter(0.0f, 0.0f, 0.0f), mRadius(20.0f), mColor(1.0f, 0.0f, 0.0f)
+		{
+
+		}
+
+		SimpleShpere2(Vec3f const& center, float radius, const Color3f& color = Color3f(1.0f, 0.0f, 0.0f))
+			: mCenter(center), mRadius(radius), mColor(color)
+		{
+
+		}
+
+		virtual ~SimpleShpere2()
+		{
+
+		}
+
+	public:
+		virtual void *Clone()
+		{
+			return (SimpleShpere2 *)(new SimpleShpere2(*this));
+		}
+
+	public:
+		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
+		{
+			Vec3f vpos = inRay.O() - mCenter;
+			float x0 = vpos.X();
+			float y0 = vpos.Y();
+			float z0 = vpos.Z();
+			float dx = inRay.D().X();
+			float dy = inRay.D().Y();
+			float dz = inRay.D().Z();
+
+			float A = dx*dx + dy*dy + dz*dz;
+			float B = 2.0f*(x0*dx + y0*dy + z0*dz);
+			float C = x0*x0 + y0*y0 + z0*z0 - mRadius*mRadius;
+
+			float D = B*B - 4.0f*A*C;
+			if (D < 0.0f)
+			{
+				return false;
+			}
+
+			bool is_hit = false;
+			float temp = 0.0f;
+			float root0 = (-B - std::sqrt(D)) / (2.0f * A);
+			if ((root0 > tmin + KEpsilon()) && (root0 < tmax))
+			{
+				is_hit = true;
+				temp = root0;
+			}
+
+			if (!is_hit)
+			{
+				float root1 = (-B + std::sqrt(D)) / (2.0f * A);
+				if ((root1 > tmin + KEpsilon()) && (root1 < tmax))
+				{
+					is_hit = true;
+					temp = root1;
+				}
+			}
+
+			if (is_hit)
+			{
+				tmax = temp;
+
+				rec.hit = true;
+				rec.t = temp;
+				rec.pt = inRay.O() + temp * inRay.D();
+				rec.albedo = mColor;
+				rec.n = GetNormal(rec);
+				rec.pMaterial = nullptr;
+
+			}
+
+			return is_hit;
+		}
+
+		virtual bool IntersectP(Ray const& inRay, float& tvalue) const
+		{
+			Vec3f vpos = inRay.O() - mCenter;
+			float x0 = vpos.X();
+			float y0 = vpos.Y();
+			float z0 = vpos.Z();
+			float dx = inRay.D().X();
+			float dy = inRay.D().Y();
+			float dz = inRay.D().Z();
+
+			float A = dx*dx + dy*dy + dz*dz;
+			float B = 2.0f*(x0*dx + y0*dy + z0*dz);
+			float C = x0*x0 + y0*y0 + z0*z0 - mRadius*mRadius;
+
+			float D = B*B - 4.0f*A*C;
+			if (D < 0.0f)
+			{
+				return false;
+			}
+
+			bool is_hit = false;
+			float root0 = (-B - std::sqrt(D)) / (2.0f * A);
+			if (root0 > KEpsilon())
+			{
+				is_hit = true;
+				tvalue = root0;
+			}
+
+			if (!is_hit)
+			{
+				float root1 = (-B + std::sqrt(D)) / (2.0f * A);
+				if (root1 > KEpsilon())
+				{
+					is_hit = true;
+					tvalue = root1;
+				}
+			}
+
+			return is_hit;
+		}
+
+	public:
+		virtual float Area() const
+		{
+			return 0.0f;
+		}
+
+		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
+		{
+			Vec3f vmin = mCenter - Vec3f(mRadius, mRadius, mRadius);
+			Vec3f vmax = mCenter + Vec3f(mRadius, mRadius, mRadius);
+			bounding = AABB(vmin, vmax);
+
+			return true;
+		}
+
+		virtual Vec3f GetNormal(const HitRecord& rec) const
+		{
+			Vec3f norm;
+			norm.Set(rec.pt.X() - mCenter.X(), rec.pt.Y() - mCenter.Y(), rec.pt.Z() - mCenter.Z());
+			norm.MakeUnit();
+			return norm;
+
+		}
+
+		virtual Vec3f RandomSamplePoint() const
+		{
+			return WORLD_ORIGIN;
+		}
+
+		virtual void Update(float t)
+		{
+
+		}
+
+		virtual bool IsCompound() const
+		{
+			return false;
+		}
+
+		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+		{
+			Ray testRay(o, v, 0.0f);
+			float tvalue = 0.0f;
+			if (this->IntersectP(testRay, tvalue))
+			{
+				Vec3f vec_dir = mCenter - o;
+				float len = vec_dir.Length();
+				float cos_theta_max = std::sqrt(1.0f - (mRadius * mRadius) / (len * len));
+				float solid_angle = 2.0f * PI_CONST * (1.0f - cos_theta_max);
+				return 1.0f / solid_angle;
+			}
+
+			return 0.0f;
+		}
+
+		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+		{
+			Vec3f vec_dir = mCenter - v;
+			float len = vec_dir.Length();
+			float squd_dist = len * len;
+
+			ONB onb;
+			onb.BuildFromW(vec_dir);
+			Vec3f rand_pt_on_shpere = SamplerBase::RandomToShpere(mRadius, squd_dist);
+			return (onb.Local2(rand_pt_on_shpere));
+		}
+
+	public:
+		inline void SetCenter(Vec3f const& center) { mCenter = center; }
+		inline void SetRadius(float radius) { mRadius = radius; }
+		inline void SetColor(Color3f const& color) { mColor = color; }
+
+	public:
+		inline static float KEpsilon() { return 0.001f; }
+
+	private:
+		Vec3f mCenter;
+		float mRadius;
+		float mArea;
+		Color3f mColor;
+
+	};
+
 	//
 	class SimpleDisk : public GeometricObject
 	{
@@ -1634,6 +1840,8 @@ namespace LaplataRayTracer
 				rec.pt = inRay.O() + t0 * inRay.D();
 				if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
 				{
+					tmax = t0;
+
 					rec.hit = true;
 					rec.t = t0;
 					rec.n = GetNormal(rec);
@@ -1656,6 +1864,8 @@ namespace LaplataRayTracer
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > tmin + KEpsilon() && t1 < tmax)
 				{
+					tmax = t1;
+
 					is_hit = true;
 					rec.pt = inRay.O() + t1 * inRay.D();
 					if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
@@ -1846,6 +2056,8 @@ namespace LaplataRayTracer
 			float t0 = (-B - std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 			if (t0 > tmin + KEpsilon() && t0 < tmax)
 			{
+				tmax = t0;
+
 				is_hit = true;
 				rec.pt = inRay.O() + t0 * inRay.D();
 				if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
@@ -1867,6 +2079,8 @@ namespace LaplataRayTracer
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > tmin + KEpsilon() && t1 < tmax)
 				{
+					tmax = t1;
+
 					is_hit = true;
 					rec.pt = inRay.O() + t1 * inRay.D();
 					if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
@@ -2095,7 +2309,7 @@ namespace LaplataRayTracer
 			}
 			else
 			{
-				// sort the answers
+				// find the minimum value among the roots.
 				float temp = FLT_MAX;
 				bool has_root = false;
 				for (int i = 0; i < num_real_roots; ++i)
@@ -2114,6 +2328,8 @@ namespace LaplataRayTracer
 				{
 					if ((temp > tmin + KEpsilon()) && (temp < tmax))
 					{
+						tmax = temp;
+
 						is_hit = true;
 
 						rec.hit = true;
@@ -2321,6 +2537,8 @@ namespace LaplataRayTracer
 			float root0 = (-B - std::sqrt(D)) / (2.0f * A);
 			if ((root0 > tmin + KEpsilon()) && (root0 < tmax))
 			{
+				tmax = root0;
+
 				is_hit = true;
 
 				rec.hit = true;
@@ -2336,6 +2554,8 @@ namespace LaplataRayTracer
 				float root1 = (-B + std::sqrt(D)) / (2.0f * A);
 				if ((root1 > tmin + KEpsilon()) && (root1 < tmax))
 				{
+					tmax = root1;
+
 					is_hit = true;
 
 					rec.hit = true;
@@ -2545,6 +2765,8 @@ namespace LaplataRayTracer
 				Vec3f pt = inRay.O() + roots[0] * inRay.D();
 				if ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight))
 				{
+					tmax = roots[0];
+
 					is_hit = true;
 
 					rec.hit = true;
@@ -2567,6 +2789,8 @@ namespace LaplataRayTracer
 					Vec3f pt = inRay.O() + roots[1] * inRay.D();
 					if ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight))
 					{
+						tmax = roots[1];
+
 						is_hit = true;
 
 						rec.hit = true;
@@ -2787,6 +3011,8 @@ namespace LaplataRayTracer
 				Vec3f pt = inRay.O() + roots[0] * inRay.D();
 				if ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight))
 				{
+					tmax = roots[0];
+
 					is_hit = true;
 
 					rec.hit = true;
@@ -2809,6 +3035,8 @@ namespace LaplataRayTracer
 					Vec3f pt = inRay.O() + roots[1] * inRay.D();
 					if ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight))
 					{
+						tmax = roots[1];
+
 						is_hit = true;
 
 						rec.hit = true;
@@ -3023,6 +3251,8 @@ namespace LaplataRayTracer
 				bool in_y_range = ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight));
 				if (in_x_range && in_y_range)
 				{
+					tmax = roots[0];
+
 					is_hit = true;
 
 					rec.hit = true;
@@ -3047,6 +3277,8 @@ namespace LaplataRayTracer
 					bool in_y_range = ((pt.Y() - mCenter.Y() > -mHalfHeight) && (pt.Y() - mCenter.Y() < mHalfHeight));
 					if (in_x_range && in_y_range)
 					{
+						tmax = roots[1];
+
 						is_hit = true;
 
 						rec.hit = true;

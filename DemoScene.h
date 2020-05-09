@@ -26,11 +26,11 @@ public:
 public:
 	virtual void Setup()
 	{
-		//  mpRayTracer = new RayCastTracer;
+		  mpRayTracer = new RayCastTracer;
 		//	mpRayTracer = new AreaLightTracer;
 		//	mpRayTracer = new WhittedTracer;
 		//	mpRayTracer = new PathTracer;
-			mpRayTracer = new PathTracer_PBRS;
+		//	mpRayTracer = new PathTracer_PBRS;
 
 		mpViewPlane = new ViewPlane;
 		mpCamera = new PerspectiveCamera;
@@ -62,14 +62,14 @@ public:
 		//	buildup_test_hard_shadow_scene();
 		//	buildup_test_ambient_occlusion_scene();
 		//	BuildupMultiObjIntersectionTestScene();
-			buildup_CornellBox();
+		//	buildup_CornellBox();
 		//	buildup_test_area_light_shading_scene();
 		//	buildup_test_texutre_area_light_shading_scene();
 		//	buildup_test_retangle_texture_scene();
 		//	build_up_test_ply_model_scene();
 		//	buildup_test_mesh_triangle_model_scene();
 		//  buildup_test_motion_blur_scene();
-		//  buildup_test_other_geometry_objects();
+		    buildup_test_other_geometry_objects();
 
 	}
 
@@ -974,12 +974,12 @@ private:
 
 		mpCamera->SetExpTime(0, 2);
 	//	mpCamera->SetEye(Vec3f(5, 25, 20));		// For torus
-		mpCamera->SetEye(Vec3f(235, 25, 600));		// For teardrop, parallel rays may cause problem for solving quratic in y direction
-	//	mpCamera->SetEye(Vec3f(0, 25, 500));
-		mpCamera->SetLookAt(Vec3f(-10, 0, 0));
+	//	mpCamera->SetEye(Vec3f(235, 25, 600));		// For teardrop, parallel rays may cause problem for solving quratic in y direction
+		mpCamera->SetEye(Vec3f(10, 5, 6));
+		mpCamera->SetLookAt(Vec3f(-5, 0, 0));
 		mpCamera->SetUpVector(Vec3f(0.0f, 1.0f, 0.0f));
 	//	mpCamera->SetDistance(1500.0f);			// For torus
-		mpCamera->SetDistance(1500.0f);
+		mpCamera->SetDistance(500.0f);
 		mpCamera->Update();
 
 //		SimpleCylinder *pCylinder = new SimpleCylinder(Vec3f(0, 0, 0), 20, 0, 60);
@@ -1006,13 +1006,20 @@ private:
 // 		MaterialObject *pMatParaboloid = new MaterialObject(pParaboloid, new NormalMaterial);
 //		mvecObjects.push_back(pMatParaboloid);
 
-  		SimpleHyperboloid *pHyperboloid = new SimpleHyperboloid(Vec3f(0.0f, 0.0f, 0.0f), 70, 52, 50, 50);
-  		MaterialObject *pMatParaHyperboloid = new MaterialObject(pHyperboloid, new NormalMaterial);
-  		mvecObjects.push_back(pMatParaHyperboloid);
+//   		SimpleHyperboloid *pHyperboloid = new SimpleHyperboloid(Vec3f(0.0f, 0.0f, 0.0f), 70, 52, 50, 50);
+//   		MaterialObject *pMatParaHyperboloid = new MaterialObject(pHyperboloid, new NormalMaterial);
+//   		mvecObjects.push_back(pMatParaHyperboloid);
 
 // 		Teardrop *pTeardrop = new Teardrop(Vec3f(-13.0f, 13.0f, 0), 2, 2, 2);
 // 		MaterialObject *pMatParaTeardrop = new MaterialObject(pTeardrop, new NormalMaterial);
 // 		mvecObjects.push_back(pMatParaTeardrop);
+
+// 		SimpleShpere2 *pShere2 = new SimpleShpere2;
+// 		mvecObjects.push_back(pShere2);
+
+		JoinBlendCylinder *pJoinBlendCylinder = new JoinBlendCylinder;
+		MaterialObject *pMatJoinBlendCylinder = new MaterialObject(pJoinBlendCylinder, new NormalMaterial);
+		mvecObjects.push_back(pMatJoinBlendCylinder);
 
 // 		int num = 0;
 // 		float roots[4] = { 0.0f };
