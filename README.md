@@ -16,3 +16,17 @@ I used my new tracer to render many images, lik the material ball, teapot from P
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/material_ball2.png)
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/fish_bowl_with_diff_material.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/cor_bunny1.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/cor_bunny2.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/mac1.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/mac2.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/mac3.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/mac4.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/mac5.png)
