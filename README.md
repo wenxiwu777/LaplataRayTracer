@@ -21,6 +21,10 @@ The following images are rendered by this ray tracer:
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/fish_bowl_with_diff_material.png)
 
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/instance_cone.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/instance_thick_ring.png)
+
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/cor_bunny1.png)
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/cor_bunny2.png)
