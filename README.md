@@ -3,7 +3,7 @@ This is a ray tracer renderer written in C/C++ on windows based on &lt;&lt;ray t
 
 (about three moths later... ...）
 
-And now it supports more features, i can't list them all here, its too many, like noise texture mapping, OBJ file loader, a wide range of new brdf and materials included, for instance, cook-torrance lighting model, oren nayar diffuse model, smith ggx microfacet model, lots of new gemoetric objects and part object, like
+And now it supports more features, i can't list them all here, its too many, like noise texture mapping, OBJ file loader, panoramic cameram, a wide range of new brdf and materials included, for instance, cook-torrance lighting model, oren nayar diffuse model, smith ggx microfacet model, lots of new gemoetric objects and part object, like
 part shpere/clyinder/cone/tori, and complex objects like bowl, thick ring, solid cylinder and so on, and some more complex objects, like rotational sweeping, the tellslation of sphere and sweeping objects.
 
 I used my new tracer to render many images, lik the material ball, teapot from PBRT.org with different materials(metal, substrate, glass, plastic, mirror, matte), and fixed sooo many bugs, not its a robust version.
