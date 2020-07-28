@@ -7,3 +7,6 @@ And now it supports more features, i can't list them all here, its too many, lik
 part shpere/clyinder/cone/tori, and complex objects like bowl, thick ring, solid cylinder and so on, and some more complex objects, like rotational sweeping, the tellslation of sphere and sweeping objects.
 
 I used my new tracer to render many images, lik the material ball, teapot from PBRT.org with different materials(metal, substrate, glass, plastic, mirror, matte), and fixed sooo many bugs, not its a robust version.
+
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/aluminum_like_teapot.png)
