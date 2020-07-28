@@ -14,3 +14,5 @@ I used my new tracer to render many images, lik the material ball, teapot from P
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/big_helmet.png)
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/material_ball2.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/fish_bowl_with_diff_material.png)
