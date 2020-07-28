@@ -9,6 +9,8 @@ part shpere/clyinder/cone/tori, and complex objects like bowl, thick ring, solid
 I used my new tracer to render many images, lik the material ball, teapot from PBRT.org with different materials(metal, substrate, glass, plastic, mirror, matte), and fixed sooo many bugs, not its a robust version.
 
 
+DemoScene.h shows how to use it.
+
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/aluminum_like_teapot.png)
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/big_helmet.png)
