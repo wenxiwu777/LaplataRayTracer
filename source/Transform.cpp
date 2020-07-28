@@ -202,6 +202,18 @@ namespace LaplataRayTracer {
 		return ret_ray;
 	}
 
+	Vec3f Transform::InverseApplyPoint(Vec3f const& p) const {
+		Vec3f ret_pt;
+		apply_point_impl(mInvMat, p, ret_pt);
+		return ret_pt;
+	}
+
+	Vec3f Transform::InverseApplyVector(Vec3f const& v) const {
+		Vec3f ret_vec;
+		apply_vector_impl(mInvMat, v, ret_vec);
+		return ret_vec;
+	}
+
 	Ray Transform::InverseApplyRay(Ray const& ray) const {
 		Ray ret_ray;
 		apply_ray_impl(mInvMat, ray, ret_ray);

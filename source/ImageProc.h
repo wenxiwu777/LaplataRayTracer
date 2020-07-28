@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "Vec3.h"
+#include "Utility.h"
 
 namespace LaplataRayTracer
 {
@@ -33,15 +34,25 @@ namespace LaplataRayTracer
 		inline static Color3f De_NAN(Color3f const& col) {
 			Color3f col_temp = col;
 
-			if (!(col_temp[0] == col_temp[0])) {
-				col_temp[0] = 0.0f;
-			}
-			if (!(col_temp[1] == col_temp[1])) {
-				col_temp[1] = 0.0f;
-			}
-			if (!(col_temp[2] == col_temp[2])) {
-				col_temp[2] = 0.0f;
-			}
+//			if (!(col_temp[0] == col_temp[0])) {
+//				col_temp[0] = 0.0f;
+//			}
+//			if (!(col_temp[1] == col_temp[1])) {
+//				col_temp[1] = 0.0f;
+//			}
+//			if (!(col_temp[2] == col_temp[2])) {
+//				col_temp[2] = 0.0f;
+//			}
+
+            if (RTMath::IsNan(col_temp[0])) {
+                col_temp[0] = 0.0f;
+            }
+            if (RTMath::IsNan(col_temp[1])) {
+                col_temp[1] = 0.0f;
+            }
+            if (RTMath::IsNan(col_temp[2])) {
+                col_temp[2] = 0.0f;
+            }
 
 			return col_temp;
 		}

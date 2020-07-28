@@ -10,7 +10,7 @@ namespace LaplataRayTracer
 	//
 	PLYFileReader::PLYFileReader() 
 		: mpReaderSink(nullptr) {
-
+        mNormal = false;
 	}
 
 	PLYFileReader::~PLYFileReader() {
@@ -18,10 +18,15 @@ namespace LaplataRayTracer
 	}
 
 	//
-	int PLYFileReader::LoadMeshFromFile(const char *fileName, MeshDesc& mesh) {
+	int PLYFileReader::LoadMeshFromFile(const char *fileName, MeshDesc& mesh, bool bin) {
+		mBin = bin;
 
 		FILE *fp = nullptr;
-		fopen_s(&fp, fileName, "r");
+#ifdef PLATFORM_MACOSX
+		fp = fopen(fileName, "r");
+#else
+		fopen_s(&fp, fileName, "rb");
+#endif // PLATFORM_MACOSX
 		if (fp == nullptr) {
 			return -1;
 		}
@@ -42,34 +47,45 @@ namespace LaplataRayTracer
 				return -3;
 			}
 
-			succ = check_vertex_uv(fp, mesh);
-			if (!succ) {
-				fclose(fp);
-				return -4;
-			}
+            succ = check_vertex_xyz(fp, mesh);
+            if (!succ) {
+                fclose(fp);
+                return -4;
+            }
+
+            int ch = fgetc(fp);
+            ungetc(ch, fp);
+            if ((char)ch == 'p') {
+
+                succ = check_vertex_property_nx_ny_nz_uv(fp, mesh);
+                if (!succ) {
+                    fclose(fp);
+                    return -5;
+                }
+            }
 
 			succ = read_face_count(fp, mesh);
-			if (!succ) {
-				fclose(fp);
-				return -5;
-			}
-
-			succ = check_header_ending(fp, mesh);
 			if (!succ) {
 				fclose(fp);
 				return -6;
 			}
 
-			succ = read_vertex_data(fp, mesh);
+			succ = check_header_ending(fp, mesh);
 			if (!succ) {
 				fclose(fp);
 				return -7;
 			}
 
-			succ = read_face_data(fp, mesh);
+			succ = read_vertex_data(fp, mesh);
 			if (!succ) {
 				fclose(fp);
 				return -8;
+			}
+
+			succ = read_face_data(fp, mesh);
+			if (!succ) {
+				fclose(fp);
+				return -9;
 			}
 
 			fclose(fp);
@@ -77,7 +93,7 @@ namespace LaplataRayTracer
 		}
 
 		fclose(fp);
-		return -9;
+		return -10;
 	}
 
 	void PLYFileReader::SetReadingSink(IMeshFileReaderSink *pSink) {
@@ -152,23 +168,72 @@ namespace LaplataRayTracer
 		return succ;
 	}
 
-	bool PLYFileReader::check_vertex_uv(FILE *fp, MeshDesc& mesh) {
+    bool PLYFileReader::check_vertex_property_nx_ny_nz_uv(FILE *fp, MeshDesc& mesh) {
+        char line[128] = { 0 };
+        clear_line(line, sizeof(line));
+        fgets(line, sizeof(line), fp);
 
-		char line[128] = { 0 };
-		fgets(line, sizeof(line), fp);
-		if (is_property(line)) {
-			if (is_u(line)) {
+		bool has_following_prop = false;
+        if (is_property(line) && is_nx(line)) {
+            clear_line(line, sizeof(line));
+            fgets(line, sizeof(line), fp);
+            if (is_property(line) && is_ny(line)) {
+                clear_line(line, sizeof(line));
+                fgets(line, sizeof(line), fp);
+                if (is_property(line) && is_nz(line)) {
+                    clear_line(line, sizeof(line));
+                    mNormal = true;
+					int ch = fgetc(fp);
+					ungetc(ch, fp);
+					if ((char)ch == 'p') {
+						has_following_prop = true;
+					}
+                }
+            }
+        }
+
+		if (has_following_prop) {
+			clear_line(line, sizeof(line));
+			fgets(line, sizeof(line), fp);
+		}
+
+		if (is_property(line) && is_u(line)) {
+//			if (!has_following_prop) {
 				clear_line(line, sizeof(line));
 				fgets(line, sizeof(line), fp);
-				if (is_property(line)) {
-					if (is_v(line)) {
-						mesh.mesh_support_uv = 1;
+//			}
+			if (is_property(line) && is_v(line)) {
+				clear_line(line, sizeof(line));
+				mesh.mesh_support_uv = 1;
+				has_following_prop = false; // reset tag var.
+
+				int ch = fgetc(fp);
+				ungetc(ch, fp);
+				if ((char)ch == 'p') {
+					has_following_prop = true;
+				}
+
+				if (has_following_prop) {
+					clear_line(line, sizeof(line));
+					fgets(line, sizeof(line), fp);
+
+					if (is_property(line) && is_nx(line)) {
+						clear_line(line, sizeof(line));
+						fgets(line, sizeof(line), fp);
+						if (is_property(line) && is_ny(line)) {
+							clear_line(line, sizeof(line));
+							fgets(line, sizeof(line), fp);
+							if (is_property(line) && is_nz(line)) {
+								clear_line(line, sizeof(line));
+								mNormal = true;
+							}
+						}
 					}
 				}
 			}
 		}
 
-		return true;
+        return true;
 	}
 
 	bool PLYFileReader::read_face_count(FILE *fp, MeshDesc& mesh) {
@@ -216,13 +281,44 @@ namespace LaplataRayTracer
 
 	bool PLYFileReader::read_vertex_data(FILE *fp, MeshDesc& mesh) {
 		mesh.mesh_vertices.clear();
-		mesh.mesh_vertex_faces.reserve(mesh.mesh_vertex_count);
+//		mesh.mesh_vertex_faces.reserve(mesh.mesh_vertex_count);
 		if (mesh.mesh_support_uv)
 		{
 			mesh.mesh_texU.reserve(mesh.mesh_vertex_count);
 			mesh.mesh_texV.reserve(mesh.mesh_vertex_count);
 		}
 
+		bool succ = true;
+		if (mBin) {
+			succ = read_bin_vertex_data(fp, mesh);
+		}
+		else {
+			succ = read_ascii_vertex_data(fp, mesh);
+		}
+
+		return succ;
+	}
+
+	bool PLYFileReader::read_face_data(FILE *fp, MeshDesc& mesh) {
+		mesh.mesh_vertex_faces.clear();
+		mesh.mesh_vertex_faces.reserve(mesh.mesh_vertex_count);
+		MeshDesc::FaceListPerVertex face_list;
+		for (int i = 0; i < mesh.mesh_vertex_count; ++i) {
+			mesh.mesh_vertex_faces.push_back(face_list);
+		}
+
+		bool succ = true;
+		if (mBin) {
+			succ = read_bin_face_data(fp, mesh);
+		}
+		else {
+			succ = read_ascii_face_data(fp, mesh);
+		}
+
+		return succ;
+	}
+
+	bool PLYFileReader::read_ascii_vertex_data(FILE *fp, MeshDesc& mesh) {
 		char line[128] = { 0 };
 		for (int i = 0; i < mesh.mesh_vertex_count; ++i) {
 			fgets(line, sizeof(line), fp);
@@ -239,7 +335,7 @@ namespace LaplataRayTracer
 				mesh.mesh_texU.push_back(static_cast<float>(u));
 				mesh.mesh_texV.push_back(static_cast<float>(v));
 			}
-
+			
 			if (mpReaderSink) {
 				mpReaderSink->OnReadVertexRecord(x, y, z);
 			}
@@ -250,14 +346,46 @@ namespace LaplataRayTracer
 		return true;
 	}
 
-	bool PLYFileReader::read_face_data(FILE *fp, MeshDesc& mesh) {
-		mesh.mesh_vertex_faces.clear();
-		mesh.mesh_vertex_faces.reserve(mesh.mesh_vertex_count);
-		MeshDesc::FaceListPerVertex face_list;
+	bool PLYFileReader::read_bin_vertex_data(FILE *fp, MeshDesc& mesh) {
 		for (int i = 0; i < mesh.mesh_vertex_count; ++i) {
-			mesh.mesh_vertex_faces.push_back(face_list);
+			float x;
+			float y;
+			float z;
+			fread((void *)&x, sizeof(float), 1U, fp);
+			fread((void *)&y, sizeof(float), 1U, fp);
+			fread((void *)&z, sizeof(float), 1U, fp);
+			mesh.mesh_vertices.push_back(Vec3f(x, y, z));
+
+			if (mNormal) {
+                float nx;
+                float ny;
+                float nz;
+                fread((void *)&nx, sizeof(float), 1U, fp);
+                fread((void *)&ny, sizeof(float), 1U, fp);
+                fread((void *)&nz, sizeof(float), 1U, fp);
+
+                Vec3f norm(nx, ny, nz);
+                mesh.mesh_normal.push_back(norm);
+			}
+
+			if (mesh.mesh_support_uv) {
+				float u;
+				float v;
+				fread((void *)&u, sizeof(float), 1U, fp);
+				fread((void *)&v, sizeof(float), 1U, fp);
+				mesh.mesh_texU.push_back(static_cast<float>(u));
+				mesh.mesh_texV.push_back(static_cast<float>(v));
+			}
+
+			if (mpReaderSink) {
+				mpReaderSink->OnReadVertexRecord(x, y, z);
+			}
 		}
 
+		return true;
+	}
+
+	bool PLYFileReader::read_ascii_face_data(FILE *fp, MeshDesc& mesh) {
 		bool succ = true;
 		char line[128] = { 0 };
 		for (int i = 0; i < mesh.mesh_face_count; ++i) {
@@ -295,6 +423,36 @@ namespace LaplataRayTracer
 		return succ;
 	}
 
+	bool PLYFileReader::read_bin_face_data(FILE *fp, MeshDesc& mesh) {
+
+		for (int i = 0; i < mesh.mesh_face_count; ++i) {
+			unsigned char cc;
+			int idx0;
+			int idx1;
+			int idx2;
+			fread((void *)&cc, sizeof(unsigned char), 1U, fp);
+			fread((void *)&idx0, sizeof(int), 1U, fp);
+			fread((void *)&idx1, sizeof(int), 1U, fp);
+			fread((void *)&idx2, sizeof(int), 1U, fp);
+			if (mpReaderSink) {
+				mpReaderSink->OnReadFaceRecord(idx0, idx1, idx2);
+			}
+			else {
+				TriFace one_face = { 0 };
+				one_face.index0 = idx0;
+				one_face.index1 = idx1;
+				one_face.index2 = idx2;
+				mesh.mesh_face_datas.push_back(one_face);
+			}
+
+			mesh.mesh_vertex_faces[idx0].push_back(i);
+			mesh.mesh_vertex_faces[idx1].push_back(i);
+			mesh.mesh_vertex_faces[idx2].push_back(i);
+		}
+
+		return true;
+	}
+
 	//
 	bool PLYFileReader::is_ply_tag(char *line) {
 		return (line[0] == 'p' && line[1] == 'l' && line[2] == 'y');
@@ -322,6 +480,18 @@ namespace LaplataRayTracer
 
 	bool PLYFileReader::is_z(char *line) {
 		return (line[15] == 'z');
+	}
+
+    bool PLYFileReader::is_nx(char *line) {
+        return (line[15] == 'n' && line[16] == 'x');
+	}
+
+    bool PLYFileReader::is_ny(char *line) {
+        return (line[15] == 'n' && line[16] == 'y');
+	}
+
+	bool PLYFileReader::is_nz(char *line) {
+        return (line[15] == 'n' && line[16] == 'z');
 	}
 
 	bool PLYFileReader::is_u(char *line) {

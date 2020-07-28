@@ -49,6 +49,9 @@ namespace LaplataRayTracer
 		Vec3f ApplyVector(Vec3f const& v) const;
 		Vec3f ApplyNormal(Vec3f const& n) const;
 		Ray ApplyRay(Ray const& ray) const;
+
+        	Vec3f InverseApplyPoint(Vec3f const& p) const;
+        	Vec3f InverseApplyVector(Vec3f const& v) const;
 		Ray InverseApplyRay(Ray const& ray) const;
 
 		Transform operator*(Transform const& mat) const;

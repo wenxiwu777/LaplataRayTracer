@@ -1,5 +1,5 @@
 #include <algorithm>
-
+#include <cmath>
 #include "Matrix.h"
 
 namespace LaplataRayTracer {
@@ -58,5 +58,23 @@ namespace LaplataRayTracer {
 			}
 		}
 		return Matrix4x4(minv);
+	}
+
+	//
+    void Matrix4x4_Mul_Matrix_4_1(float mat4x4[4][4], float mat4x1[4][1], float mat_ret[4][1]) {
+        mat_ret[0][0] = mat4x4[0][0] * mat4x1[0][0] + mat4x4[0][1] * mat4x1[1][0]
+                + mat4x4[0][2] * mat4x1[2][0] + mat4x4[0][3] * mat4x1[3][0];
+        mat_ret[1][0] = mat4x4[1][0] * mat4x1[0][0] + mat4x4[1][1] * mat4x1[1][0]
+                + mat4x4[1][2] * mat4x1[2][0] + mat4x4[1][3] * mat4x1[3][0];
+        mat_ret[2][0] = mat4x4[2][0] * mat4x1[0][0] + mat4x4[2][1] * mat4x1[1][0]
+                + mat4x4[2][2] * mat4x1[2][0] + mat4x4[2][3] * mat4x1[3][0];
+        mat_ret[3][0] = mat4x4[3][0] * mat4x1[0][0] + mat4x4[3][1] * mat4x1[1][0]
+                + mat4x4[3][2] * mat4x1[2][0] + mat4x4[3][3] * mat4x1[3][0];
+	}
+
+    float Matrix1x4_Mul_Matrix_4_1(float mat1x4[1][4], float mat4x1[4][1]) {
+	    float ret_value = mat1x4[0][0] * mat4x1[0][0] + mat1x4[0][1] * mat4x1[1][0]
+	            + mat1x4[0][2] * mat4x1[2][0] + mat1x4[0][3] * mat4x1[3][0];
+	    return ret_value;
 	}
 }

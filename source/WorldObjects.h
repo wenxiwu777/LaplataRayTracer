@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GeometricObject.h"
-#include "GeometryObjectPlus.h"
+#include "GeometricObjectPlus.h"
 
 namespace LaplataRayTracer
 {

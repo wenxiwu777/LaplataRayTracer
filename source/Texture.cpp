@@ -40,9 +40,9 @@ namespace LaplataRayTracer
 	}
 
 	//
-	Color3f ImageTexture::GetTextureColor(HitRecord& hitRec) {
-		if (mpImgTexMapping) {
-			mpImgTexMapping->DoInverseMapping(hitRec);
+	Color3f ImageTexture::GetTextureColor(HitRecord& hitRec) const {
+		if (mpImgTexMapping != nullptr) {
+			mpImgTexMapping->DoMapping(hitRec);
 		}
 
 		Color3f texel_color = Sample(hitRec.u, hitRec.v);
@@ -50,7 +50,7 @@ namespace LaplataRayTracer
 	}
 
 	// !!NOTE: don't support mip-map/bilinear/trilinear mapping so far.!!
-	Color3f ImageTexture::Sample(float u, float v) {
+	Color3f ImageTexture::Sample(float u, float v) const {
 		int texel_x = (int)(u * (mpImgTexData->width - 1));
 		int texel_y = (int)(v * (mpImgTexData->height - 1));
 
@@ -59,7 +59,7 @@ namespace LaplataRayTracer
 		return GetTexelColor(texel_x, texel_y);
 	}
 
-	Color3f ImageTexture::GetTexelColor(int texelX, int texelY) {
+	Color3f ImageTexture::GetTexelColor(int texelX, int texelY) const {
 //		texelX = RTMath::Clamp(texelX, 0, mpImgTexData->width - 1);
 //		texelY = RTMath::Clamp(texelY, 0, mpImgTexData->height - 1);
 
@@ -162,8 +162,8 @@ namespace LaplataRayTracer
 		return loaded_;
 	}
 
-	void ImageTexture::SetInverseMapping(ImageTextureMapping *imgTexMapping) {
-		mpImgTexMapping = imgTexMapping;
+	void ImageTexture::SetMappingMethod(ImageTextureMapping *method) {
+		mpImgTexMapping = method;
 	}
 
 	//

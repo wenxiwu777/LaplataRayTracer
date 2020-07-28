@@ -13,4 +13,20 @@ namespace LaplataRayTracer
 
 	};
 
+	//
+	class IMeshFileReader {
+	public:
+	    enum FILE_TYPE {
+	        FILE_PLY = 0,
+	        FILE_OBJ,
+	    };
+
+	public:
+	    virtual ~IMeshFileReader() { }
+
+	public:
+
+
+	};
+
 }

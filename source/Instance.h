@@ -51,10 +51,14 @@ namespace LaplataRayTracer {
 		void Translate(const Vec3f& p);
 		void Translate(float x, float y, float z);
 
+		void Scale(float a, float b, float c);
+
 		void RotateX(float angleX);
 		void RotateY(float angleY);
 		void RotateZ(float angleZ);
 		void Rotate(float angle, Vec3f& dir);
+
+		void EnableTextureTransform(bool enable);
 
 	private:
 		void copy_constructor(Instance const& rhs);
@@ -70,6 +74,8 @@ namespace LaplataRayTracer {
 		Transform mTransform;
 
 		bool	mbAutoDelete;
+
+		bool    mbTransformTexture;
 
 	};
 }

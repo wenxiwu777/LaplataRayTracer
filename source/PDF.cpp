@@ -31,7 +31,7 @@ namespace LaplataRayTracer {
 	}
 
 	Vec3f CosinePDF::Generate(void) const {
-		Vec3f random_consine_ = SamplerBase::RandomConsineDirection();
+        Vec3f random_consine_ = SamplerBase::RandomConsineDirection();
 		return (m_onb_coord.Local2(random_consine_));
 	}
 
@@ -78,10 +78,10 @@ namespace LaplataRayTracer {
 
 	Vec3f MixturePDF::Generate(void) const {
 		if (Random::drand48() < 0.5f) {
-			return mPDF[0]->Generate();
+			return mPDF[0]->Generate();      
 		}
 		else {
-			return mPDF[1]->Generate();
+			return mPDF[1]->Generate();            
 		}
 	}
 

@@ -154,6 +154,33 @@ namespace LaplataRayTracer
 			return std::sqrt(this->SquareDistance(rhs));
 		}
 
+		inline void Average()
+		{
+			float avg = (v[0] + v[1] + v[2]) * 0.33333f;
+			v[0] = avg;
+			v[1] = avg;
+			v[2] = avg;
+		}
+
+		inline Vec3 Filter(float c) const
+		{
+			return Vec3(std::pow(v[0], c), std::pow(v[1], c), std::pow(v[2], c));
+		}
+
+		inline Vec3 Mix(Vec3 const& v0, Vec3 const& v1, float c)
+        {
+		    return ((1.0f - c) * v0 + c * v1);
+        }
+
+        inline Vec3 Sqrt()
+		{
+			Vec3 ret;
+			ret[0] = std::sqrt(v[0]);
+			ret[1] = std::sqrt(v[1]);
+			ret[2] = std::sqrt(v[2]);
+			return ret;
+		}
+
 	};
 
 	//
@@ -164,9 +191,21 @@ namespace LaplataRayTracer
 	}
 
 	template<typename T >
+    inline Vec3<T> operator+(const Vec3<T>& v0, float f)
+    {
+        return Vec3<T>(v0[0] + f, v0[1] + f, v0[2] + f);
+    }
+
+	template<typename T >
 	inline Vec3<T> operator-(const Vec3<T>& v0, const Vec3<T>& v1)
 	{
 		return Vec3<T>(v0[0] - v1[0], v0[1] - v1[1], v0[2] - v1[2]);
+	}
+
+	template<typename T >
+	inline Vec3<T> operator-(const Vec3<T>& v0, float f)
+	{
+		return Vec3<T>(v0[0] - f, v0[1] - f, v0[2] - f);
 	}
 
 	template<typename T >
@@ -236,5 +275,6 @@ namespace LaplataRayTracer
 
 #define BLACK			Color3f(0.0f, 0.0f, 0.0f)
 #define WHITE			Color3f(1.0f, 1.0f, 1.0f)
+#define RED				Color3f(1.0f, 0.0f, 0.0f)
 
 }

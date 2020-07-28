@@ -72,7 +72,7 @@ namespace LaplataRayTracer
 
 	public:
 		virtual void *Clone() {
-			return (new AmbientLight(mLs, mLc));
+			return (new AmbientLight(*this));
 		}
 
 	public:
@@ -181,7 +181,7 @@ namespace LaplataRayTracer
 			// 4. do the hit test with the outgoing ray among others objects
 			//Vec3f ambient_occ_dir = point_in_UVW - hitRec.pt;
 			//ambient_occ_dir.MakeUnit();
-			Ray ambient_occ_ray = Ray(hitRec.pt, ambient_occ_dir, 0.0f);
+			Ray ambient_occ_ray = Ray(hitRec.wpt, ambient_occ_dir, 0.0f);
 
 			// 5. calculate the L according to the fact if the outgoing ray is hit some object
 			bool is_hit = ShadowHit(ambient_occ_ray, sceneObjects);
@@ -250,7 +250,7 @@ namespace LaplataRayTracer
 
 	public:
 		virtual void *Clone() {
-			return (new DirectionLight(mDir, mLs, mLc));
+			return (new DirectionLight(*this));
 		}
 
 	public:
@@ -327,12 +327,12 @@ namespace LaplataRayTracer
 	class PointLight : public Light {
 	public:
 		PointLight()
-			: mLightPos(WORLD_ORIGIN), mLs(0.0f), mLc(BLACK), mShadow(true) {
+			: mLightPos(WORLD_ORIGIN), mLs(0.0f), mLc(BLACK), mShadow(true), mDistAttenu(false), mDistAttenuParam(0.0f) {
 
 		}
 
 		PointLight(const Vec3f& lightPos, float ls, const Color3f& lc)
-			: mLightPos(lightPos), mLs(ls), mLc(lc) {
+			: mLightPos(lightPos), mLs(ls), mLc(lc), mDistAttenu(false), mDistAttenuParam(0.0f) {
 
 		}
 
@@ -342,17 +342,22 @@ namespace LaplataRayTracer
 
 	public:
 		virtual void *Clone() {
-			return (new PointLight(mLightPos, mLs, mLc));
+			return (new PointLight(*this));
 		}
 
 	public:
 		virtual Vec3f GetDirection(const HitRecord& hitRec) {
-			Vec3f vecDir = (mLightPos - hitRec.pt);
+			Vec3f vecDir = (mLightPos - hitRec.wpt);
 			vecDir.MakeUnit();
 			return vecDir;
 		}
 
 		virtual Color3f Li(HitRecord& hitRec, SceneObjects& sceneObjects) const {
+			if (mDistAttenu) {
+				Vec3f vecDir = (mLightPos - hitRec.wpt);
+				return ((mLs * mLc) / std::pow(vecDir.Length(), mDistAttenuParam));
+			}
+
 			return (mLs * mLc);
 		}
 
@@ -411,11 +416,19 @@ namespace LaplataRayTracer
 			mShadow = enable;
 		}
 
+		inline void EnableDistanceAttenuation(bool enable, float p) {
+			mDistAttenu = enable;
+			mDistAttenuParam = p;
+		}
+
 	private:
 		Vec3f	mLightPos;
 		float	mLs;
 		Color3f mLc;
 		bool	mShadow;
+
+		bool	mDistAttenu;
+		float   mDistAttenuParam;
 
 	};
 
@@ -464,7 +477,7 @@ namespace LaplataRayTracer
 			mLightNormal = mpLightShape->GetNormal(hitRec);
 
 			mSamplePoint = mpLightShape->RandomSamplePoint();
-			mWi = mSamplePoint - hitRec.pt;
+			mWi = mSamplePoint - hitRec.wpt;
 			mWi.MakeUnit();
 
 			return mWi;
@@ -476,7 +489,7 @@ namespace LaplataRayTracer
 
 		virtual float G(const HitRecord& hitRec) const {
 			float ndotd = Dot(-mLightNormal, mWi);
-			float d2 = mSamplePoint.SquareDistance(hitRec.pt);
+			float d2 = mSamplePoint.SquareDistance(hitRec.wpt);
 			return (ndotd / d2);
 		}
 
@@ -700,6 +713,7 @@ namespace LaplataRayTracer
 
 			mSamplePoint = mpSampler->SampleFromHemishpere();
 			mWi = mSamplePoint.X() * U + mSamplePoint.Y() * V + mSamplePoint.Z() * W;
+			mSamplePoint = mWi;
 			mWi.MakeUnit();
 			return mWi;
 		}
@@ -860,7 +874,7 @@ namespace LaplataRayTracer
 			HitRecord hitRecForSamplePoint;
 			hitRecForSamplePoint.pt = mSamplePoint;
 			hitRecForSamplePoint.n = mSamplePoint;
-			Color3f col = mLEs * mpLEc->GetTextureColor(hitRec);
+			Color3f col = mLEs * mpLEc->GetTextureColor(hitRecForSamplePoint);
 			return col;
 		}
 
@@ -904,7 +918,7 @@ namespace LaplataRayTracer
 
 	public:
 		virtual Vec3f GetDirection(const HitRecord& hitRec) {
-			mSurfaceDir = mLightPos - hitRec.pt;
+			mSurfaceDir = mLightPos - hitRec.wpt;
 			mSurfaceDir.MakeUnit();
 			return mSurfaceDir;
 		}
@@ -912,7 +926,7 @@ namespace LaplataRayTracer
 		virtual Color3f Li(HitRecord& hitRec, SceneObjects& sceneObjects) const {
 			Color3f L;
 
-			float dist = hitRec.pt.Distance(mLightPos);
+			float dist = hitRec.wpt.Distance(mLightPos);
 			float sdotdir = Dot(-mSurfaceDir, mLightDir);
 			if (sdotdir < mHalfCosPenumbraRad) {
 				L.Set(0.0f, 0.0f, 0.0f);
@@ -1073,7 +1087,7 @@ namespace LaplataRayTracer
 
 	public:
 		virtual Vec3f GetDirection(const HitRecord& hitRec) {
-			mSurfaceDir = mLightPos - hitRec.pt;
+			mSurfaceDir = mLightPos - hitRec.wpt;
 			mSurfaceDir.MakeUnit();
 
 			return mSurfaceDir;
@@ -1088,7 +1102,7 @@ namespace LaplataRayTracer
 			}
 			else {
 				// conver hit point into ONB space
-				Vec3f v_local = mONB.Local2(hitRec.pt);
+				Vec3f v_local = mONB.Local2(hitRec.wpt);
 				
 				// Address the texuture directly
 				HitRecord recForTex;
@@ -1262,7 +1276,7 @@ namespace LaplataRayTracer
 
 	public:
 		virtual Vec3f GetDirection(const HitRecord& hitRec) {
-			Vec3f v_dir = mLightPos - hitRec.pt;
+			Vec3f v_dir = mLightPos - hitRec.wpt;
 			v_dir.MakeUnit();
 
 			return v_dir;
@@ -1271,7 +1285,7 @@ namespace LaplataRayTracer
 		virtual Color3f Li(HitRecord& hitRec, SceneObjects& sceneObjects) const {
 			Color3f L;
 
-			Vec3f v_view_onb = hitRec.pt - mLightPos;
+			Vec3f v_view_onb = hitRec.wpt - mLightPos;
 			v_view_onb = mInverseONB.Local2(v_view_onb);
 
 			float view_z = v_view_onb.Z(); //std::abs(v_view_onb.Z());

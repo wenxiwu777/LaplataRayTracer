@@ -151,5 +151,9 @@ namespace LaplataRayTracer
 		}
 
 	};
-	
+
+	//
+	void Matrix4x4_Mul_Matrix_4_1(float mat4x4[4][4], float mat4x1[4][1], float mat_ret[4][1]);
+	float Matrix1x4_Mul_Matrix_4_1(float mat1x4[1][4], float mat4x1[4][1]);
+
 }

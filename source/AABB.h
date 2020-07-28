@@ -73,7 +73,7 @@ namespace LaplataRayTracer
 			return is_hit;
 		}
 
-		inline bool IsInside(const Vec3f& const v) const
+		inline bool IsInside(const Vec3f& v) const
 		{
 			return ((v.X() > mX0 && v.X() < mX1) && (v.Y() > mY0 && v.Y() < mY1) && (v.Z() > mZ0 && v.Z() < mZ1));
 		}

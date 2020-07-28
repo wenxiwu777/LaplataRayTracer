@@ -5,6 +5,83 @@ namespace LaplataRayTracer {
 
 	//
 	// RTMath
+    bool RTMath::Quadratic(float a, float b, float c, float *t0, float *t1) {
+        // Find quadratic discriminant
+        double discrim = (double)b * (double)b - 4.0f * (double)a * (double)c;
+        if (discrim < 0.0f) {
+            return false;
+        }
+        double rootDiscrim = std::sqrt(discrim);
+
+        // Compute quadratic _t_ values
+        double q;
+        if (b < 0.0f) {
+            q = -0.5 * (b - rootDiscrim);
+        } else {
+            q = -0.5 * (b + rootDiscrim);
+        }
+        *t0 = q / a;
+        *t1 = c / q;
+        if (*t0 > *t1) {
+            std::swap(*t0, *t1);
+        }
+        return true;
+    }
+
+    float RTMath::ErfInv(float x) {
+        float w, p;
+        x = RTMath::Clamp(x, -0.99999f, 0.99999f);
+        w = -std::log((1.0f - x) * (1.0f + x));
+        if (w < 5.0f) {
+            w = w - 2.5f;
+            p = 2.81022636e-08f;
+            p = 3.43273939e-07f + p * w;
+            p = -3.5233877e-06f + p * w;
+            p = -4.39150654e-06f + p * w;
+            p = 0.00021858087f + p * w;
+            p = -0.00125372503f + p * w;
+            p = -0.00417768164f + p * w;
+            p = 0.246640727f + p * w;
+            p = 1.50140941f + p * w;
+        } else {
+            w = std::sqrt(w) - 3.0f;
+            p = -0.000200214257f;
+            p = 0.000100950558f + p * w;
+            p = 0.00134934322f + p * w;
+            p = -0.00367342844f + p * w;
+            p = 0.00573950773f + p * w;
+            p = -0.0076224613f + p * w;
+            p = 0.00943887047f + p * w;
+            p = 1.00167406f + p * w;
+            p = 2.83297682f + p * w;
+        }
+        return p * x;
+    }
+
+    float RTMath::Erf(float x) {
+        // constants
+        float a1 = 0.254829592f;
+        float a2 = -0.284496736f;
+        float a3 = 1.421413741f;
+        float a4 = -1.453152027f;
+        float a5 = 1.061405429f;
+        float p = 0.3275911f;
+
+        // Save the sign of x
+        int sign = 1;
+        if (x < 0.0f) {
+            sign = -1;
+        }
+        x = std::abs(x);
+
+        // A&S formula 7.1.26
+        float t = 1.0f / (1.0f + p * x);
+        float y = 1.0f - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * std::exp(-x * x);
+
+        return sign * y;
+    }
+
+	//
 	void RTMath::SolveQuadraticEquation(float a, float b, float c, int& num, float roots[2]) {
 		if (RTMath::IsZero(a)) {
 			if (RTMath::IsZero(b)) {
@@ -331,4 +408,291 @@ namespace LaplataRayTracer {
 
 		return num;
 	}
+
+    //
+    //
+    class One6thEquationHelper
+    {
+    public:
+        One6thEquationHelper()
+        {
+
+        }
+
+        ~One6thEquationHelper()
+        {
+
+        }
+
+    public:
+        static int SolveOne6th_equation(float c[7], float a, float b, float roots[6]);
+
+    private:
+        static int get_root_num(float c[7], float a, float b);
+        static bool get_one6th_equation_derivative(float c[7], float init, float& fnc, float& drv);
+        static bool solve_one6th_equation_by_newton_iteration(float c[7], float range[2], float tolerance, int& num, float& root);
+
+    };
+
+    //
+    int One6thEquationHelper::SolveOne6th_equation(float c[7], float a, float b, float roots[6])
+    {
+        int num = 0;
+        int num_root = 0;
+        float root, range[2], temp;
+        float left = a;
+        float right = b;
+        int total_num, interval_num;
+        float tolerance = 1e-6;
+        /*”total_num” for the whole interval; “interval_num” for every sub-interval*/
+        int offset = 0;
+        total_num = get_root_num(c, a, b);
+        /*determine the number of distinct real roots in the interval*/
+        if (total_num == 0)
+        {
+            return 0;
+        }
+        else
+        {
+            interval_num = total_num;
+            for (int i = 1; i < (total_num + 1 + offset); i++)
+            {
+                while (interval_num != 1)
+                {
+                    /*to find a sub-interval with one real root in*/
+                    if (left > right)
+                    {
+                        temp = left;
+                        left = right;
+                        right = temp;
+                    }
+                    right = (left + right) / 2;
+
+                    interval_num = get_root_num(c, left, right);
+                    if (interval_num == 0)
+                    {
+                        left = right;
+                        right = b;
+
+                        if (left == right)
+                        {
+                            /*s2: handle the situation that both left and right value reach the right end of the whole interval*/
+                            break;
+                        }
+                    }
+                    else if (std::fabs(left - right) < tolerance)
+                    {
+                        /*s1: left and right value are are so close that their values even don't change under sub-dividing*/
+                        break;
+                    }
+                }
+                if (interval_num == 0)
+                {
+                    /*s2: handle the situation that both left and right value reach the right end of the whole interval*/
+                    break;
+                }
+                range[0] = left;
+                range[1] = right;
+                solve_one6th_equation_by_newton_iteration(c, range, tolerance, num, root);
+                if (num != 0)
+                {
+                    /*if newton finds the root*/
+                    roots[num_root] = root;
+                    num_root += 1;
+                    left = right;
+                    right = b;
+                }
+                else if ((num == 0) && (std::fabs(left - right) < tolerance) && (interval_num >= 1))
+                {
+                    /*if newton doesn’t find the root, but the interval is small enough*/
+                    /*s1: left and right value are are so close that their values even don't change under sub-dividing,
+                        the interval_num may be more than one, so we modify "interval_num==1" to "interval_num>=1"*/
+                    roots[num_root] = left;
+                    num_root += 1;
+                    left = right;
+                    right = b;
+                }
+                else
+                {
+                    /*newton failed to find the root in regular interval, we need another time to find the root with smaller interval*/
+                    offset++;
+                    right = (left + right) / 2.0f;
+                }
+
+                interval_num = get_root_num(c, left, right);
+            }
+        }
+        return num_root;
+    }
+
+    //
+    int One6thEquationHelper::get_root_num(float c[7], float a, float b)
+    {
+        float temp1, temp2, aaa, bbb;
+        float ee77[7][7] = { 0.0 };
+        float fun_a[7] = { 0.0 };
+        float fun_b[7] = { 0.0 };
+        int change_num_a = 0;
+        int change_num_b = 0;
+
+        for(int i=0;i<7;++i){
+            for(int j=0;j<7;++j){
+                ee77[i][j]=0.0f;
+            }
+            fun_a[i]=0.0f;
+            fun_b[i]=0.0f;
+        }
+
+        if (std::fabs(a) < 1e-3) {
+            aaa = 1e-3;
+        }
+        else {
+            aaa = a;
+        }
+        if (std::fabs(b) < 1e-3) {
+            bbb = 1e-3;
+        }
+        else {
+            bbb = b;
+        }
+
+        for (int i = 0; i < 6; i++) {
+            //determine f0, f1
+            ee77[0][i] = c[i];
+            ee77[1][i] = (6 - i)*c[i];
+        }
+        ee77[0][6] = c[6];
+
+        for (int i = 2; i < 6; i++) {
+            //determine f2, f3, f4, f5
+            temp1 = ee77[i - 2][0] / ee77[i - 1][0];
+            temp2 = (ee77[i - 2][1] - temp1*ee77[i - 1][1]) / ee77[i - 1][0];
+            for (int j = 0; j < (6 - i); j++) {
+                ee77[i][j] = temp1*ee77[i - 1][j + 2] + temp2*ee77[i - 1][j + 1] - ee77[i - 2][j + 2];
+                if (std::fabs(ee77[i][j]) < 1e-5) {
+                    ee77[i][j] = 0.0f;
+                }
+            }
+            ee77[i][6 - i] = temp2*ee77[i - 1][6 - i + 1] - ee77[i - 2][6 - i + 2];
+            if (std::fabs(ee77[i][6 - i]) < 1e-5) {
+                ee77[i][6 - i] = 0.0f;
+            }
+
+            if (RTMath::IsZero(ee77[i][0]) && RTMath::IsZero(ee77[i][1]) && RTMath::IsZero(ee77[i][2]) &&
+                RTMath::IsZero(ee77[i][3]) && RTMath::IsZero(ee77[i][4]) && RTMath::IsZero(ee77[i][5]) &&
+                RTMath::IsZero(ee77[i][6])) {
+                break;
+            }
+        }
+        if (std::fabs(ee77[5][0]) > 1e-5) {
+            //determine f6
+            temp1 = ee77[4][0] / ee77[5][0];
+            temp2 = (ee77[4][1] - temp1*ee77[5][1]) / ee77[5][0];
+            ee77[6][0] = temp2*ee77[5][1] - ee77[4][2];
+            if (std::fabs(ee77[6][0]) < 1e-5) {
+                ee77[6][0] = 0.0f;
+            }
+        }
+        else {
+            ee77[6][0] = 0.0f;
+        }
+
+        for (int j = 0; j < 7; j++) {
+            fun_a[0] = fun_a[0] + ee77[0][j] * std::pow(aaa, (6 - j));
+            fun_b[0] = fun_b[0] + ee77[0][j] * std::pow(bbb, (6 - j));
+        }
+        for (int i = 1; i < 7; i++) {
+            for (int j = 0; j < (7 - i); j++) {
+                fun_a[i] = fun_a[i] + ee77[i][j] * std::pow(aaa, ((6 - i) - j));
+                fun_b[i] = fun_b[i] + ee77[i][j] * std::pow(bbb, ((6 - i) - j));
+            }
+            if ((fun_a[i] * fun_a[i - 1]) < 0) {
+                change_num_a++;
+            }
+            if ((fun_b[i] * fun_b[i - 1]) < 0) {
+                change_num_b++;
+            }
+        }
+        int num = std::abs(change_num_a - change_num_b);
+        return num;
+    }
+
+    bool One6thEquationHelper::get_one6th_equation_derivative(float c[7], float init, float& fnc, float& drv)
+    {
+        /*determine function value and derivative value at xxx*/
+        fnc = 0.0f;
+        drv = 0.0f;
+        for (int i = 0; i < 7; i++) {
+            fnc = fnc + c[i] * std::pow(init, (6 - i));
+            if (i < 6) {
+                drv = drv + (6 - i)*c[i] * std::pow(init, (5 - i));
+            }
+        }
+        return true;
+    }
+
+    bool One6thEquationHelper::solve_one6th_equation_by_newton_iteration(float c[7], float range[2], float tolerance, int& num, float& root)
+    {
+        /*find the single root in the interval [x0[0], x0[1]] by newton iteration */
+        float t_k, t_k1, ft_k, ft_d_k;
+        int get = 0;
+
+        for (int i = 0; i < 2; i++)
+        {
+            t_k = range[i];
+            for (int k = 0; k < 20; k++)
+            {
+                if (!(std::isnan(t_k)))
+                {
+                    get_one6th_equation_derivative(c, t_k, ft_k, ft_d_k);
+                    if ((!RTMath::IsZero(ft_d_k) && !std::isnan(ft_k)) && !std::isnan(ft_d_k))
+                    {
+                        t_k1 = t_k - ft_k / ft_d_k;
+                        if (((std::fabs(t_k1) >= 1e-2) && (std::fabs((t_k1 - t_k) / t_k1) < tolerance)) ||
+                            ((std::fabs(t_k1) < 1e-2) && (std::fabs((t_k1 - t_k)) < tolerance)))
+                        {
+                            if ((t_k1 > range[0]) && (t_k1 <= range[1]))
+                            {
+                                root = (std::fabs(t_k1) < (tolerance * 10.0f)) ? 0.0f : t_k1;
+                                num = 1;
+                                get++;
+                            }
+                            else
+                            {
+                                range[1] = (range[0] + range[1]) / 2.0f;
+                            }
+                            break;
+                        }
+                        else
+                        {
+                            t_k = t_k1;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (get == 1)
+            {
+                break;
+            }
+        }
+        num = get;
+        return true;
+    }
+
+    //
+    int RTMath::SolveOne6th_equation(float c[7], float a, float b, float roots[6])
+    {
+        int num_root = 0;
+        num_root = One6thEquationHelper::SolveOne6th_equation(c, a, b, roots);
+
+        return num_root;
+    }
 }

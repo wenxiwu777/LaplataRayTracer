@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Vec3.h"
 #include "IGeometricAcceleration.h"
-#include "IMeshFileReaderSink.h"
+#include "IMeshFileReader.h"
 #include "GeometricObject.h"
 #include "MeshDesc.h"
 
@@ -17,6 +17,17 @@ namespace LaplataRayTracer
 		FLAT_UV_SHADING,
 		SMOOTH_UV_SHADING,
 	};
+
+	enum EModelType {
+	    MODEL_PLY = 0,
+	    MODEL_OBJ,
+	};
+
+	//-----------------------------------------------------------------
+	// RegularGridMeshObject impl IGeometricAcceleration, IMeshFileReaderSink
+	// BVHMeshObject impl IGeometricAcceleration, IMeshFileReaderSink
+	// most of the .ply or .obj file parser codes are alread in seperated classes.
+	//-----------------------------------------------------------------
 
 	//
 	class RegularGridMeshObject : public CompoundObject, public IGeometricAcceleration, public IMeshFileReaderSink {
@@ -50,7 +61,8 @@ namespace LaplataRayTracer
 		virtual void OnReadFaceRecord(int& index0, int& index1, int& index2);
 
 	public:
-		bool LoadFromPLYFile(const char *meshFileName, const EMeshType meshType);
+		bool LoadFromFile(const char *meshFileName, const EMeshType meshType,
+                             EModelType modelType = EModelType::MODEL_PLY, bool isBin = false);
 		bool LoadFromMeshDesc(const int meshResID, const EMeshType meshType);
 
 		void SetMaterial(Material *material);
@@ -62,6 +74,11 @@ namespace LaplataRayTracer
 
 		void EnableAcceleration(bool enable);
 
+    public:
+        // tessellate geometry functions
+        void TessellateFlatShpere(Vec3f const& pos, int hNum, int vNum);
+        void TessellateFlatRotaionalSweeping(Vec3f const& pos, int hNum, int vNum, const float controlPoints[6][2]);
+
 	public:
 		static float KEpsilon() { return 0.0001f; }
 
@@ -71,7 +88,7 @@ namespace LaplataRayTracer
 
 		void update_mesh_normals(MeshDesc *meshDesc);
 
-		void release_mehs_cell_objects();
+		void release_mesh_cell_objects();
 
 	private:
 		vector<GeometricObject * >	mvecCells; // just the references from its base objects, so we don't release them.

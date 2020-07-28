@@ -48,13 +48,13 @@ namespace LaplataRayTracer
 		Point2f SampeFromOneSet(void);
 
 	public:
-		inline static Point2f SamplerBase::SampleInUnitDisk() {
+		inline static Point2f SampleInUnitDisk() {
 			Point2f pt;
 
 			while (1) {
 				pt.x = Random::frand48();
 				pt.y = Random::frand48();
-				if (pt.SqaureLength() < 1.0f) {
+				if (pt.SqaureLength() <= 1.0f) {
 					break;
 				}
 			}
@@ -62,12 +62,12 @@ namespace LaplataRayTracer
 			return pt;
 		}
 
-		inline static Vec3f SamplerBase::SampleInUnitSphere() {
+		inline static Vec3f SampleInUnitSphere() {
 			Vec3f vec;
 
 			while (1) {
 				vec.Set(2 * Random::frand48() - 1, 2 * Random::frand48() - 1, 2 * Random::frand48() - 1);
-				if (vec.SquareLength() < 1.0f) {
+				if (vec.SquareLength() <= 1.0f) {
 					break;
 				}
 			}
@@ -75,7 +75,7 @@ namespace LaplataRayTracer
 			return vec;
 		}
 
-		inline static Vec3f SamplerBase::SampleUponUnitShpere() {
+		inline static Vec3f SampleUponUnitShpere() {
 			Vec3f vec;
 
 			while (1) {
@@ -93,7 +93,7 @@ namespace LaplataRayTracer
 			float r1 = Random::drand48();
 			float r2 = Random::drand48();
 			float z = std::sqrt(1.0f - r2);
-			float phi = 2.0f * PI_CONST * r1;
+            float phi = 2.0f * PI_CONST * r1;
 			float x = std::cos(phi) * 2.0f * std::sqrt(r2);
 			float y = std::sin(phi) * 2.0f * std::sqrt(r2);
 			return Vec3f(x, y, z);

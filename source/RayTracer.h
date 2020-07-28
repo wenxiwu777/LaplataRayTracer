@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <float.h>
+#include <iostream>
 
 #include "Vec3.h"
 #include "Ray.h"
@@ -58,7 +59,7 @@ namespace LaplataRayTracer
 		virtual Color3f Run(Ray& ray, int depth = 0, int maxDepth = 0)
 		{
 			float ft = 0.0f;
-		//	float tmax = FLT_MAX;
+			float tmax = FLT_MAX;
 			float t = FLT_MAX;
 			bool bHitAnything = false;
 			HitRecord hitRec;
@@ -69,11 +70,12 @@ namespace LaplataRayTracer
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
 				{
-				//	if (t < tmax) {
-				//		tmax = t;
+					if (t < tmax) {
+						tmax = t;
+				        hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
 						hitRec = hitTempRec;
 						bHitAnything = true;
-				//	}
+					}
 				}
 			}
 
@@ -108,11 +110,13 @@ namespace LaplataRayTracer
 		{
 			if (depth > maxDepth)
 			{
+			//    std::cout << "over path" << std::endl;
+			//	g_Console.Write("over path\n");
 				return BLACK;
 			}
 
 			float ft = 0.0f;
-		//	float tmax = FLT_MAX;
+			float tmax = FLT_MAX;
 			float t = FLT_MAX;
 			bool bHitAnything = false;
 			HitRecord hitRec;
@@ -123,11 +127,12 @@ namespace LaplataRayTracer
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
 				{
-			//		if (t < tmax) {
-			//			tmax = t;
+					if (t < tmax) {
+						tmax = t;
+                        hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
 						hitRec = hitTempRec;
 						bHitAnything = true;
-			//		}
+					}
 				}
 			}
 
@@ -137,14 +142,50 @@ namespace LaplataRayTracer
 
 			if (hitRec.pMaterial != nullptr) {
 				hitRec.albedo = hitRec.pMaterial->Shade(ray, hitRec, *mRTEvn.mpvecHitableObjs, *mRTEvn.mpSceneLights);
-
+				
 				//
 				Vec3f wi;
 				Color3f CR;
-				bool reflective = hitRec.pMaterial->WhittedShade(ray, hitRec, wi, CR);
-				if (reflective) {
-					Ray reflectedRay(hitRec.pt, wi, ray.T());
+				bool is_specular = hitRec.pMaterial->WhittedShade(ray, hitRec, wi, CR);
+				if (is_specular) {
+					Ray reflectedRay(hitRec.wpt, wi, ray.T());
 					hitRec.albedo += CR * this->Run(reflectedRay, depth + 1, maxDepth) /* * Dot(hitRec.n, wi) */;
+				}
+				
+				//
+				WhittedRecord whittedRec;
+				Color3f Lr;
+				Color3f Lt;
+				bool is_dielectric = hitRec.pMaterial->WhittedShade(ray, hitRec, whittedRec);
+				if (is_dielectric) {
+					if (whittedRec.feature == 1) {
+						Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+						Lr = this->Run(reflectedRay, depth + 1, maxDepth);
+						hitRec.albedo += whittedRec.cf1.Filter(t) * Lr;
+					}
+					else if (whittedRec.feature == 2) {
+						Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+						Lr = this->Run(reflectedRay, depth + 1, maxDepth);
+						hitRec.albedo += whittedRec.cf2.Filter(t) * Lr;
+					}
+					else if (whittedRec.feature == 3) {
+						Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+						Lr = whittedRec.fr * this->Run(reflectedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wr));
+						hitRec.albedo += whittedRec.cf1.Filter(t) * Lr;
+
+						Ray refractedRay(hitRec.wpt, whittedRec.wt, ray.T());
+						Lt = whittedRec.ft * this->Run(refractedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wt));
+						hitRec.albedo += whittedRec.cf2.Filter(t) * Lt;
+					}
+					else if (whittedRec.feature == 4) {
+						Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+						Lr = whittedRec.fr * this->Run(reflectedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wr));
+						hitRec.albedo += whittedRec.cf2.Filter(t) * Lr;
+
+						Ray refractedRay(hitRec.wpt, whittedRec.wt, ray.T());
+						Lt = whittedRec.ft * this->Run(refractedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wt));
+						hitRec.albedo += whittedRec.cf1.Filter(t) * Lt;
+					}
 				}
 			}
 
@@ -175,7 +216,7 @@ namespace LaplataRayTracer
 			}
 
 			float ft = 0.0f;
-		//	float tmax = FLT_MAX;
+			float tmax = FLT_MAX;
 			float t = FLT_MAX;
 			bool bHitAnything = false;
 			HitRecord hitRec;
@@ -186,11 +227,12 @@ namespace LaplataRayTracer
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
 				{
-			//		if (t < tmax) {
-			//			tmax = t;
+					if (t < tmax) {
+						tmax = t;
+                        hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
 						hitRec = hitTempRec;
 						bHitAnything = true;
-			//		}
+					}
 				}
 			}
 
@@ -203,15 +245,143 @@ namespace LaplataRayTracer
 
 				Vec3f wi;
 				Color3f CR;
-				bool glossy_reflective = hitRec.pMaterial->AreaLightShade(ray, hitRec, wi, CR);
+				float pdf;
+				bool glossy_reflective = hitRec.pMaterial->AreaLightShade(ray, hitRec, wi, CR, pdf);
 				if (glossy_reflective) {
-					Ray glossy_reflective_ray(hitRec.pt, wi, ray.T());
-					hitRec.albedo += CR * this->Run(glossy_reflective_ray, depth + 1, maxDepth); // * Dot(hitRec.n, wi) / pdf;
+					Ray glossy_reflective_ray(hitRec.wpt, wi, ray.T());
+					hitRec.albedo += CR * this->Run(glossy_reflective_ray, depth + 1, maxDepth);//  *Dot(hitRec.n, wi) / pdf;
 				}
 			}
 
 			return hitRec.albedo;
 		}
+	};
+
+	//
+	// This one is based on <<RTGU>>, so the implementation is different from PathTracer.
+	class GlobalTracer : public RayTracer
+	{
+	public:
+		GlobalTracer()
+		{
+
+		}
+
+		virtual ~GlobalTracer()
+		{
+
+		}
+
+	public:
+		virtual Color3f Run(Ray& ray, int depth = 0, int maxDepth = 0)
+		{
+			if (depth > maxDepth)
+			{
+				return BLACK;
+			}
+
+			float ft = 0.0f;
+			float tmax = FLT_MAX;
+			float t = FLT_MAX;
+			bool bHitAnything = false;
+			HitRecord hitRec;
+			HitRecord hitTempRec;
+			int count = mRTEvn.mpvecHitableObjs->size();
+			for (int i = 0; i < count; ++i)
+			{
+				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
+				if (bHit)
+				{
+					if (t < tmax) {
+						tmax = t;
+						hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
+						hitRec = hitTempRec;
+						bHitAnything = true;
+					}
+				}
+			}
+
+			if (!bHitAnything) {
+				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+			}
+
+			if (hitRec.pMaterial != nullptr) {
+				GlobalPathRecord globalRec;
+				globalRec.depth = depth;
+				if (hitRec.pMaterial->GlobalShade(ray, hitRec, globalRec)) {
+					// Matte2Material
+					// GlossyReflectiveMaterial
+					if (globalRec.mat_type == 1 || globalRec.mat_type == 2) {
+						if (depth == 0) {
+							hitRec.albedo = hitRec.pMaterial->AreaLightShade(ray, hitRec, *mRTEvn.mpvecHitableObjs, *mRTEvn.mpSceneLights);
+						}
+
+						Ray scattered(hitRec.wpt, globalRec.reflected_dir, ray.T());
+						Color3f temp = this->Run(scattered, depth + 1, maxDepth);
+						hitRec.albedo += globalRec.albedo * temp * Dot(hitRec.n, globalRec.reflected_dir) / globalRec.pdf;
+					}
+					// ReflectiveMaterial
+					else if (globalRec.mat_type == 3) {
+						Ray scattered(hitRec.wpt, globalRec.reflected_dir, ray.T());
+
+						if (depth == 0) {
+                            Color3f temp = this->Run(scattered, depth + 2, maxDepth);
+                            hitRec.albedo = globalRec.albedo * temp * Dot(hitRec.n, globalRec.reflected_dir) / globalRec.pdf;
+						}
+						else {
+                            Color3f temp = this->Run(scattered, depth + 1, maxDepth);
+							hitRec.albedo = globalRec.albedo * temp * Dot(hitRec.n, globalRec.reflected_dir) / globalRec.pdf;
+						}
+					}
+					// Emissive2Material EmissiveTextureMaterial
+					else if (globalRec.mat_type == 4) { // we reach the leaf node of the path tracing.
+					     hitRec.albedo = globalRec.albedo;
+					}
+					// DielectricMaterial
+					else if (globalRec.mat_type == 5) {
+						hitRec.albedo += hitRec.pMaterial->AreaLightShade(ray, hitRec, *mRTEvn.mpvecHitableObjs, *mRTEvn.mpSceneLights);
+
+						WhittedRecord whittedRec;
+						Color3f Lr;
+						Color3f Lt;
+						bool is_dielectric = hitRec.pMaterial->WhittedShade(ray, hitRec, whittedRec);
+						if (is_dielectric) {
+							if (whittedRec.feature == 1) {
+								Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+								Lr = this->Run(reflectedRay, depth + 1, maxDepth);
+								hitRec.albedo += whittedRec.cf1.Filter(hitRec.t) * Lr;
+							}
+							else if (whittedRec.feature == 2) {
+								Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+								Lr = this->Run(reflectedRay, depth + 1, maxDepth);
+								hitRec.albedo += whittedRec.cf2.Filter(hitRec.t) * Lr;
+							}
+							else if (whittedRec.feature == 3) {
+								Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+								Lr = whittedRec.fr * this->Run(reflectedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wr));
+								hitRec.albedo += whittedRec.cf1.Filter(hitRec.t) * Lr;
+
+								Ray refractedRay(hitRec.wpt, whittedRec.wt, ray.T());
+								Lt = whittedRec.ft * this->Run(refractedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wt));
+								hitRec.albedo += whittedRec.cf2.Filter(hitRec.t) * Lt;
+							}
+							else if (whittedRec.feature == 4) {
+								Ray reflectedRay(hitRec.wpt, whittedRec.wr, ray.T());
+								Lr = whittedRec.fr * this->Run(reflectedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wr));
+								hitRec.albedo += whittedRec.cf2.Filter(hitRec.t) * Lr;
+
+								Ray refractedRay(hitRec.wpt, whittedRec.wt, ray.T());
+								Lt = whittedRec.ft * this->Run(refractedRay, depth + 1, maxDepth) * std::fabs(Dot(hitRec.n, whittedRec.wt));
+								hitRec.albedo += whittedRec.cf1.Filter(hitRec.t) * Lt;
+							}
+						}
+					}
+				}
+			}
+
+ 			return hitRec.albedo;
+		}
+
 	};
 
 	//
@@ -231,7 +401,7 @@ namespace LaplataRayTracer
 			// If I require it from the abstract base Class' function, like KEpsilon(), it will slow down our running,
 			// so ft is not used currently.
 			float ft = 0.0f;
-		//	float tmax = FLT_MAX;
+			float tmax = FLT_MAX;
 			float t = FLT_MAX;
 			bool bHitAnything = false;
 			HitRecord hitRec;
@@ -242,13 +412,14 @@ namespace LaplataRayTracer
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
 				{
-		//			if (t < tmax) {
-		//				tmax = t;
+					if (t < tmax) {
+						tmax = t;
+                        hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
 						hitRec = hitTempRec;
 						//	return Color3f((hitRec.n.X()+1.0f)/2.0f, (hitRec.n.Y()+1.0f)/2, (hitRec.n.Z()+1.0f)/2);
 						//	return hitRec.albedo;
 						bHitAnything = true; 
-		//			}
+					}
 				}
 			}
 
@@ -261,12 +432,12 @@ namespace LaplataRayTracer
 			if (hitRec.pMaterial != nullptr) {
 				Ray rayScatter;
 				Color3f attenuation_albedo;
-				Color3f emisive_albedo = hitRec.pMaterial->Emisive(ray, hitRec);
+				Color3f Emissive_albedo = hitRec.pMaterial->Emissive(ray, hitRec);
 				if (hitRec.pMaterial->PathShade(ray, hitRec, attenuation_albedo, rayScatter)) {
-					hitRec.albedo = emisive_albedo + attenuation_albedo * Run(rayScatter, depth + 1, maxDepth);
+					hitRec.albedo = Emissive_albedo + attenuation_albedo * Run(rayScatter, depth + 1, maxDepth);
 				}
 				else {
-					hitRec.albedo = emisive_albedo;
+					hitRec.albedo = Emissive_albedo;
 				}
 			}
 
@@ -291,8 +462,9 @@ namespace LaplataRayTracer
 	public:
 		virtual Color3f Run(Ray& ray, int depth = 0, int maxDepth = 0)
 		{
-			if (depth > maxDepth)
-				return BLACK;
+            if (depth > maxDepth) {
+                return BLACK;
+            }
 
 			float ft = 0.0f;
 			float t = FLT_MAX;
@@ -305,6 +477,7 @@ namespace LaplataRayTracer
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
 				{
+                    hitTempRec.wpt = ray.O() + hitTempRec.t * ray.D();
 					hitRec = hitTempRec;
 					bHitAnything = true;
 				}
@@ -316,31 +489,29 @@ namespace LaplataRayTracer
 			}
 
 			if (hitRec.pMaterial != nullptr) {
-				Color3f emisive_albedo = hitRec.pMaterial->Emisive(ray, hitRec);
+                Color3f Emissive_albedo = hitRec.pMaterial->Emissive(ray, hitRec);
 				ScatterRecord srec;
 				if (hitRec.pMaterial->PathShade2(ray, hitRec, srec)) {
-				//	g_Console.Write("pathshade2\n");
 					if (srec.is_specular) {
-						hitRec.albedo = srec.alebdo * Run(srec.specular_ray, depth + 1, maxDepth);
+						hitRec.albedo = srec.albedo * Run(srec.specular_ray, depth + 1, maxDepth);
 					}
 					else {
-						LightPDF lightPDF(mpLightList, hitRec.pt);
-						MixturePDF mixPDF(&lightPDF, srec.pPDF);
+						LightPDF lightPDF(mpLightList, hitRec.wpt);
+                        MixturePDF mixPDF(&lightPDF, srec.pPDF);
 						Ray outRay;
-						outRay.Set(hitRec.pt, mixPDF.Generate(), ray.T());
-					//	g_Console.Write("prepare to get mixture pdf\n");
-						float pdf = mixPDF.Value(outRay.D());
-					//	g_Console.Write("get mixture pdf\n");
-						hitRec.albedo = emisive_albedo + (srec.alebdo * hitRec.pMaterial->PathShade2_pdf(ray, hitRec, outRay)
-							* Run(outRay, depth + 1, maxDepth)) / pdf;
+                        outRay.Set(hitRec.wpt, mixPDF.Generate(), ray.T());
+                        float pdf = mixPDF.Value(outRay.D());
+                        hitRec.albedo = Emissive_albedo +
+                                (srec.albedo * hitRec.pMaterial->PathShade2_pdf(ray, hitRec, outRay)
+                            * Run(outRay, depth + 1, maxDepth)) / pdf;
 					}
 				}
 				else {
-					hitRec.albedo = emisive_albedo;
+					hitRec.albedo = Emissive_albedo;
 				}
 			}
 
-			return hitRec.albedo;
+            return hitRec.albedo;
 		}
 
 	public:

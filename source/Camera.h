@@ -18,6 +18,9 @@ namespace LaplataRayTracer
 			
 			mTime0 = 0.0f;
 			mTime1 = 0.0f;
+
+            mEnableZoom = false;
+            mZoomFactor = 1.0f;
 		}
 		virtual ~Camera() { }
 
@@ -42,6 +45,12 @@ namespace LaplataRayTracer
 		virtual void Update() = 0;
 		virtual bool GenerateRay(float x, float y, Ray& ray) = 0;
 
+	public:
+	    inline void EnableZoomFactor(bool enable) { mEnableZoom = enable; }
+	    inline bool IsZoomMode() const { return mEnableZoom; }
+	    inline void SetZoomFactor(float zoomFactor) { mZoomFactor = zoomFactor; }
+	    inline float GetZoomFactor() const { return mZoomFactor; }
+
 	protected:
 		virtual float genRayTime() const
 		{
@@ -65,6 +74,9 @@ namespace LaplataRayTracer
 
 		float mTime0;
 		float mTime1;
+
+		bool mEnableZoom;
+		float mZoomFactor;
 	};
 
 	//
@@ -92,7 +104,7 @@ namespace LaplataRayTracer
 
 		virtual bool GenerateRay(float x, float y, Ray& ray)
 		{
-			ray.Set(vOrg, vPlaneStart + x * vHor + y * vVer - vOrg, 0.0f);
+			ray.Set(vOrg, vPlaneStart + x * vHor + y * vVer - vOrg, genRayTime());
 			return true;
 		}
 
@@ -126,7 +138,7 @@ namespace LaplataRayTracer
 		{
 			Vec3f vDirInUVW = mW;
 			vDirInUVW.MakeUnit();
-			ray.Set(mEye, vDirInUVW, 0.0f);
+			ray.Set(mEye, vDirInUVW, genRayTime());
 			return true;
 		}
 	};
@@ -149,9 +161,7 @@ namespace LaplataRayTracer
 			Vec3f vDirInUVW = x * mU + y * mV - mfdist * mW;
 			vDirInUVW.MakeUnit();
 
-			float t = genRayTime();
-
-			ray.Set(mEye, vDirInUVW, t);
+			ray.Set(mEye, vDirInUVW, genRayTime());
 
 			return true;
 		}
@@ -217,7 +227,8 @@ namespace LaplataRayTracer
 				Vec3f ray_dir = sin_theta * cos_phi * mU 
 					+ sin_theta * sin_phi * mV
 					- cos_theta * mW;
-				ray.Set(mEye, ray_dir, 0.0f);
+                ray_dir.MakeUnit();
+				ray.Set(mEye, ray_dir, genRayTime());
 
 				return true;
 			}
@@ -272,7 +283,7 @@ namespace LaplataRayTracer
 				(pt_focus_plane.y - pt_lp.y) * mV - mFocusPlaneLen * mW;
 			ray_dir.MakeUnit();
 
-			ray.Set(ray_o, ray_dir, 0.0f);
+			ray.Set(ray_o, ray_dir, genRayTime());
 
 			return true;
 		}
@@ -302,4 +313,62 @@ namespace LaplataRayTracer
 		SamplerBase *mpSampler;
 
 	};
+
+	//
+	class PanoramicCamera : public PerspectiveCamera {
+	public:
+        PanoramicCamera()
+        : mLambdaMax(360.0f), mPsiMax(180.0f) {
+
+        }
+
+        PanoramicCamera(float lambdaMax, float psiMax)
+        : mLambdaMax(lambdaMax), mPsiMax(psiMax) {
+
+        }
+
+        virtual ~PanoramicCamera() {
+
+        }
+
+	public:
+        virtual bool GenerateRay(float x, float y, Ray& ray) {
+            Point2f ndc;
+            ndc.x = 2.0f / (mZoomFactor * mWidth) * x;
+            ndc.y = 2.0f / (mZoomFactor * mHeight) * y;
+
+            float lambda = ndc.x * mLambdaMax * PI_ON_180;
+            float psi = ndc.y * mPsiMax * PI_ON_180;
+
+            float phi = PI_CONST - lambda;
+            float theta = 0.5f * PI_CONST - psi;
+
+            float sin_phi = std::sin(phi);
+            float cos_phi = std::cos(phi);
+            float sin_theta = std::sin(theta);
+            float cos_theta = std::cos(theta);
+
+            Vec3f ray_dir = sin_theta * sin_phi * mU
+                            + cos_theta * mV
+                            + sin_theta * cos_phi * mW;
+            ray_dir.MakeUnit();
+            ray.Set(mEye, ray_dir, genRayTime());
+
+            return true;
+        }
+
+	public:
+	    inline void SetLambdaMax(float lambdaMax) {
+            mLambdaMax = lambdaMax;
+        }
+        inline void SetPhiMax(float psiMax) {
+            mPsiMax = psiMax;
+        }
+
+	private:
+	    float mLambdaMax;
+	    float mPsiMax;
+
+	};
+
 }

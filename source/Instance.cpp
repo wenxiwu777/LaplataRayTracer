@@ -9,6 +9,8 @@ namespace LaplataRayTracer {
 		mTransform.SetIdentity();
 
 		mbAutoDelete = false;
+
+        mbTransformTexture = true;
 	}
 
 	Instance::Instance(GeometricObject *ptrObj, bool autoDelete) {
@@ -51,7 +53,9 @@ namespace LaplataRayTracer {
 			rec.n = mTransform.ApplyNormal(rec.n);
 			rec.n.MakeUnit();
 
-			rec.pt = inRay.O() + rec.t * inRay.D();
+			if (!mbTransformTexture) {
+                rec.pt = inRay.O() + rec.t * inRay.D();
+			}
 
 			return true;
 		}
@@ -76,10 +80,12 @@ namespace LaplataRayTracer {
 	}
 
 	bool Instance::GetBoundingBox(float t0, float t1, AABB& bounding) {
-		if (!mpProxyObject->GetBoundingBox(t0, t1, bounding)) {
-			return false;
-		}
+	//	if (!mpProxyObject->GetBoundingBox(t0, t1, bounding)) {
+	//		return false;
+	//	}
 
+	//	bounding = mBoundingBox;
+		this->ComputeBoundingBox();
 		bounding = mBoundingBox;
 
 		return true;
@@ -216,6 +222,11 @@ namespace LaplataRayTracer {
 		mTransform = mTransform * transTranslate;
 	}
 
+    void Instance::Scale(float a, float b, float c) {
+	    Transform scale = Transform::Scale(a, b, c);
+	    mTransform = mTransform * scale;
+	}
+
 	void Instance::RotateX(float angleX) {
 		Transform transRotateX = Transform::RotateX(angleX);
 		mTransform = mTransform * transRotateX;
@@ -234,6 +245,10 @@ namespace LaplataRayTracer {
 	void Instance::Rotate(float angle, Vec3f& dir) {
 		Transform transRotate = Transform::Rotate(angle, dir);
 		mTransform = mTransform * transRotate;
+	}
+
+    void Instance::EnableTextureTransform(bool enable) {
+        mbTransformTexture = enable;
 	}
 
 	//

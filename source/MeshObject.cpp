@@ -1,6 +1,7 @@
 #include "Utility.h"
 #include "ResourcePool.h"
 #include "PLYFileReader.h"
+#include "OBJFileReader.h"
 #include "ShadeObject.h"
 #include "MeshTriangle.h"
 #include "MeshObject.h"
@@ -22,7 +23,7 @@ namespace LaplataRayTracer
 	}
 
 	RegularGridMeshObject::RegularGridMeshObject(RegularGridMeshObject& other) {
-		
+
 	}
 
 	RegularGridMeshObject& RegularGridMeshObject::operator=(RegularGridMeshObject& other) {
@@ -43,7 +44,7 @@ namespace LaplataRayTracer
 
 		//
 		CompoundObject::DeleteObjects();
-		release_mehs_cell_objects();
+		release_mesh_cell_objects();
 
 		//
 		if (mpAllMaterial != nullptr) {
@@ -155,58 +156,64 @@ namespace LaplataRayTracer
 
 					if (tx_next < ty_next && tx_next < tz_next) {
 						if (object_ptr && object_ptr->HitTest(inRay, tmin, tmax, rec) && tmax < tx_next) {
-							if (object_ptr->IsCompound()) {
-								CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
-								rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
-							}
-							else {
-								rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
-							}
+							//							if (object_ptr->IsCompound()) {
+							//								CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
+							//								rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
+							//							}
+							//							else {
+							//								rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
+							//							}
 							return (true);
 						}
 
 						tx_next += dtx_;
 						ix_ += ix_step;
 
-						if (ix_ == ix_stop)
+						if (ix_ == ix_stop) {
 							return (false);
+						}
+						
 					}
 					else {
 						if (ty_next < tz_next) {
 							if (object_ptr && object_ptr->HitTest(inRay, tmin, tmax, rec) && tmax < ty_next) {
-								if (object_ptr->IsCompound()) {
-									CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
-									rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
-								}
-								else {
-									rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
-								}
+								//if (object_ptr->IsCompound()) {
+								//	CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
+								//	rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
+								//}
+								//else {
+								//	rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
+								//}
 								return (true);
 							}
 
 							ty_next += dty_;
 							iy_ += iy_step;
 
-							if (iy_ == iy_stop)
+							if (iy_ == iy_stop) {
 								return (false);
+							}
+								
 						}
 						else {
 							if (object_ptr && object_ptr->HitTest(inRay, tmin, tmax, rec) && tmax < tz_next) {
-								if (object_ptr->IsCompound()) {
-									CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
-									rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
-								}
-								else {
-									rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
-								}
+								//if (object_ptr->IsCompound()) {
+								//	CompoundObject *object_compound_ptr = (CompoundObject *)object_ptr;
+								//	rec.pMaterial = ((MaterialObject *)(object_compound_ptr->At(object_compound_ptr->LastHit())))->GetMaterial();
+								//}
+								//else {
+								//	rec.pMaterial = ((MaterialObject *)object_ptr)->GetMaterial();
+								//}
 								return (true);
 							}
 
 							tz_next += dtz_;
 							iz_ += iz_step;
 
-							if (iz_ == iz_stop)
+							if (iz_ == iz_stop) {
 								return (false);
+							}
+							
 						}
 					}
 				}
@@ -214,16 +221,16 @@ namespace LaplataRayTracer
 		}
 		else {
 			is_hit = CompoundObject::HitTest(inRay, tmin, tmax, rec);
-			if (is_hit) {
+			//if (is_hit) {
 			//	rec.pMaterial = mpAllMaterial;
-				int hitIdx_ = this->LastHit();
-				rec.pMaterial = ((MaterialObject *)this->At(hitIdx_))->GetMaterial();
-			}
+			//	int hitIdx_ = this->LastHit();
+			//	rec.pMaterial = ((MaterialObject *)this->At(hitIdx_))->GetMaterial();
+			//}
 		}
 
 		return is_hit;
 	}
-	
+
 	bool RegularGridMeshObject::IntersectP(Ray const& inRay, float& tvalue) const
 	{
 		bool is_hit = false;
@@ -363,7 +370,7 @@ namespace LaplataRayTracer
 
 		return is_hit;
 	}
-	
+
 	//
 	// From CompoundObject
 	float RegularGridMeshObject::Area() const
@@ -403,7 +410,7 @@ namespace LaplataRayTracer
 	//
 	// From IAccelerationGeometric
 	void RegularGridMeshObject::BuildupAccelerationStructure() {
-		release_mehs_cell_objects();
+		release_mesh_cell_objects();
 
 		// find the boundary
 		AABB bounding_box;
@@ -440,7 +447,7 @@ namespace LaplataRayTracer
 			mvecCells.push_back(nullptr);
 			each_cell_obj_count.push_back(0);
 		}
-		
+
 		// match each object in its base class to the cells in the boundary(each object may cover multiply cells).
 		AABB curr_obj_bounding;
 		int curr_obj_index;
@@ -466,7 +473,7 @@ namespace LaplataRayTracer
 					for (int jy = min_y; jy <= max_y; ++jy) {
 						for (int kx = min_x; kx <= max_x; ++kx) {
 							curr_obj_index = kx + mnX * jy + mnX * mnY * iz;
-							
+
 							if (each_cell_obj_count[curr_obj_index] == 0) {
 								mvecCells[curr_obj_index] = mvecObjects[i];
 								each_cell_obj_count[curr_obj_index] += 1;
@@ -526,7 +533,8 @@ namespace LaplataRayTracer
 	}
 
 	//
-	bool RegularGridMeshObject::LoadFromPLYFile(const char *meshFileName, const EMeshType meshType) {
+	bool RegularGridMeshObject::LoadFromFile(const char *meshFileName, const EMeshType meshType,
+		EModelType modelType, bool isBin) {
 		mbAutoReleaseMesh = true;
 		mMeshType = meshType;
 
@@ -540,23 +548,39 @@ namespace LaplataRayTracer
 		}
 
 		DeleteObjects();
-		release_mehs_cell_objects();
+		release_mesh_cell_objects();
 
 		mpMeshDesc = mesh_desc;
 		mvecObjects.reserve(mesh_desc->mesh_face_count);
 
-		PLYFileReader reader;
-		reader.SetReadingSink(this);
-		int succ = reader.LoadMeshFromFile(meshFileName, *mesh_desc);
-		if (succ != 0) {
-			DeleteObjects();
-			release_mehs_cell_objects();
+		int succ = 0;
+		if (modelType == EModelType::MODEL_PLY) {
+			PLYFileReader reader;
+			reader.SetReadingSink(this);
+			succ = reader.LoadMeshFromFile(meshFileName, *mesh_desc, isBin);
+		}
+		else if (modelType == EModelType::MODEL_OBJ) {
+			OBJFileReader reader;
+			reader.SetReadingSink(this);
+			succ = reader.LoadMeshFromFile(meshFileName, *mesh_desc);
+		}
+		else { // model type not support
 			return false;
 		}
 
-		if (mMeshType == SMOOTH_SHADING || mMeshType == SMOOTH_UV_SHADING) {
-			update_mesh_normals(mesh_desc);
+		if (succ != 0) {
+			DeleteObjects();
+			release_mesh_cell_objects();
+			return false;
 		}
+
+		if (mesh_desc->mesh_normal.size() == 0) {
+			if (mMeshType == SMOOTH_SHADING || mMeshType == SMOOTH_UV_SHADING) {
+				update_mesh_normals(mesh_desc);
+			}
+		}
+		mpMeshDesc->mesh_face_datas.clear();
+		mpMeshDesc->mesh_vertex_faces.clear();
 
 		return true;
 	}
@@ -577,12 +601,12 @@ namespace LaplataRayTracer
 		mpMeshDesc = mesh_desc;
 
 		DeleteObjects();
-		release_mehs_cell_objects();
+		release_mesh_cell_objects();
 
 		mvecObjects.reserve(mesh_desc->mesh_face_count);
 		for (int i = 0; i < mesh_desc->mesh_face_count; ++i) {
-			OnReadFaceRecord(mesh_desc->mesh_face_datas[i].index0, 
-				mesh_desc->mesh_face_datas[i].index1, 
+			OnReadFaceRecord(mesh_desc->mesh_face_datas[i].index0,
+				mesh_desc->mesh_face_datas[i].index1,
 				mesh_desc->mesh_face_datas[i].index2);
 		}
 
@@ -623,6 +647,173 @@ namespace LaplataRayTracer
 	}
 
 	//
+	void RegularGridMeshObject::TessellateFlatShpere(Vec3f const& pos, int hNum, int vNum) {
+		this->release_mesh_cell_objects();
+		CompoundObject::DeleteObjects();
+
+		// deal with the north and south pole of the shpere.
+		int k = 1;
+		for (int i = 0; i <= hNum - 1; ++i) {
+			Vec3f v0(0.0f, 1.0f, 0.0f);     // The north pole point
+
+			Vec3f v1(std::sin(2.0f * PI_CONST * i / hNum) * std::sin(PI_CONST * k / vNum),
+				std::cos(PI_CONST * k / vNum),
+				std::cos(2.0f * PI_CONST * i / hNum) * std::sin(PI_CONST * k / vNum));
+
+			Vec3f v2(std::sin(2.0f * PI_CONST * (i + 1) / hNum) * std::sin(PI_CONST * k / vNum),
+				std::cos(PI_CONST * k / vNum),
+				std::cos(2.0f * PI_CONST * (i + 1) / hNum) * std::sin(PI_CONST * k / vNum));
+
+			SimpleTriangle *tessellate_triagnle = new SimpleTriangle(pos + v0, pos + v1, pos + v2);
+			if (mbReverseNormal) {
+				tessellate_triagnle->ComputeNormal();
+			}
+			MaterialObject *mat_triangle = new MaterialObject(tessellate_triagnle, mpAllMaterial, true, false);
+			mvecObjects.push_back(mat_triangle);
+		}
+
+		k = vNum - 1;
+		for (int i = 0; i <= hNum - 1; ++i) {
+			Vec3f v0(std::sin(2.0f * PI_CONST * i / hNum) * std::sin(PI_CONST * k / vNum),
+				std::cos(PI_CONST * k / vNum),
+				std::cos(2.0f * PI_CONST * i / hNum) * std::sin(PI_CONST * k / vNum));
+
+			Vec3f v1(0.0f, -1.0f, 0.0f);
+
+			Vec3f v2(std::sin(2.0f * PI_CONST * (i + 1) / hNum) * std::sin(PI_CONST * k / vNum),
+				std::cos(PI_CONST * k / vNum),
+				std::cos(2.0f * PI_CONST * (i + 1) / hNum) * std::sin(PI_CONST * k / vNum));
+
+			SimpleTriangle *tessellate_triagnle = new SimpleTriangle(pos + v0, pos + v1, pos + v2);
+			if (mbReverseNormal) {
+				tessellate_triagnle->ComputeNormal();
+			}
+			MaterialObject *mat_triangle = new MaterialObject(tessellate_triagnle, mpAllMaterial, true, false);
+			mvecObjects.push_back(mat_triangle);
+		}
+
+		// deal with other tessellation triangles upon the shpere.
+		for (int i = 1; i <= vNum - 2; ++i) {
+			for (int j = 0; j <= hNum - 1; ++j) {
+				// get the first triangle from the tessellation
+				Vec3f v0(std::sin(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * (i + 1) / vNum),
+					std::cos(PI_CONST * (i + 1) / vNum),
+					std::cos(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * (i + 1) / vNum));
+
+				Vec3f v1(std::sin(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * (i + 1) / vNum),
+					std::cos(PI_CONST * (i + 1) / vNum),
+					std::cos(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * (i + 1) / vNum));
+
+				Vec3f v2(std::sin(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * i / vNum),
+					std::cos(PI_CONST * i / vNum),
+					std::cos(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * i / vNum));
+
+				SimpleTriangle *tessellate_triagnle1 = new SimpleTriangle(pos + v0, pos + v1, pos + v2);
+				if (mbReverseNormal) {
+					tessellate_triagnle1->ComputeNormal();
+				}
+				MaterialObject *mat_triangle1 = new MaterialObject(tessellate_triagnle1, mpAllMaterial, true, false);
+				mvecObjects.push_back(mat_triangle1);
+
+				// get the second triangle from the tessellation
+				v0 = Vec3f(std::sin(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * i / vNum),
+					std::cos(PI_CONST * i / vNum),
+					std::cos(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * i / vNum));
+
+				v1 = Vec3f(std::sin(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * i / vNum),
+					std::cos(PI_CONST * i / vNum),
+					std::cos(2.0f * PI_CONST * j / hNum) * std::sin(PI_CONST * i / vNum));
+
+				v2 = Vec3f(std::sin(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * (i + 1) / vNum),
+					std::cos(PI_CONST * (i + 1) / vNum),
+					std::cos(2.0f * PI_CONST * (j + 1) / hNum) * std::sin(PI_CONST * (i + 1) / vNum));
+
+				SimpleTriangle *tessellate_triagnle2 = new SimpleTriangle(pos + v0, pos + v1, pos + v2);
+				if (mbReverseNormal) {
+					tessellate_triagnle2->ComputeNormal();
+				}
+				MaterialObject *mat_triangle2 = new MaterialObject(tessellate_triagnle2, mpAllMaterial, true, false);
+				mvecObjects.push_back(mat_triangle2);
+			}
+		}
+	}
+
+	void RegularGridMeshObject::TessellateFlatRotaionalSweeping(Vec3f const& pos, int hNum, int vNum, const float controlPoints[6][2]) {
+		const float mat_bezier_N[4][4] = {
+			{ 1,  4,  1, 0 },
+			{ -3,  0,  3, 0 },
+			{ 3, -6,  3, 0 },
+			{ -1,  3, -3, 1 }
+		};
+		float mat_b_spline_N[4][4];
+		for (int i = 0; i < 4; ++i) {
+			for (int j = 0; j < 4; ++j) {
+				mat_b_spline_N[i][j] = mat_bezier_N[i][j] / 6.0f;
+			}
+		}
+
+		float temp_u_points[4][1];
+		float temp_v_points[4][1];
+		float final_u_points[4][1];
+		float final_v_points[4][1];
+		float coeff_s0[1][4];
+		float coeff_s1[1][4];
+		for (int i = 0; i < 3; ++i) {
+			temp_u_points[0][0] = controlPoints[i][0];
+			temp_u_points[1][0] = controlPoints[i + 1][0];
+			temp_u_points[2][0] = controlPoints[i + 2][0];
+			temp_u_points[3][0] = controlPoints[i + 3][0];
+			temp_v_points[0][0] = controlPoints[i][1];
+			temp_v_points[1][0] = controlPoints[i + 1][1];
+			temp_v_points[2][0] = controlPoints[i + 2][1];
+			temp_v_points[3][0] = controlPoints[i + 3][1];
+
+			Matrix4x4_Mul_Matrix_4_1(mat_b_spline_N, temp_u_points, final_u_points);
+			Matrix4x4_Mul_Matrix_4_1(mat_b_spline_N, temp_v_points, final_v_points);
+			for (int m = 0; m <= vNum - 1; ++m) {
+				for (int n = 0; n <= hNum - 1; ++n) {
+					coeff_s0[0][0] = 1.0f;
+					coeff_s0[0][1] = (float)m / (float)vNum;
+					coeff_s0[0][2] = coeff_s0[0][1] * coeff_s0[0][1];
+					coeff_s0[0][3] = coeff_s0[0][1] * coeff_s0[0][2];
+
+					coeff_s1[0][0] = 1.0f;
+					coeff_s1[0][1] = (float)(m + 1) / (float)vNum;
+					coeff_s1[0][2] = coeff_s1[0][1] * coeff_s1[0][1];
+					coeff_s1[0][3] = coeff_s1[0][1] * coeff_s1[0][2];
+
+					float u0 = Matrix1x4_Mul_Matrix_4_1(coeff_s0, final_u_points);
+					float u1 = Matrix1x4_Mul_Matrix_4_1(coeff_s1, final_u_points);
+					float v0 = Matrix1x4_Mul_Matrix_4_1(coeff_s0, final_v_points);
+					float v1 = Matrix1x4_Mul_Matrix_4_1(coeff_s1, final_v_points);
+
+					float phi0 = ((float)n * 2.0f * PI_CONST) / (float)hNum;
+					float phi1 = ((float)(n + 1) * 2.0f * PI_CONST) / (float)hNum;
+
+					Vec3f vec0(u0*std::cos(phi0), v0, u0*std::sin(phi0));
+					Vec3f vec1(u0*std::cos(phi1), v0, u0*std::sin(phi1));
+					Vec3f vec2(u1*std::cos(phi0), v1, u1*std::sin(phi0));
+					Vec3f vec3(u1*std::cos(phi1), v1, u1*std::sin(phi1));
+
+					SimpleTriangle *tessellate_triagnle0 = new SimpleTriangle(pos + vec2, pos + vec0, pos + vec3);
+					if (mbReverseNormal) {
+						tessellate_triagnle0->ComputeNormal();
+					}
+					MaterialObject *mat_triangle0 = new MaterialObject(tessellate_triagnle0, mpAllMaterial, true, false);
+					mvecObjects.push_back(mat_triangle0);
+
+					SimpleTriangle *tessellate_triagnle1 = new SimpleTriangle(pos + vec1, pos + vec3, pos + vec0);
+					if (mbReverseNormal) {
+						tessellate_triagnle1->ComputeNormal();
+					}
+					MaterialObject *mat_triangle1 = new MaterialObject(tessellate_triagnle1, mpAllMaterial, true, false);
+					mvecObjects.push_back(mat_triangle1);
+				}
+			}
+		}
+	}
+
+	//
 	Vec3f RegularGridMeshObject::find_min_bounds() {
 		AABB obj_box;
 		Vec3f pt_min(FLT_MAX);
@@ -634,10 +825,10 @@ namespace LaplataRayTracer
 			if (obj_box.mX0 < pt_min.X()) {
 				pt_min[0] = obj_box.mX0;
 			}
-			else if (obj_box.mY0 < pt_min.Y()) {
+			if (obj_box.mY0 < pt_min.Y()) {
 				pt_min[1] = obj_box.mY0;
 			}
-			else if (obj_box.mZ0 < pt_min.Z()) {
+			if (obj_box.mZ0 < pt_min.Z()) {
 				pt_min[2] = obj_box.mZ0;
 			}
 		}
@@ -660,10 +851,10 @@ namespace LaplataRayTracer
 			if (obj_box.mX1 > pt_max.X()) {
 				pt_max[0] = obj_box.mX1;
 			}
-			else if (obj_box.mY1 > pt_max.Y()) {
+			if (obj_box.mY1 > pt_max.Y()) {
 				pt_max[1] = obj_box.mY1;
 			}
-			else if (obj_box.mZ1 > pt_max.Z()) {
+			if (obj_box.mZ1 > pt_max.Z()) {
 				pt_max[2] = obj_box.mZ1;
 			}
 		}
@@ -678,7 +869,7 @@ namespace LaplataRayTracer
 	void RegularGridMeshObject::update_mesh_normals(MeshDesc *meshDesc) {
 		meshDesc->mesh_normal.clear();
 		meshDesc->mesh_normal.reserve(meshDesc->mesh_vertex_count);
-	
+
 		for (int i = 0; i < meshDesc->mesh_vertex_count; ++i) { // how many vertex we have?
 			Vec3f vertex_average_normal(0.0f);
 			int face_count = (int)meshDesc->mesh_vertex_faces[i].size(); // how many faces per vertex?
@@ -694,7 +885,7 @@ namespace LaplataRayTracer
 		}
 	}
 
-	void RegularGridMeshObject::release_mehs_cell_objects() {
+	void RegularGridMeshObject::release_mesh_cell_objects() {
 		for (int i = 0; i < mvecCells.size(); ++i) {
 			if (mvecCells[i]->IsCompound()) {
 				delete mvecCells[i];

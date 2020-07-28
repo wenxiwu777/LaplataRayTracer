@@ -32,7 +32,7 @@ namespace LaplataRayTracer {
 		void SetW(Vec3f& w);
 
 	private:
-		ONB		m_onb_coord;
+        ONB		m_onb_coord;
 
 
 	};

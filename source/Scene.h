@@ -1,11 +1,23 @@
 #pragma once
 
+#include "Common.h"
+
+#ifdef PLATFORM_WIN
 #include "../stdafx.h"
+#endif // PLATFORM_WIN
+
+#ifdef PLATFORM_MACOSX
+#include "../ext/img/tgaimage.h"
+#endif // PLATFORM_MACOSX
+
 #include <stdlib.h>
 #include <vector>
 
+#ifdef PLATFORM_WIN
 #include "Console.h"
 #include "MemBuffer.h"
+#endif // PLATFORM_WIN
+
 #include "WindowSink.h"
 
 #include "WorldObjects.h"
@@ -19,6 +31,7 @@
 #include "Volume.h"
 #include "MeshObject.h"
 #include "MovingObject.h"
+#include "Instance.h"
 
 using std::vector;
 
@@ -29,26 +42,34 @@ namespace LaplataRayTracer
 	{
 	public:
 		Scene()
-			: mpSurface(nullptr), mpViewPlane(nullptr), mpCamera(nullptr),
-				mpRenderWndSink(nullptr), mpRayTracer(nullptr), mpBackground(nullptr)
+		    : mpSurface(nullptr), mpViewPlane(nullptr), mpCamera(nullptr),
+		    mpRenderWndSink(nullptr), mpViewSampler(nullptr), mpRayTracer(nullptr), mpBackground(nullptr)
 		{
 
 		}
 		virtual ~Scene() { Purge(); }
 
 	public:
+#ifdef PLATFORM_WIN
 		inline void SetDrawingSurface(CDC *pDC) { mpSurface = pDC; }
 		inline void SetConsoleHandle(OutputConsole *pConsle) { mpConsole = pConsle; }
+#endif // PLATFORM_WIN
 		inline void SetRenderWndSink(IRenderWindowSink *pRenderWndSink) { mpRenderWndSink = pRenderWndSink; }
 
 	public:
+		inline void SetViewSampler(SamplerBase *pSampler) { mpViewSampler = pSampler; }
 		inline void SetViewPlane(ViewPlane *pViewPlane) { mpViewPlane = pViewPlane; }
 		inline void SetCamera(Camera *pCamear) { mpCamera = pCamear; }
 		inline void SetRayTracer(RayTracer *pRayTracer) { mpRayTracer = pRayTracer; }
 		inline void SetBackground(Texture *pTexture) { mpBackground = pTexture; }
 
 	public:
-		virtual void Setup() { }
+		virtual void Setup(int w = 400, int h = 400)
+        {
+#ifdef PLATFORM_MACOSX
+		    mpSurface = new TGAImage(w, h, TGAImage::RGB);
+#endif // PLATFORM_MACOSX
+        }
 		virtual void UpdateScene(float fElapse) { }
 		virtual void BuildScene() { }
 
@@ -69,31 +90,75 @@ namespace LaplataRayTracer
 			int w = mpViewPlane->Width();
 			int h = mpViewPlane->Height();
 
+			bool enableZoom = mpCamera->IsZoomMode();
+			float zoomFactor = mpCamera->GetZoomFactor();
+
 			for (int row = 0; row < h; ++row)
 			{
 				for (int col = 0; col < w; ++col)
 				{
 					Color3f color(0.0f, 0.0f, 0.0f);
-				//	for (int m = 0; m < 30; ++m)
-				//	{
-				//		for (int n = 0; n < 30; ++n)
-				//		{
-					for (int k = 0; k < 100; ++k)
+                    /*int sampler_count = mpViewSampler->GetSampleCount();
+					for (int c = 0; c < sampler_count; ++c)
 					{
-					//	float x = (col - 0.5f * w + (float)m / 30);
-					//	float y = (row - 0.5f * h + (float)n / 30);
-						float x = (col - 0.5f * w + (float)Random::drand48());
-						float y = (row - 0.5f * h + (float)Random::drand48());
+						float x;
+						float y;
+
+						Point2f sp = mpViewSampler->SampleFromUnitSquare();
+
+						if (enableZoom)
+						{
+							x = zoomFactor * (col - 0.5f * w + sp.X());
+							y = zoomFactor * (row - 0.5f * h + sp.Y());
+						}
+						else
+						{
+							x = (col - 0.5f * w + sp.X());
+							y = (row - 0.5f * h + sp.Y());
+						}
 
 						Ray ray;
 						if (mpCamera->GenerateRay(x, y, ray))
-						{
+                        {
 							color += mpRayTracer->Run(ray, 0, 10);
 						}
 					}
-				//		}
-				//	}
-					color /= 100.0f;
+                    color /= (float)sampler_count;*/
+                    int N = 30;
+                    for (int m = 0; m < N; ++m)
+                    {
+                        for (int n = 0; n < N; ++n)
+                        {
+                            float x;
+                            float y;
+
+                            if (enableZoom)
+                            {
+                                x = zoomFactor * (col - 0.5f * w + (float)m / N);
+                                y = zoomFactor * (row - 0.5f * h + (float)n / N);
+                            }
+                            else
+                            {
+                                x = (col - 0.5f * w + (float)m / N);
+                                y = (row - 0.5f * h + (float)n / N);
+                            }
+
+                            Ray ray;
+                            if (mpCamera->GenerateRay(x, y, ray))
+                            {
+                                color += mpRayTracer->Run(ray, 0, 10);
+                            }
+                        }
+                    }
+                    color /= (N*N);
+					
+//                    float x = (col - 0.5f * w);
+//                    float y = (row - 0.5f * h);
+//                    Ray ray;
+//                    if (mpCamera->GenerateRay(x, y, ray))
+//                    {
+//                        color = mpRayTracer->Run(ray, 0, 10);
+//                    }
 
 					ImageProc::De_NAN(color);
 					ImageProc::HDR_Operator_MaxToOne(color);
@@ -102,7 +167,14 @@ namespace LaplataRayTracer
 					int g = (int)(255.99f*color[1]);
 					int b = (int)(255.99f*color[2]);
 
+#ifdef PLATFORM_WIN
 					mpSurface->SetPixel(col, h - row - 1, RGB(r, g, b));
+#endif // PLATFORM_WIN
+
+#ifdef PLATFORM_MACOSX
+                    TGAColor pixel_color(r, g, b);
+                    mpSurface->set(col, h - row - 1, pixel_color);
+#endif // PLATFORM_MACOSX
 				}
 
 				//
@@ -113,15 +185,17 @@ namespace LaplataRayTracer
 			}
 		}
 
-		virtual void RenderText(const int x, const int y, std::string const& text, const unsigned long color = RGB(255, 255, 255))
+		virtual void RenderText(const int x, const int y, std::string const& text, int r, int g, int b)
 		{
+#ifdef PLATFORM_WIN
 			if (mpSurface)
 			{
 				int text_len = strlen(text.c_str());
 				mpSurface->SetBkColor(TRANSPARENT);
-				mpSurface->SetTextColor(color);
+				mpSurface->SetTextColor(RGB(255, 255, 255));
 				mpSurface->TextOut(x, y, text.c_str(), text_len);
 			}
+#endif // PLATFORM_WIN
 		}
 
 		virtual void RenderImage(const int x, const int y, const int w, const int h, Texture *tex)
@@ -134,11 +208,26 @@ namespace LaplataRayTracer
 						int r = (int)(255.99f*texel_color[0]);
 						int g = (int)(255.99f*texel_color[1]);
 						int b = (int)(255.99f*texel_color[2]);
+#ifdef PLATFORM_WIN
 						mpSurface->SetPixel(x + i, y + j, RGB(r,g,b));
+#endif // PLATFORM_WIN
+
+#ifdef PLATFORM_MACOSX
+                        TGAColor pixel_color(r, g, b);
+                        mpSurface->set(x + i, y + j, pixel_color);
+#endif // PLATFORM_MACOSX
 					}
 				}
 			}
 		}
+
+		virtual void SaveScene(const char *resultPath)
+        {
+#ifdef PLATFORM_MACOSX
+            mpSurface->write_tga_file(resultPath);
+#endif // PLATFORM_MACOSX
+
+        }
 
 		virtual void Purge()
 		{
@@ -146,10 +235,15 @@ namespace LaplataRayTracer
 			ClearScene();
 
 			//
+			if (mpViewSampler) { delete mpViewSampler; mpViewSampler = nullptr; }
 			if (mpViewPlane) { delete mpViewPlane; mpViewPlane = nullptr; }
 			if (mpCamera) { delete mpCamera; mpCamera = nullptr; }
 			if (mpRayTracer) { delete mpRayTracer; mpRayTracer = nullptr; }
 			if (mpBackground) { delete mpBackground; mpBackground = nullptr; }
+
+#ifdef PLATFORM_MACOSX
+			if (mpSurface) { delete mpSurface; mpSurface = nullptr; }
+#endif // PLATFORM_MACOSX
 		}
 
 		virtual void ClearScene()
@@ -169,24 +263,35 @@ namespace LaplataRayTracer
 			mobjSceneLights.Purge();
 		}
 
-	protected:
-		inline void showRenderingPercentage(float ration)
-		{
-			CString sRation;
-			sRation.Format(_T("rendering: %.2f%%\n"), ration * 100);
-			mpConsole->Write(sRation);
-		}
+//	protected:
+//		inline void showRenderingPercentage(float ration)
+//		{
+//			CString sRation;
+//			sRation.Format(_T("rendering: %.2f%%\n"), ration * 100);
+//			mpConsole->Write(sRation);
+//		}
 
 	protected:
+#ifdef PLATFORM_WIN
 		CDC *	mpSurface;
 		OutputConsole * mpConsole;
+#endif // PLATFORM_WIN
+
+#ifdef PLATFORM_MACOSX
+		TGAImage *mpSurface;
+#endif // PLATFORM_MACOSX
+
 		IRenderWindowSink *mpRenderWndSink;
+
+		SamplerBase *   mpViewSampler;
 
 		SceneObjects	mvecObjects;
 		SceneLights		mobjSceneLights;
+
 		ViewPlane *		mpViewPlane;
 		Camera	*		mpCamera;
 		RayTracer *		mpRayTracer;
+
 		Texture *		mpBackground;
 
 	};

@@ -1,10 +1,10 @@
 #pragma once
-
+#include <iostream>
 #include "Common.h"
 #include "Console.h"
 #include "Random.h"
-#include "Utility.h"
 #include "Vec3.h"
+#include "Utility.h"
 #include "Ray.h"
 #include "AABB.h"
 #include "HitRecord.h"
@@ -178,7 +178,7 @@ namespace LaplataRayTracer
 	{
 	public:
 		SimpleSphere(Vec3f const& pos, float fRadius)
-			: mColor(1.0f, 0.0f, 0.0f), mPos(pos), mfRadius(fRadius)
+			: mColor(1.0f, 0.0f, 0.0f), mPos(pos), mfRadius(fRadius), mbPart(false)
 		{
 			update_shpere();
 		}
@@ -194,7 +194,7 @@ namespace LaplataRayTracer
 			Vec3f vOC = inRay.O() - getPos(inRay.T());
 
 			float A = Dot<float>(inRay.D(), inRay.D());
-			float B = 2 * (Dot<float>(inRay.D(), vOC));
+			float B = 2.0f * (Dot<float>(inRay.D(), vOC));
 			float C = Dot<float>(vOC, vOC) - mfRadius * mfRadius;
 			float D = B * B - 4 * A * C;
 
@@ -205,34 +205,91 @@ namespace LaplataRayTracer
 
 			float result = 0.0f;
 			bool isHit = false;
-			float ans0 = (-B - std::sqrt(D)) / (2 * A);
+			float ans0 = (-B - std::sqrt(D)) / (2.0f * A);
 			if ((ans0 > tmin + KEpsilon()) && (ans0 < tmax))
 			{
-				isHit = true;
-				result = ans0;
+				// is it a part shpere?
+				if (mbPart)
+				{
+					Vec3f ptTemp = inRay.O() + inRay.D() * ans0;
+					Vec3f ptCheck = ptTemp - mPos;
+					if (!this->check_in_range(ptCheck))
+					{
+						isHit = false;
+					}
+					else
+					{
+						isHit = true;
+						result = ans0;
+					}
+				}
+				else
+				{
+					isHit = true;
+					result = ans0;
+				}
 			}
 			if (!isHit)
 			{
-				float ans1 = (-B + std::sqrt(D)) / (2 * A);
+				float ans1 = (-B + std::sqrt(D)) / (2.0f * A);
 				if ((ans1 > tmin + KEpsilon()) && (ans1 < tmax))
 				{
-					isHit = true;
-					result = ans1;
+					// is it a part shpere?
+					if (mbPart)
+					{
+						Vec3f ptTemp = inRay.O() + inRay.D() * ans1;
+						Vec3f ptCheck = ptTemp - mPos;
+						if (!this->check_in_range(ptCheck))
+						{
+							isHit = false;
+						}
+						else
+						{
+							isHit = true;
+							result = ans1;
+						}
+					}
+					else
+					{
+						isHit = true;
+						result = ans1;
+					}
 				}
 			}
 
 			if (isHit)
 			{
+			    //
 				tmax = result;
 
 				rec.hit = true;
 				rec.t = result;
 				rec.pt = inRay.O() + inRay.D() * rec.t;
 				Vec3f vR = (rec.pt - mPos);
-				rec.n = MakeUnit(vR);
+				vR.MakeUnit();
+				rec.n = vR;
+				////////////////////// Only for testing, shall be removed later.
+//				float theta = std::acos(RTMath::Clamp(rec.pt.Z() / mfRadius, -1.0f, 1.0f));
+//				float zRadius = std::sqrt(rec.pt.X() * rec.pt.X() + rec.pt.Y() * rec.pt.Y());
+//				float invZRadius = 1 / zRadius;
+//				float cosPhi = rec.pt.X() * invZRadius;
+//				float sinPhi = rec.pt.Y() * invZRadius;
+//				Vec3f dpdu(-TWO_PI_CONST * rec.pt.Y(), TWO_PI_CONST * rec.pt.X(), 0);
+//				Vec3f dpdv(rec.pt.Z() * cosPhi, rec.pt.Z() * sinPhi, -mfRadius * std::sin(theta));
+//				rec.dpdu = dpdu;
+//				rec.dpdv = PI_CONST * dpdv;
+				////////////////////// Only for testing, shall be removed later.
+				if (mbPart)
+                {
+                    if (Dot(rec.n, inRay.D()) > 0.0f)
+                    {
+                        rec.n = -rec.n; // to handle the case of part object.
+                    }
+                }
 				//	rec.albedo = Color3f(0.5f*(rec.n.X()+1.0f), 0.5f*(rec.n.Y() + 1.0f), 0.5f*(rec.n.Z() + 1.0f));
 				rec.albedo = mColor;
 				rec.pMaterial = nullptr;
+			//	g_Console.Write("hit\n");
 				return true;
 			}
 
@@ -260,6 +317,76 @@ namespace LaplataRayTracer
 			float ans0 = (-B - std::sqrt(D)) / (2 * A);
 			if (ans0 > KEpsilon())
 			{
+				if (mbPart)
+				{
+					// is it a part shpere?
+					Vec3f ptTemp = inRay.O() + inRay.D() * ans0;
+					Vec3f ptCheck = ptTemp - mPos;
+					if (!this->check_in_range(ptCheck))
+					{
+						isHit = false;
+					}
+					else
+					{
+						result = ans0;
+						isHit = true;
+					}
+				}
+				else
+				{
+					result = ans0;
+					isHit = true;
+				}
+			}
+			if (!isHit)
+			{
+				float ans1 = (-B + std::sqrt(D)) / (2 * A);
+				if (ans1 > KEpsilon())
+				{
+					//
+					if (mbPart)
+					{
+						// is it a part shpere?
+						Vec3f ptTemp = inRay.O() + inRay.D() * ans1;
+						Vec3f ptCheck = ptTemp - mPos;
+						if (!this->check_in_range(ptCheck))
+						{
+							return false;
+						}
+					}
+
+					result = ans1;
+					isHit = true;
+				}
+			}
+
+			if (isHit)
+			{
+				tvalue = result;
+			}
+			return isHit;
+		}
+
+		/*virtual bool IntersectP(Ray const& inRay, float& tvalue) const
+		{
+			//	Vec3f vOC = inRay.O() - mPos;
+			Vec3f vOC = inRay.O() - getPos(inRay.T());
+
+			float A = Dot<float>(inRay.D(), inRay.D());
+			float B = 2 * (Dot<float>(inRay.D(), vOC));
+			float C = Dot<float>(vOC, vOC) - mfRadius * mfRadius;
+			float D = B * B - 4 * A * C;
+
+			if (D < 0.0f)
+			{
+				return false;
+			}
+
+			float result = 0.0f;
+			bool isHit = false;
+			float ans0 = (-B - std::sqrt(D)) / (2 * A);
+			if (ans0 > KEpsilon())
+			{
 				result = ans0;
 				isHit = true;
 			}
@@ -268,6 +395,21 @@ namespace LaplataRayTracer
 				float ans1 = (-B + std::sqrt(D)) / (2 * A);
 				if (ans1 > KEpsilon())
 				{
+					//
+					if (mbPart)
+					{
+						// is it a part shpere?
+						if (isHit)
+						{
+							Vec3f ptTemp = inRay.O() + inRay.D() * result;
+							Vec3f ptCheck = ptTemp - mPos;
+							if (!this->check_in_range(ptCheck))
+							{
+								return false;
+							}
+						}
+					}
+
 					result = ans1;
 					isHit = true;
 				}
@@ -275,12 +417,12 @@ namespace LaplataRayTracer
 
 			tvalue = result;
 			return isHit;
-		}
+		}*/
 
 	public:
 		virtual float Area() const
 		{
-			return mfArea;
+			return 1.0f / (4.0f * PI_CONST);
 		}
 
 		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
@@ -298,7 +440,9 @@ namespace LaplataRayTracer
 
 		virtual Vec3f RandomSamplePoint() const
 		{
-			return WORLD_ORIGIN;
+		    Vec3f pt = SamplerBase::SampleInUnitSphere();
+		    pt.MakeUnit();
+			return pt;
 		}
 
 		virtual void Update(float t)
@@ -348,6 +492,17 @@ namespace LaplataRayTracer
 		float GetRadius() const { return mfRadius; }
 
 	public:
+	    inline void SetPartParams(bool part, float phiMin, float phiMax, float thetaMin, float thetaMax)
+	    {
+		    mbPart = part;
+
+		    mPhiMin = ANG2RAD(phiMin);
+		    mPhiMax = ANG2RAD(phiMax);
+		    mCosThetaMin = std::cos(ANG2RAD(thetaMin));
+		    mCosThetaMax = std::cos(ANG2RAD(thetaMax));
+		}
+
+	public:
 		inline static float KEpsilon() { return 0.001f; }
 
 	protected:
@@ -362,30 +517,52 @@ namespace LaplataRayTracer
 
 		}
 
+	private:
+	    inline bool check_in_range(const Vec3f& pt) const
+        {
+            double phi = std::atan2(pt.X(), pt.Z());
+            if (phi < 0.0f)
+                phi += TWO_PI_CONST;
+
+            if (pt.Y() <= mfRadius * mCosThetaMin &&
+                pt.Y() >= mfRadius * mCosThetaMax &&
+                phi >= mPhiMin && phi <= mPhiMax) {
+                return true;
+            }
+
+            return false;
+		}
+
 	protected:
 		Color3f mColor;
 		Vec3f  mPos;
 		float mfRadius;
 		float mfArea;
 
+		//
+		bool mbPart;
+		float mPhiMin;
+		float mPhiMax;
+		float mCosThetaMin;
+		float mCosThetaMax;
 	};
 
-	class SimpleShpere2 : public GeometricObject
+	class SimpleSphere2 : public GeometricObject
 	{
 	public:
-		SimpleShpere2()
+        SimpleSphere2()
 			: mCenter(0.0f, 0.0f, 0.0f), mRadius(20.0f), mColor(1.0f, 0.0f, 0.0f)
 		{
 
 		}
 
-		SimpleShpere2(Vec3f const& center, float radius, const Color3f& color = Color3f(1.0f, 0.0f, 0.0f))
+        SimpleSphere2(Vec3f const& center, float radius, const Color3f& color = Color3f(1.0f, 0.0f, 0.0f))
 			: mCenter(center), mRadius(radius), mColor(color)
 		{
 
 		}
 
-		virtual ~SimpleShpere2()
+		virtual ~SimpleSphere2()
 		{
 
 		}
@@ -393,7 +570,7 @@ namespace LaplataRayTracer
 	public:
 		virtual void *Clone()
 		{
-			return (SimpleShpere2 *)(new SimpleShpere2(*this));
+			return (SimpleSphere2 *)(new SimpleSphere2(*this));
 		}
 
 	public:
@@ -660,7 +837,9 @@ namespace LaplataRayTracer
 
 		virtual Vec3f RandomSamplePoint() const
 		{
-			return WORLD_ORIGIN;
+			Point2f pt = SamplerBase::SampleInUnitDisk();
+			Vec3f vecRand = mPos + pt.X() * mBase.U() + pt.Y() * mBase.V();
+			return vecRand;
 		}
 
 		virtual void Update(float t)
@@ -675,12 +854,13 @@ namespace LaplataRayTracer
 
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
 		{
-			return 0.0f;
+			return (1.0f / mArea);
 		}
 
 		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
 		{
-			return Vec3f(0.0f, 0.0f, 0.0f);
+			Vec3f randDir = v - RandomSamplePoint();
+			return randDir;
 		}
 
 	public:
@@ -700,6 +880,8 @@ namespace LaplataRayTracer
 		{
 			mSquareRadius = mRadius * mRadius;
 			mArea = PI_CONST * mRadius * mRadius;
+
+			mBase.BuildFromW(mNormal);
 		}
 
 		inline void calc_uv(const Vec3f& pt,  float& u, float& v)
@@ -740,7 +922,7 @@ namespace LaplataRayTracer
 			v = op_len_ / mRadius;
 
 			float op_dot_ref_ = Dot(vOP_, vRef_);
-			u = std::acos(op_dot_ref_ / op_len_) / (2.0f * PI_CONST);
+			u = std::acos(op_dot_ref_ / op_len_) / TWO_PI_CONST;
 
 			if (over_pi_)
 			{
@@ -757,6 +939,8 @@ namespace LaplataRayTracer
 		float mSquareRadius;
 
 		float mArea;
+
+		ONB	 mBase;
 	};
 
 	//
@@ -950,352 +1134,418 @@ namespace LaplataRayTracer
 	};
 
 	// 
-	class SimpleRectangle : public GeometricObject
-	{
-	public:
-		SimpleRectangle(Vec3f const& vPos, Vec3f const& vNormal, Vec3f const& vW, Vec3f const& vH)
-			: mPos(vPos), mNormal(vNormal), mDirW(vW), mDirH(vH), mColor(1.0f, 0.0f, 0.0f)
-		{
-			update_rectangle();
-		}
-		virtual ~SimpleRectangle() { }
+    //
+    class SimpleRectangle : public GeometricObject
+    {
+    public:
+        SimpleRectangle(Vec3f const& vPos, Vec3f const& vW, Vec3f const& vH)
+                : mPos(vPos), mDirW(vW), mDirH(vH), mColor(1.0f, 0.0f, 0.0f)
+        {
+            update_rectangle();
+        }
+        virtual ~SimpleRectangle() { }
 
-	public:
-		virtual void *Clone() { return (GeometricObject *)(new SimpleRectangle(*this)); }
+    public:
+        virtual void *Clone() { return (GeometricObject *)(new SimpleRectangle(*this)); }
 
-	public:
-		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
-		{
-			Vec3f OA = inRay.O() - mPos;
-			float A = -Dot(OA, mNormal);
-			float B = Dot(inRay.D(), mNormal);
-			float t = A / B;
+    public:
+        virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
+        {
+        /*    Vec3f OA = inRay.O() - mPos;
+            float A = -Dot(OA, mNormal);
+            float B = Dot(inRay.D(), mNormal);
+            float t = A / B;
 
-			if ((t > tmin + KEpsilon()) && (t < tmax))
-			{
-				Vec3f vH = inRay.O() + inRay.D() * t;
-				Vec3f vHP = vH - mPos;
+            if ((t > tmin + KEpsilon()) && (t < tmax))
+            {
+                Vec3f vH = inRay.O() + inRay.D() * t;
+                Vec3f vHP = vH - mPos;
 
-				float fDotW = Dot(vHP, mDirW);
-				if (fDotW < 0.0f || fDotW > mSqaureW)
-				{
-					rec.hit = false;
-					return false;
-				}
+                float fDotW = Dot(vHP, mDirW);
+                if (fDotW < 0.0f || fDotW > mSqaureW)
+                {
+                    rec.hit = false;
+                    return false;
+                }
 
-				float fDotH = Dot(vHP, mDirH);
-				if (fDotH < 0.0f || fDotH > mSqaureH)
-				{
-					rec.hit = false;
-					return false;
-				}
+                float fDotH = Dot(vHP, mDirH);
+                if (fDotH < 0.0f || fDotH > mSqaureH)
+                {
+                    rec.hit = false;
+                    return false;
+                }
 
-				tmax = t;
-				rec.hit = true;
-				rec.t = t;
-				rec.pt = vH;
-				rec.n = mNormal;
-				rec.albedo = mColor;
-				rec.pMaterial = nullptr;
+                tmax = t;
+                rec.hit = true;
+                rec.t = t;
+                rec.pt = vH;
+                rec.n = mNormal;
+                rec.albedo = mColor;
+                rec.pMaterial = nullptr;
 
-				return true;
+                return true;
+            }
+
+            rec.hit = false;
+            return false;*/
+
+			float t = Dot((mPos - inRay.O()), mNormal) / Dot(inRay.D(), mNormal);
+
+			if (t <= KEpsilon()) {
+				return false;
 			}
 
-			rec.hit = false;
-			return false;
-		}
+			Vec3f p = inRay.O() + t * inRay.D();
+			Vec3f d = p - mPos;
 
-		virtual bool IntersectP(Ray const& inRay, float& tvalue) const
-		{
-			Vec3f OA = inRay.O() - mPos;
-			float A = -Dot(OA, mNormal);
-			float B = Dot(inRay.D(), mNormal);
-			float t = A / B;
+			float ddota = Dot(d, mDirW);
 
-			if (t > KEpsilon())
+			if (ddota < 0.0f || ddota > mSqaureW)
 			{
-				Vec3f vH = inRay.O() + inRay.D() * t;
-				Vec3f vHP = vH - mPos;
+				return false;
+			}
 
-				float fDotW = Dot(vHP, mDirW);
-				if (fDotW < 0.0f || fDotW > mSqaureW)
-				{
-					return false;
-				}
+			double ddotb = Dot(d, mDirH);
 
-				float fDotH = Dot(vHP, mDirH);
-				if (fDotH < 0.0f || fDotH > mSqaureH)
-				{
-					return false;
-				}
+			if (ddotb < 0.0f || ddotb > mSqaureH)
+			{
+				return false;
+			}
+				
+			tmax = t;
+			rec.hit = true;
+			rec.t = t;
+			rec.pt = p;
+			rec.n = mNormal;
+			rec.albedo = mColor;
+			rec.pMaterial = nullptr;
+
+			return true;
+        }
+
+        virtual bool IntersectP(Ray const& inRay, float& tvalue) const
+        {
+        /*    Vec3f OA = inRay.O() - mPos;
+            float A = -Dot(OA, mNormal);
+            float B = Dot(inRay.D(), mNormal);
+            float t = A / B;
+
+            if (t > KEpsilon())
+            {
+                Vec3f vH = inRay.O() + inRay.D() * t;
+                Vec3f vHP = vH - mPos;
+
+                float fDotW = Dot(vHP, mDirW);
+                if (fDotW < 0.0f || fDotW > mSqaureW)
+                {
+                    return false;
+                }
+
+                float fDotH = Dot(vHP, mDirH);
+                if (fDotH < 0.0f || fDotH > mSqaureH)
+                {
+                    return false;
+                }
+
+                tvalue = t;
+                return true;
+            }
+
+            return false;*/
+
+			float t = Dot((mPos - inRay.O()), mNormal) / Dot(inRay.D(), mNormal);
+
+			if (t <= KEpsilon()) {
+				return false;
+			}
+
+			Vec3f p = inRay.O() + t * inRay.D();
+			Vec3f d = p - mPos;
+
+			float ddota = Dot(d, mDirW);
+
+			if (ddota < 0.0f || ddota > mSqaureW)
+			{
+				return false;
+			}
+
+			double ddotb = Dot(d, mDirH);
+
+			if (ddotb < 0.0f || ddotb > mSqaureH)
+			{
+				return false;
 			}
 
 			tvalue = t;
 			return true;
-		}
 
-	public:
-		virtual float Area() const
-		{
-			return mArea;
-		}
+        }
 
-		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
-		{
-			static const float RECT_DELTA = 0.0001f;
+    public:
+        virtual float Area() const
+        {
+            return mArea;
+        }
 
-			float dOtherSideX = mPos.X() + mDirW.X() + mDirH.X();
-			float dOtherSideY = mPos.Y() + mDirW.Y() + mDirH.Y();
-			float dOtherSideZ = mPos.Z() + mDirW.Z() + mDirH.Z();
+        virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
+        {
+            static const float RECT_DELTA = 0.0001f;
 
-			bounding = AABB(std::min<float>(mPos.X(), dOtherSideX) - RECT_DELTA, std::max<float>(mPos.X(), dOtherSideX) + RECT_DELTA,
-				std::min<float>(mPos.Y(), dOtherSideY) - RECT_DELTA, std::max<float>(mPos.Y(), dOtherSideY) + RECT_DELTA,
-				std::min<float>(mPos.Z(), dOtherSideZ) - RECT_DELTA, std::max<float>(mPos.Z(), dOtherSideZ) + RECT_DELTA);
+            float dOtherSideX = mPos.X() + mDirW.X() + mDirH.X();
+            float dOtherSideY = mPos.Y() + mDirW.Y() + mDirH.Y();
+            float dOtherSideZ = mPos.Z() + mDirW.Z() + mDirH.Z();
 
-			return true;
-		}
+            bounding = AABB(std::min<float>(mPos.X(), dOtherSideX) - RECT_DELTA, std::max<float>(mPos.X(), dOtherSideX) + RECT_DELTA,
+                            std::min<float>(mPos.Y(), dOtherSideY) - RECT_DELTA, std::max<float>(mPos.Y(), dOtherSideY) + RECT_DELTA,
+                            std::min<float>(mPos.Z(), dOtherSideZ) - RECT_DELTA, std::max<float>(mPos.Z(), dOtherSideZ) + RECT_DELTA);
 
-		virtual Vec3f GetNormal(const HitRecord& rec) const
-		{
-			return mNormal;
-		}
+            return true;
+        }
 
-		virtual Vec3f RandomSamplePoint() const
-		{
-			Vec3f sample_point = mPos + Random::frand48() * mDirW + Random::frand48() * mDirH;
-			return sample_point;
-		}
+        virtual Vec3f GetNormal(const HitRecord& rec) const
+        {
+            return mNormal;
+        }
 
-		virtual void Update(float t)
-		{
-			update_rectangle();
-		}
+        virtual Vec3f RandomSamplePoint() const
+        {
+            Vec3f sample_point = mPos + Random::frand48() * mDirW + Random::frand48() * mDirH;
+            return sample_point;
+        }
 
-		virtual bool IsCompound() const
-		{
-			return false;
-		}
+        virtual void Update(float t)
+        {
+            update_rectangle();
+        }
 
-		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
-		{
-			Ray testRay(o, v, 0.0f);
-			float tvalue = 0.0f;
-			if (SimpleRectangle::IntersectP(testRay, tvalue))
-			{
-				float len = v.Length();
-				float dist_squd = tvalue * tvalue * len * len;
-				float cosine_ = std::fabs(Dot(v, mNormal) / len);
+        virtual bool IsCompound() const
+        {
+            return false;
+        }
 
-				return dist_squd / (cosine_ * mArea);
-			}
+        virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+        {
+            Ray testRay(o, v, 0.0f);
+            float tvalue = 0.0f;
+            if (SimpleRectangle::IntersectP(testRay, tvalue))
+            {
+                float len = v.Length();
+                float dist_squd = tvalue * tvalue * len * len;
+                float cosine_ = std::fabs(Dot(v, mNormal) / len);
 
-			return 0.0f;
-		}
+                return dist_squd / (cosine_ * mArea);
+            }
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
-		{
-			Vec3f pt = RandomSamplePoint();
-			return (pt - v);
-		}
+            return 0.0f;
+        }
 
-	public:
-		inline void SetColor(Color3f const& c) { mColor = c; }
-		inline Color3f GetColor() const { return mColor; }
-		inline void SetPosition(Vec3f const& v) { mPos = v; }
-		inline Vec3f GetPosition() const { return mPos; }
-		inline void SetDirW(Vec3f const& w) { mDirW = w; }
-		inline void SetDirH(Vec3f const& h) { mDirH = h; }
-		inline Vec3f GetDirW() const { return mDirW; }
-		inline Vec3f GetDirH() const { return mDirH; }
-		inline void SetNormal(Vec3f const& n) { mNormal = n; }
-		
-	public:
-		inline static float KEpsilon() { return 0.001f; }
+        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        {
+            Vec3f pt = RandomSamplePoint();
+            return (pt - v);
+        }
 
-	private:
-		inline void update_rectangle()
-		{
-			mSqaureW = Dot<float>(mDirW, mDirW);
-			mSqaureH = Dot<float>(mDirH, mDirH);
+    public:
+        inline void SetColor(Color3f const& c) { mColor = c; }
+        inline Color3f GetColor() const { return mColor; }
+        inline void SetPosition(Vec3f const& v) { mPos = v; }
+        inline Vec3f GetPosition() const { return mPos; }
+        inline void SetDirW(Vec3f const& w) { mDirW = w; }
+        inline void SetDirH(Vec3f const& h) { mDirH = h; }
+        inline Vec3f GetDirW() const { return mDirW; }
+        inline Vec3f GetDirH() const { return mDirH; }
+        inline void SetNormal(Vec3f const& n) { mNormal = n; }
 
-			mLenOfW = mDirW.Length();
-			mLenOfH = mDirH.Length();
+    public:
+        inline static float KEpsilon() { return 0.001f; }
 
-			mArea = mLenOfW * mLenOfH;
-		}
+    private:
+        inline void update_rectangle()
+        {
+            mNormal = Cross(mDirW, mDirH);
+            mNormal.MakeUnit();
 
-	protected:
-		Vec3f mPos;
-		Vec3f mNormal;
-		Vec3f mDirW;
-		Vec3f mDirH;
-		Color3f mColor;
+            mSqaureW = Dot<float>(mDirW, mDirW);
+            mSqaureH = Dot<float>(mDirH, mDirH);
 
-		float mSqaureW;
-		float mSqaureH;
-		float mLenOfW;
-		float mLenOfH;
+            mLenOfW = mDirW.Length();
+            mLenOfH = mDirH.Length();
 
-		float mArea;
+            mArea = mLenOfW * mLenOfH;
+        }
 
-	};
+    protected:
+        Vec3f mPos;
+        Vec3f mNormal;
+        Vec3f mDirW;
+        Vec3f mDirH;
+        Color3f mColor;
 
-	class XYRect : public SimpleRectangle
-	{
-	public:
-		XYRect(Vec3f const& vPos, bool flip, int w, int h)
-			: SimpleRectangle(vPos, (flip ? Vec3f(0, 0, -1) : Vec3f(0, 0, 1)), Vec3f(w, 0, 0), Vec3f(0, h, 0))
-		{
+        float mSqaureW;
+        float mSqaureH;
+        float mLenOfW;
+        float mLenOfH;
 
-		}
-		virtual ~XYRect() { }
+        float mArea;
 
-	public:
-		virtual void *Clone() { return (GeometricObject *)(new XYRect(*this)); }
+    };
 
-	public:
-		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
-		{
-			if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
-			{
-				rec.u = (rec.pt.X() - mPos.X()) / mLenOfW;
-				rec.v = 1.0f - (rec.pt.Y() - mPos.Y()) / mLenOfH;
+    class XYRect : public SimpleRectangle
+    {
+    public:
+        XYRect(Vec3f const& vPos, bool flip, int w, int h)
+                : SimpleRectangle(vPos, Vec3f(w, 0, 0), Vec3f(0, h, 0))
+        {
+            mNormal = (flip ? Vec3f(0, 0, -1) : Vec3f(0, 0, 1));
+        }
+        virtual ~XYRect() { }
 
-				return true;
-			}
+    public:
+        virtual void *Clone() { return (GeometricObject *)(new XYRect(*this)); }
 
-			return false;
-		}
+    public:
+        virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
+        {
+            if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
+            {
+                rec.u = (rec.pt.X() - mPos.X()) / mLenOfW;
+                rec.v = 1.0f - (rec.pt.Y() - mPos.Y()) / mLenOfH;
 
-	public:
-		virtual Vec3f RandomSamplePoint() const
-		{
-			Vec3f sample_point;
-			sample_point.Set(
-				mPos.X() + Random::frand48() * mLenOfW,
-				mPos.Y() + Random::frand48() * mLenOfH,
-				mPos.Z());
-			return sample_point;
-		}
+                return true;
+            }
 
-		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
-		{
-			return SimpleRectangle::PDFValue(o, v);
-		}
+            return false;
+        }
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
-		{
-			Vec3f pt = XYRect::RandomSamplePoint();
-			return (pt - v);
-		}
-	};
+    public:
+        virtual Vec3f RandomSamplePoint() const
+        {
+            Vec3f sample_point;
+            sample_point.Set(
+                    mPos.X() + Random::frand48() * mLenOfW,
+                    mPos.Y() + Random::frand48() * mLenOfH,
+                    mPos.Z());
+            return sample_point;
+        }
 
-	class XZRect : public SimpleRectangle
-	{
-	public:
-		XZRect(Vec3f const& vPos, bool flip, int w, int h)
-			: SimpleRectangle(vPos, (flip ? Vec3f(0, -1, 0) : Vec3f(0, 1, 0)), Vec3f(w, 0, 0), Vec3f(0, 0, h))
-		{
+        virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+        {
+            return SimpleRectangle::PDFValue(o, v);
+        }
 
-		}
-		virtual ~XZRect() { }
+        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        {
+            Vec3f pt = XYRect::RandomSamplePoint();
+            return (pt - v);
+        }
+    };
 
-	public:
-		virtual void *Clone() { return (GeometricObject *)(new XZRect(*this)); }
+    class XZRect : public SimpleRectangle
+    {
+    public:
+        XZRect(Vec3f const& vPos, bool flip, int w, int h)
+                : SimpleRectangle(vPos, Vec3f(w, 0, 0), Vec3f(0, 0, h))
+        {
+            mNormal = (flip ? Vec3f(0, -1, 0) : Vec3f(0, 1, 0));
+        }
+        virtual ~XZRect() { }
 
-	public:
-		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
-		{
-			if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
-			{
-				rec.u = (rec.pt.X() - mPos.X()) / mLenOfW;
-				rec.v = 1.0f - (rec.pt.Z() - mPos.Z()) / mLenOfH;
+    public:
+        virtual void *Clone() { return (GeometricObject *)(new XZRect(*this)); }
 
-				return true;
-			}
+    public:
+        virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
+        {
+            if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
+            {
+                rec.u = (rec.pt.X() - mPos.X()) / mLenOfW;
+                rec.v = 1.0f - (rec.pt.Z() - mPos.Z()) / mLenOfH;
 
-			return false;
-		}
+                return true;
+            }
 
-	public:
-		virtual Vec3f RandomSamplePoint() const
-		{
-			Vec3f sample_point;
-			sample_point.Set(
-				mPos.X() + Random::frand48() * mLenOfW,
-				mPos.Y(),
-				mPos.Z() + Random::frand48() * mLenOfH);
-			return sample_point;
-		}
+            return false;
+        }
 
-		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
-		{
-			return SimpleRectangle::PDFValue(o, v);
-		}
+    public:
+        virtual Vec3f RandomSamplePoint() const
+        {
+            Vec3f sample_point;
+            sample_point.Set(
+                    mPos.X() + Random::frand48() * mLenOfW,
+                    mPos.Y(),
+                    mPos.Z() + Random::frand48() * mLenOfH);
+            return sample_point;
+        }
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
-		{
-			Vec3f pt = XZRect::RandomSamplePoint();
-			return (pt - v);
-		}
-	};
+        virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+        {
+            return SimpleRectangle::PDFValue(o, v);
+        }
 
-	class YZRect : public SimpleRectangle
-	{
-	public:
-		YZRect(Vec3f const& vPos, bool flip, int w, int h)
-			: SimpleRectangle(vPos, (flip ? Vec3f(-1, 0, 0) : Vec3f(1, 0, 0)), Vec3f(0, 0, w), Vec3f(0, h, 0))
-		{
+        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        {
+            Vec3f pt = XZRect::RandomSamplePoint();
+            return (pt - v);
+        }
+    };
 
-		}
-		virtual ~YZRect() { }
+    class YZRect : public SimpleRectangle
+    {
+    public:
+        YZRect(Vec3f const& vPos, bool flip, int w, int h)
+                : SimpleRectangle(vPos, Vec3f(0, 0, w), Vec3f(0, h, 0))
+        {
+            mNormal = (flip ? Vec3f(-1, 0, 0) : Vec3f(1, 0, 0));
+        }
+        virtual ~YZRect() { }
 
-	public:
-		virtual void *Clone() { return (GeometricObject *)(new YZRect(*this)); }
+    public:
+        virtual void *Clone() { return (GeometricObject *)(new YZRect(*this)); }
 
-	public:
-		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
-		{
-			if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
-			{
-				rec.u = (rec.pt.Z() - mPos.Z()) / mLenOfW;
-				rec.v = 1.0f - (rec.pt.Y() - mPos.Y()) / mLenOfH;
+    public:
+        virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
+        {
+            if (SimpleRectangle::HitTest(inRay, tmin, tmax, rec))
+            {
+                rec.u = (rec.pt.Z() - mPos.Z()) / mLenOfW;
+                rec.v = 1.0f - (rec.pt.Y() - mPos.Y()) / mLenOfH;
 
-				return true;
-			}
+                return true;
+            }
 
-			return false;
-		}
+            return false;
+        }
 
-	public:
-		virtual Vec3f RandomSamplePoint() const
-		{
-			Vec3f sample_point;
-			sample_point.Set(
-				mPos.X(),
-				mPos.Y() + Random::frand48() * mLenOfW,
-				mPos.Z() + Random::frand48() * mLenOfH);
-			return sample_point;
-		}
+    public:
+        virtual Vec3f RandomSamplePoint() const
+        {
+            Vec3f sample_point;
+            sample_point.Set(
+                    mPos.X(),
+                    mPos.Y() + Random::frand48() * mLenOfW,
+                    mPos.Z() + Random::frand48() * mLenOfH);
+            return sample_point;
+        }
 
-		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
-		{
-			return SimpleRectangle::PDFValue(o, v);
-		}
+        virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+        {
+            return SimpleRectangle::PDFValue(o, v);
+        }
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
-		{
-			Vec3f pt = YZRect::RandomSamplePoint();
-			return (pt - v);
-		}
-	};
+        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        {
+            Vec3f pt = YZRect::RandomSamplePoint();
+            return (pt - v);
+        }
+    };
 
 	//
 	class SimpleTriangle : public GeometricObject
 	{
 	public:
 		SimpleTriangle(Vec3f const& a, Vec3f const& b, Vec3f const& c)
-			: v0(a), v1(b), v2(c)
+			: v0(a), v1(b), v2(c), mColor(1.0f, 0.0f, 0.0f)
 		{
 			update_triangle();
 		}
@@ -1603,21 +1853,21 @@ namespace LaplataRayTracer
 				face_out = (c >= 0.0f) ? 5 : 2;
 			}
 
-			bool is_hit = (t0 < t1 && t1 > tmin + KEpsilon());
+			bool is_hit = (t0 < t1 && t1 > KEpsilon());
 			if (is_hit)
 			{
 				bool ret = false;
-				if ((t0 > tmin + KEpsilon()) && (t0 < tmax)) {
+				if (t0 > KEpsilon()) {
 					tmax = t0;
 					get_normal(face_in, rec.n);
 					ret = true;
 				}
 				else {
-					if (t1 < tmax) {
+				//	if (t1 < tmax) {
 						tmax = t1;
 						get_normal(face_out, rec.n);
 						ret = true;
-					}
+				//	}
 				}
 
 				rec.hit = ret;
@@ -1696,18 +1946,25 @@ namespace LaplataRayTracer
 				t1 = tz_max;
 			}
 
-			bool isHit = (t0 < t1 && t1 > KEpsilon());
-			if (isHit)
+			bool is_hit = (t0 < t1 && t1 > KEpsilon());
+			if (is_hit)
 			{
+				bool ret = false;
 				if (t0 > KEpsilon()) {
 					tvalue = t0;
+					ret = true;
 				}
 				else {
+					//	if (t1 < tmax) {
 					tvalue = t1;
+					ret = true;
+					//	}
 				}
+
+				return ret;
 			}
 
-			return isHit;
+			return is_hit;
 		}
 
 	public:
@@ -1815,9 +2072,11 @@ namespace LaplataRayTracer
 	{
 	public:
 		SimpleCylinder()
-			: mCenter(0.0f, 0.0f, 0.0f), mRadius(30.0f), mY0(0.0f), mY1(60.0f), mColor(1.0f, 0.0f, 0.0f) { }
+			: mCenter(0.0f, 0.0f, 0.0f), mRadius(30.0f), mY0(0.0f), mY1(60.0f), mColor(1.0f, 0.0f, 0.0f),
+			  mPart(false), mTheta0(0.0f), mTheta1(0.0f) { }
 		SimpleCylinder(Vec3f const& center, float r, float y0, float y1, Color3f const& c = Color3f(1.0f, 0.0f, 0.0f))
-			: mCenter(center), mRadius(r), mY0(y0), mY1(y1), mColor(c) { }
+			: mCenter(center), mRadius(r), mY0(y0), mY1(y1), mColor(c),
+              mPart(false), mTheta0(0.0f), mTheta1(0.0f) { }
 		virtual ~SimpleCylinder() { }
 
 	public:
@@ -1827,31 +2086,49 @@ namespace LaplataRayTracer
 		virtual bool HitTest(Ray const& inRay, const float& tmin, float& tmax, HitRecord& rec)
 		{
 			Vec3f OC = inRay.O() - mCenter;
+            float x0 = OC.X();
+            float y0 = OC.Y();
+            float z0 = OC.Z();
+            float dx = inRay.D().X();
+            float dy = inRay.D().Y();
+            float dz = inRay.D().Z();
 
-			float A = (inRay.D().X() * inRay.D().X()) + (inRay.D().Z() * inRay.D().Z());
-			float B = 2.0f * (OC.X() * inRay.D().X() + OC.Z() * inRay.D().Z());
-			float C = OC.X() * OC.X() + OC.Z() * OC.Z() - mRadius * mRadius;
+			float A = (dx * dx) + (dz * dz);
+			float B = 2.0f * (x0 * dx + z0 * dz);
+			float C = x0 * x0 + z0 * z0 - mRadius * mRadius;
 
 			bool is_hit = false;
+            bool check_part = true;
 			float t0 = (-B - std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 			if (t0 > tmin + KEpsilon() && t0 < tmax)
 			{
-				is_hit = true;
 				rec.pt = inRay.O() + t0 * inRay.D();
 				if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
 				{
-					tmax = t0;
+				    if (mPart)
+                    {
+				        if (!this->check_in_theta_range(rec.pt))
+                        {
+				            check_part = false;
+                        }
+                    }
 
-					rec.hit = true;
-					rec.t = t0;
-					rec.n = GetNormal(rec);
-					if (Dot(rec.n, inRay.D()) > 0.0f)
-					{
-						rec.n = -rec.n;
-					}
-					rec.albedo = mColor;
-					rec.pMaterial = nullptr;
-					this->calc_uv(rec.pt, rec.u, rec.v);
+				    if (check_part)
+                    {
+                        is_hit = true;
+                        tmax = t0;
+
+                        rec.hit = true;
+                        rec.t = t0;
+                        rec.n = GetNormal(rec);
+                        if (Dot(rec.n, inRay.D()) > 0.0f)
+                        {
+                            rec.n = -rec.n;
+                        }
+                        rec.albedo = mColor;
+                        rec.pMaterial = nullptr;
+                        this->calc_uv(rec.pt, rec.u, rec.v);
+                    }
 				}
 				else
 				{
@@ -1864,12 +2141,20 @@ namespace LaplataRayTracer
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > tmin + KEpsilon() && t1 < tmax)
 				{
-					tmax = t1;
-
-					is_hit = true;
 					rec.pt = inRay.O() + t1 * inRay.D();
 					if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
 					{
+                        if (mPart)
+                        {
+                            if (!this->check_in_theta_range(rec.pt))
+                            {
+                                return false;
+                            }
+                        }
+
+                        tmax = t1;
+                        is_hit = true;
+
 						rec.hit = true;
 						rec.t = t1;
 						rec.n = GetNormal(rec);
@@ -1895,32 +2180,61 @@ namespace LaplataRayTracer
 		{
 			Vec3f OC = inRay.O() - mCenter;
 
-			float A = (inRay.D().X() * inRay.D().X()) + (inRay.D().Z() * inRay.D().Z());
-			float B = 2.0f * (OC.X() * inRay.D().X() + OC.Z() * inRay.D().Z());
-			float C = OC.X() * OC.X() + OC.Z() * OC.Z() - mRadius * mRadius;
+            float x0 = OC.X();
+            float y0 = OC.Y();
+            float z0 = OC.Z();
+            float dx = inRay.D().X();
+            float dy = inRay.D().Y();
+            float dz = inRay.D().Z();
+
+            float A = (dx * dx) + (dz * dz);
+            float B = 2.0f * (x0 * dx + z0 * dz);
+            float C = x0 * x0 + z0 * z0 - mRadius * mRadius;
 
 			bool is_hit = false;
+			bool check_part = true;
 			float t0 = (-B - std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 			if (t0 > KEpsilon())
 			{
-				is_hit = true;
-				Vec3f pt = inRay.O() + t0 * inRay.D();
-				if (pt.Y() >= mY0 && pt.Y() <= mY1)
-				{
-					tvalue = t0;
-				}
-				else
-				{
-					is_hit = false;
-				}
+                Vec3f pt = inRay.O() + t0 * inRay.D();
+                if (mPart)
+                {
+                    if (!this->check_in_theta_range(pt))
+                    {
+                    //    return false;
+                    //    goto L0;
+                        check_part = false;
+                    }
+                }
+
+                if (check_part)
+                {
+                    is_hit = true;
+                    if (pt.Y() >= mY0 && pt.Y() <= mY1)
+                    {
+                        tvalue = t0;
+                    }
+                    else
+                    {
+                        is_hit = false;
+                    }
+                }
 			}
 			if (!is_hit)
 			{
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > KEpsilon())
 				{
+                    Vec3f pt = inRay.O() + t1 * inRay.D();
+                    if (mPart)
+                    {
+                        if (!this->check_in_theta_range(pt))
+                        {
+                            return false;
+                        }
+                    }
+
 					is_hit = true;
-					Vec3f pt = inRay.O() + t1 * inRay.D();
 					if (pt.Y() >= mY0 && pt.Y() <= mY1)
 					{
 						tvalue = t1;
@@ -1952,7 +2266,8 @@ namespace LaplataRayTracer
 
 		virtual Vec3f GetNormal(const HitRecord& rec) const
 		{
-			return Vec3f(rec.pt.X() / mRadius, 0.0f, rec.pt.Z() / mRadius);
+		    Vec3f pt = rec.pt - mCenter;
+			return Vec3f(pt.X() / mRadius, 0.0f, pt.Z() / mRadius);
 		}
 
 		virtual Vec3f RandomSamplePoint() const
@@ -1989,23 +2304,71 @@ namespace LaplataRayTracer
 			mColor.Set(r, g, b);
 		}
 
+		inline void SetPartParams(bool part, float theta0, float theta1)
+        {
+            mPart = part;
+            if (mPart)
+            {
+                mTheta0 = ANG2RAD(theta0);
+                mTheta1 = ANG2RAD(theta1);
+            }
+        }
+
 	public:
 		inline static float KEpsilon() { return 0.001f; }
 
 	private:
 		inline void calc_uv(const Vec3f& pt, float& u, float& v)
 		{
-			v = (pt.Y() - mY0) / (mY1 - mY0);
+//			v = (pt.Y() - mY0) / (mY1 - mY0);
+//
+//			Vec3f po(pt.X(), 0.0f, pt.Y());
+//			Vec3f sz(0.0f, 0.0f, 1.0f);
+//			float d = po.Length();
+//			if (RTMath::IsZero(d)) {
+//			    d = 0.001f;
+//			}
+//			u = std::acos(Dot(po, sz) / d) / TWO_PI_CONST;
+//
+//			if (pt.X() < 0.0f)
+//			{
+//				u = 1.0f - u;
+//			}
+//			v = 1.0f - v;
 
-			Vec3f po(pt.X(), 0.0f, pt.Y());
-			Vec3f sz(0.0f, 0.0f, 1.0f);
-			u = std::acos(Dot(po, sz) / po.Length()) / (2.0f*PI_CONST);
+            float phi = std::acos(pt.X() * (1.0f / mRadius));
+            if (RTMath::IsNan(phi)) {
+                phi = 1e-4;
+            }
+            if (pt.Z() < 0.0f) {
+                phi = TWO_PI_CONST - phi;
+            }
+            u = phi * INV_TWO_PI_CONST;
+            v = (pt.Y() - mY0) / (mY1 - mY0);
+            v = 1.0f - v;
 
-			if (pt.X() < 0.0f)
-			{
-				u = 1.0f - u;
-			}
+		//	std::cout << phi << std::endl;
 		}
+
+		inline bool check_in_theta_range(const Vec3f& pt) const
+        {
+		    Vec3f po(pt.X(), 0.0f, pt.Z());
+		    Vec3f ox(1.0f, 0.0f, 0.0f);
+            float cos_theta = Dot(po, ox)/(po.Length());
+            float theta = std::acos(cos_theta);
+
+            if (pt.Z() > 0.0f)
+            {
+                theta = TWO_PI_CONST - theta;
+            }
+
+            if (theta >= mTheta0 && theta <= mTheta1)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
 	private:
 		Vec3f mCenter;
@@ -2014,6 +2377,9 @@ namespace LaplataRayTracer
 		float mY1;
 		Color3f mColor;
 
+		bool mPart;
+		float mTheta0;
+		float mTheta1;
 	};
 
 	//
@@ -2021,12 +2387,14 @@ namespace LaplataRayTracer
 	{
 	public:
 		SimpleCone()
-			: mCenter(0.0f, 0.0f, 0.0f), mRadius(30.0f), mY0(0.0f), mY1(60.0f), mColor(1.0f, 0.0f, 0.0f)
+			: mCenter(0.0f, 0.0f, 0.0f), mRadius(30.0f), mY0(0.0f), mY1(60.0f), mColor(1.0f, 0.0f, 0.0f),
+              mPart(false), mTheta0(0.0f), mTheta1(0.0f), mInterceptionH(0.0f)
 		{
 			calc_H();
 		}
 		SimpleCone(Vec3f const& center, float r, float y0, float y1, const Color3f& c = Color3f(1.0f, 0.0f, 0.0f))
-			: mCenter(center), mRadius(r), mY0(y0), mY1(y1), mColor(c)
+			: mCenter(center), mRadius(r), mY0(y0), mY1(y1), mColor(c),
+              mPart(false), mTheta0(0.0f), mTheta1(0.0f), mInterceptionH(0.0f)
 		{
 			calc_H();
 		}
@@ -2053,20 +2421,40 @@ namespace LaplataRayTracer
 			float C = hdivr*hdivr*x0*x0 - y0*y0 + 2.0f*mH*y0 - mH*mH + hdivr*hdivr*z0*z0;
 
 			bool is_hit = false;
+            bool check_part = true;
 			float t0 = (-B - std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 			if (t0 > tmin + KEpsilon() && t0 < tmax)
 			{
-				tmax = t0;
-
-				is_hit = true;
 				rec.pt = inRay.O() + t0 * inRay.D();
 				if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
 				{
-					rec.hit = true;
-					rec.t = t0;
-					rec.n = GetNormal(rec);
-					rec.albedo = mColor;
-					rec.pMaterial = nullptr;
+                    if (mPart)
+                    {
+                        if (!this->check_in_theta_range(rec.pt))
+                        {
+                            check_part = false;
+                        }
+                    }
+
+                    if (check_part)
+                    {
+                        tmax = t0;
+                        is_hit = true;
+
+                        rec.hit = true;
+                        rec.t = t0;
+                        rec.n = GetNormal(rec);
+                        if (mPart)
+                        {
+                            if (Dot(rec.n, inRay.D()) > 0.0f)
+                            {
+                                rec.n = -rec.n;
+                            }
+                        }
+                        rec.albedo = mColor;
+                        rec.pMaterial = nullptr;
+                        this->calc_uv(rec.pt, rec.u, rec.v);
+                    }
 				}
 				else
 				{
@@ -2079,17 +2467,33 @@ namespace LaplataRayTracer
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > tmin + KEpsilon() && t1 < tmax)
 				{
-					tmax = t1;
-
-					is_hit = true;
 					rec.pt = inRay.O() + t1 * inRay.D();
 					if (rec.pt.Y() >= mY0 && rec.pt.Y() <= mY1)
 					{
+                        if (mPart)
+                        {
+                            if (!this->check_in_theta_range(rec.pt))
+                            {
+                                return false;
+                            }
+                        }
+
+                        tmax = t1;
+                        is_hit = true;
+
 						rec.hit = true;
 						rec.t = t1;
 						rec.n = GetNormal(rec);
+                        if (mPart)
+                        {
+                            if (Dot(rec.n, inRay.D()) > 0.0f)
+                            {
+                                rec.n = -rec.n;
+                            }
+                        }
 						rec.albedo = mColor;
 						rec.pMaterial = nullptr;
+						this->calc_uv(rec.pt, rec.u, rec.v);
 					}
 					else
 					{
@@ -2118,29 +2522,49 @@ namespace LaplataRayTracer
 			float C = hdivr*hdivr*x0*x0 - y0*y0 + 2.0f*mH*y0 - mH*mH + hdivr*hdivr*z0*z0;
 
 			bool is_hit = false;
+            bool check_part = true;
 			float t0 = (-B - std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 			if (t0 > KEpsilon())
 			{
-				is_hit = true;
 				Vec3f pt = inRay.O() + t0 * inRay.D();
 				if (pt.Y() >= mY0 && pt.Y() <= mY1)
 				{
-					tvalue = t0;
+                    if (mPart)
+                    {
+                        if (!this->check_in_theta_range(pt))
+                        {
+                            check_part = false;
+                        }
+                    }
+
+                    if (check_part)
+                    {
+                        is_hit = true;
+                        tvalue = t0;
+                    }
 				}
 				else
 				{
 					is_hit = false;
 				}
 			}
-			if (!is_hit)
+            if (!is_hit)
 			{
 				float t1 = (-B + std::sqrt(B * B - 4.0f * A * C)) / (2.0f * A);
 				if (t1 > KEpsilon())
 				{
-					is_hit = true;
 					Vec3f pt = inRay.O() + t1 * inRay.D();
 					if (pt.Y() >= mY0 && pt.Y() <= mY1)
 					{
+                        if (mPart)
+                        {
+                            if (!this->check_in_theta_range(pt))
+                            {
+                                return false;
+                            }
+                        }
+
+                        is_hit = true;
 						tvalue = t1;
 					}
 					else
@@ -2167,6 +2591,7 @@ namespace LaplataRayTracer
 
 		virtual Vec3f GetNormal(const HitRecord& rec) const
 		{
+		    Vec3f pt = rec.pt - mCenter;
 			Vec3f norm;
 			norm.Set((2.0f * mH * rec.pt.X()) / mRadius, -2.0f*(rec.pt.Y() - mH), (2.0f * mH * rec.pt.Z()) / mRadius);
 			norm.MakeUnit();
@@ -2201,6 +2626,18 @@ namespace LaplataRayTracer
 			mColor.Set(r, g, b);
 		}
 
+        inline void SetPartParams(bool part, float theta0, float theta1, float interceptionH)
+        {
+            mPart = part;
+            if (mPart)
+            {
+                mTheta0 = ANG2RAD(theta0);
+                mTheta1 = ANG2RAD(theta1);
+
+				mInterceptionH = interceptionH;
+            }
+        }
+
 	public:
 		inline static float KEpsilon() { return 0.001f; }
 
@@ -2208,17 +2645,63 @@ namespace LaplataRayTracer
 		inline void calc_H() { mH = mY1 - mY0; }
 		inline void calc_uv(const Vec3f& pt, float& u, float& v)
 		{
-			v = (pt.Y() - mY0) / (mY1 - mY0);
+//			v = (pt.Y() - mY0) / (mY1 - mY0);
+//
+//			Vec3f po(pt.X(), 0.0f, pt.Y());
+//			Vec3f sz(0.0f, 0.0f, 1.0f);
+//			float d = po.Length();
+//			if (RTMath::IsZero(d)) {
+//			    d = 0.001f;
+//			}
+//			u = std::acos(Dot(po, sz) / d) / (2.0f*PI_CONST);
+//
+//			if (pt.X() < 0.0f)
+//			{
+//				u = 1.0f - u;
+//			}
+//			v = 1.0f - v;
 
-			Vec3f po(pt.X(), 0.0f, pt.Y());
-			Vec3f sz(0.0f, 0.0f, 1.0f);
-			u = std::acos(Dot(po, sz) / po.Length()) / (2.0f*PI_CONST);
-
-			if (pt.X() < 0.0f)
-			{
-				u = 1.0f - u;
-			}
+            float phi = std::acos(pt.X() * (1.0f / mRadius));
+            if (RTMath::IsNan(phi)) {
+                phi = 1e-4;
+            }
+            if (pt.Z() < 0.0f) {
+                phi = TWO_PI_CONST - phi;
+            }
+            u = phi * INV_TWO_PI_CONST;
+            v = (pt.Y() - mY0) / (mY1 - mY0);
+            v = 1.0f - v;
 		}
+
+        inline bool check_in_theta_range(const Vec3f& pt) const
+        {
+			//
+			//if (mInterceptionH > 0.0f)
+			{
+				if (pt.Y() - mY0 > mInterceptionH)
+				{
+					return false;
+				}
+			}
+
+			//
+            Vec3f po(pt.X(), 0.0f, pt.Z());
+            Vec3f ox(1.0f, 0.0f, 0.0f);
+            float cos_theta = Dot(po, ox)/(po.Length());
+            float theta = std::acos(cos_theta);
+
+            if (pt.Z() > 0.0f)
+            {
+                theta = TWO_PI_CONST - theta;
+            }
+
+            if (theta >= mTheta0 && theta <= mTheta1)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
 	private:
 		Vec3f mCenter;
@@ -2228,6 +2711,12 @@ namespace LaplataRayTracer
 		Color3f mColor;
 
 		float mH;
+
+        bool mPart;
+        float mTheta0;
+        float mTheta1;
+		float mInterceptionH;
+
 	};
 
 	//
@@ -2235,12 +2724,14 @@ namespace LaplataRayTracer
 	{
 	public:
 		SimpleTorus()
-			: mCenter(0.0f, 0.0f, 0.0f), mSweptRadius(30.0f), mTubeRadius(10.0f), mColor(1.0f, 0.0f, 0.0f)
+			: mCenter(0.0f, 0.0f, 0.0f), mSweptRadius(30.0f), mTubeRadius(10.0f), mColor(1.0f, 0.0f, 0.0f),
+              mPartTorus(false), mTheta0(0.0f), mTheta1(0.0f), mPhi0(0.0f), mPhi1(0.0f)
 		{
 
 		}
 		SimpleTorus(Vec3f const& center, float sweptRadius, float tubeRadius, const Color3f c = Color3f(1.0f, 0.0f, 0.0f))
-			: mCenter(center), mSweptRadius(sweptRadius), mTubeRadius(tubeRadius), mColor(c)
+			: mCenter(center), mSweptRadius(sweptRadius), mTubeRadius(tubeRadius), mColor(c),
+              mPartTorus(false), mTheta0(0.0f), mTheta1(0.0f), mPhi0(0.0f), mPhi1(0.0f)
 		{
 
 		}
@@ -2280,20 +2771,32 @@ namespace LaplataRayTracer
 			float x1 = OC.X(); float y1 = OC.Y(); float z1 = OC.Z();
 			float d1 = inRay.D().X(); float d2 = inRay.D().Y(); float d3 = inRay.D().Z();
 
-			float sum_d_sqrd = d1 * d1 + d2 * d2 + d3 * d3;
-			float e = x1 * x1 + y1 * y1 + z1 * z1 - mSweptRadius * mSweptRadius - mTubeRadius * mTubeRadius;
-			float f = x1 * d1 + y1 * d2 + z1 * d3;
-			float four_a_sqrd = 4.0 * mSweptRadius * mSweptRadius;
+//			float sum_d_sqrd = d1 * d1 + d2 * d2 + d3 * d3;
+//			float e = x1 * x1 + y1 * y1 + z1 * z1 - mSweptRadius * mSweptRadius - mTubeRadius * mTubeRadius;
+//			float f = x1 * d1 + y1 * d2 + z1 * d3;
+//			float four_a_sqrd = 4.0 * mSweptRadius * mSweptRadius;
 
 			//
 			float coefficients[5] = { 0.0f };
 			float roots[4] = { 0.0f };
 
-			coefficients[4] = sum_d_sqrd * sum_d_sqrd;
-			coefficients[3] = 4.0 * sum_d_sqrd * f;
-			coefficients[2] = 2.0 * sum_d_sqrd * e + 4.0 * f * f + four_a_sqrd * d2 * d2;
-			coefficients[1] = 4.0 * f * e + 2.0 * four_a_sqrd * y1 * d2;
-			coefficients[0] = e * e - four_a_sqrd * (mTubeRadius * mTubeRadius - y1 * y1); 	// constant term
+            float A = Dot(OC, OC);
+            float B = 2.0f*Dot(OC, inRay.D());
+            float C = Dot(inRay.D(), inRay.D());
+            float Rr_square_p = mSweptRadius*mSweptRadius+mTubeRadius*mTubeRadius;
+            float Rr_square_s_square = (mSweptRadius*mSweptRadius-mTubeRadius*mTubeRadius)*(mSweptRadius*mSweptRadius-mTubeRadius*mTubeRadius);
+            float R_square = mSweptRadius*mSweptRadius;
+            coefficients[4] = C*C;
+            coefficients[3] = 2*B*C;
+            coefficients[2] = B*B+2*A*C-2*Rr_square_p*C+4.0f*R_square*inRay.D().Z()*inRay.D().Z();
+            coefficients[1] = 2.0f*A*B-2.0f*Rr_square_p*B+8.0f*R_square*OC.Z()*inRay.D().Z();
+            coefficients[0] = A*A-2.0f*Rr_square_p*A+4.0f*R_square*OC.Z()*OC.Z()+Rr_square_s_square;
+
+//          coefficients[4] = sum_d_sqrd * sum_d_sqrd;
+//			coefficients[3] = 4.0 * sum_d_sqrd * f;
+//			coefficients[2] = 2.0 * sum_d_sqrd * e + 4.0 * f * f + four_a_sqrd * d2 * d2;
+//			coefficients[1] = 4.0 * f * e + 2.0 * four_a_sqrd * y1 * d2;
+//			coefficients[0] = e * e - four_a_sqrd * (mTubeRadius * mTubeRadius - y1 * y1); 	// constant term
 
 			//
 // 			int num_roots = 0;
@@ -2309,37 +2812,56 @@ namespace LaplataRayTracer
 			}
 			else
 			{
-				// find the minimum value among the roots.
+				// sort the roots
 				float temp = FLT_MAX;
-				bool has_root = false;
 				for (int i = 0; i < num_real_roots; ++i)
 				{
-					if (roots[i] > KEpsilon())
-					{
-						has_root = true;
-						if (roots[i] < temp)
-						{
-							temp = roots[i];
-						}
-					}
+				    for (int j = i + 1; j < num_real_roots; ++j)
+                    {
+				        if (roots[i] > roots[j])
+                        {
+				            temp = roots[i];
+				            roots[i] = roots[j];
+				            roots[j] = temp;
+                        }
+                    }
 				}
 
-				if (has_root)
-				{
-					if ((temp > tmin + KEpsilon()) && (temp < tmax))
-					{
-						tmax = temp;
+                for (int i = 0; i < num_real_roots; ++i)
+                {
+                    temp = roots[i];
+                    if ((temp > tmin + KEpsilon()) && (temp < tmax))
+                    {
+                        bool test = true;
+                        if (mPartTorus)
+                        {
+                            Vec3f hitPt = inRay.O() + temp * inRay.D();
+                            hitPt = hitPt - mCenter;
+                            bool in_theta_range = this->check_in_theta_range(hitPt);
+                            bool in_phi_range = this->check_in_phi_range(hitPt);
+                            if (!in_theta_range || !in_phi_range)
+                            {
+                                test = false;
+                            }
+                        }
 
-						is_hit = true;
+                        if (test)
+                        {
+                            tmax = temp;
 
-						rec.hit = true;
-						rec.t = temp;
-						rec.pt = inRay.O() + temp * inRay.D();
-						rec.n = GetNormal(rec);
-						rec.albedo = mColor;
-						rec.pMaterial = nullptr;
-					}
-				}
+                            is_hit = true;
+
+                            rec.hit = true;
+                            rec.t = temp;
+                            rec.pt = inRay.O() + temp * inRay.D();
+                            rec.n = GetNormal(rec);
+                            rec.albedo = mColor;
+                            rec.pMaterial = nullptr;
+
+                            break;
+                        }
+                    }
+                }
 			}
 
 			return is_hit;
@@ -2347,61 +2869,96 @@ namespace LaplataRayTracer
 
 		virtual bool IntersectP(Ray const& inRay, float& tvalue) const
 		{
-			Vec3f OC = inRay.O() - mCenter;
+            Vec3f OC = inRay.O() - mCenter;
 
-			float x1 = OC.X(); float y1 = OC.Y(); float z1 = OC.Z();
-			float d1 = inRay.D().X(); float d2 = inRay.D().Y(); float d3 = inRay.D().Z();
+            float x1 = OC.X(); float y1 = OC.Y(); float z1 = OC.Z();
+            float d1 = inRay.D().X(); float d2 = inRay.D().Y(); float d3 = inRay.D().Z();
 
-			float sum_d_sqrd = d1 * d1 + d2 * d2 + d3 * d3;
-			float e = x1 * x1 + y1 * y1 + z1 * z1 - mSweptRadius * mSweptRadius - mTubeRadius * mTubeRadius;
-			float f = x1 * d1 + y1 * d2 + z1 * d3;
-			float four_a_sqrd = 4.0 * mSweptRadius * mSweptRadius;
+//			float sum_d_sqrd = d1 * d1 + d2 * d2 + d3 * d3;
+//			float e = x1 * x1 + y1 * y1 + z1 * z1 - mSweptRadius * mSweptRadius - mTubeRadius * mTubeRadius;
+//			float f = x1 * d1 + y1 * d2 + z1 * d3;
+//			float four_a_sqrd = 4.0 * mSweptRadius * mSweptRadius;
 
-			//
-			float coefficients[5] = { 0.0f };
-			float roots[4] = { 0.0f };
+            //
+            float coefficients[5] = { 0.0f };
+            float roots[4] = { 0.0f };
 
-			coefficients[4] = sum_d_sqrd * sum_d_sqrd;
-			coefficients[3] = 4.0 * sum_d_sqrd * f;
-			coefficients[2] = 2.0 * sum_d_sqrd * e + 4.0 * f * f + four_a_sqrd * d2 * d2;
-			coefficients[1] = 4.0 * f * e + 2.0 * four_a_sqrd * y1 * d2;
-			coefficients[0] = e * e - four_a_sqrd * (mTubeRadius * mTubeRadius - y1 * y1); 	// constant term
+            float A = Dot(OC, OC);
+            float B = 2.0f*Dot(OC, inRay.D());
+            float C = Dot(inRay.D(), inRay.D());
+            float Rr_square_p = mSweptRadius*mSweptRadius+mTubeRadius*mTubeRadius;
+            float Rr_square_s_square = (mSweptRadius*mSweptRadius-mTubeRadius*mTubeRadius)*(mSweptRadius*mSweptRadius-mTubeRadius*mTubeRadius);
+            float R_square = mSweptRadius*mSweptRadius;
+            coefficients[4] = C*C;
+            coefficients[3] = 2*B*C;
+            coefficients[2] = B*B+2*A*C-2*Rr_square_p*C+4.0f*R_square*inRay.D().Z()*inRay.D().Z();
+            coefficients[1] = 2.0f*A*B-2.0f*Rr_square_p*B+8.0f*R_square*OC.Z()*inRay.D().Z();
+            coefficients[0] = A*A-2.0f*Rr_square_p*A+4.0f*R_square*OC.Z()*OC.Z()+Rr_square_s_square;
 
-			int num_real_roots = RTMath::SolveQuartic(coefficients, roots);
+//          coefficients[4] = sum_d_sqrd * sum_d_sqrd;
+//			coefficients[3] = 4.0 * sum_d_sqrd * f;
+//			coefficients[2] = 2.0 * sum_d_sqrd * e + 4.0 * f * f + four_a_sqrd * d2 * d2;
+//			coefficients[1] = 4.0 * f * e + 2.0 * four_a_sqrd * y1 * d2;
+//			coefficients[0] = e * e - four_a_sqrd * (mTubeRadius * mTubeRadius - y1 * y1); 	// constant term
 
-			bool is_hit = false;
-			if (num_real_roots == 0)
-			{
-				return is_hit;
-			}
-			else
-			{
-				// sort the answers
-				float temp = FLT_MAX;
-				bool has_root = false;
-				for (int i = 0; i < num_real_roots; ++i)
-				{
-					if (roots[i] > KEpsilon())
-					{
-						has_root = true;
-						if (roots[i] < temp)
-						{
-							temp = roots[i];
-						}
-					}
-				}
+            //
+// 			int num_roots = 0;
+// 			float roots[4] = { 0.0f };
+// 			RTMath::SolveQuaraticEquation(A, B, C, D, E, num_roots, roots);
+            int num_real_roots = RTMath::SolveQuartic(coefficients, roots);
 
-				if (has_root)
-				{
-					if (temp > KEpsilon())
-					{
-						is_hit = true;
-						tvalue = temp;
-					}
-				}
-			}
+            bool is_hit = false;
+            if (num_real_roots == 0)
+            {
+                //		g_Console.Write("num_roots is zero!\n");
+                return is_hit;
+            }
+            else
+            {
+                // sort the roots
+                float temp = FLT_MAX;
+                for (int i = 0; i < num_real_roots; ++i)
+                {
+                    for (int j = i + 1; j < num_real_roots; ++j)
+                    {
+                        if (roots[i] > roots[j])
+                        {
+                            temp = roots[i];
+                            roots[i] = roots[j];
+                            roots[j] = temp;
+                        }
+                    }
+                }
 
-			return is_hit;
+                for (int i = 0; i < num_real_roots; ++i)
+                {
+                    temp = roots[i];
+                    if (temp > KEpsilon())
+                    {
+                        bool test = true;
+                        if (mPartTorus)
+                        {
+                            Vec3f hitPt = inRay.O() + temp * inRay.D();
+                            hitPt = hitPt - mCenter;
+                            bool in_theta_range = this->check_in_theta_range(hitPt);
+                            bool in_phi_range = this->check_in_phi_range(hitPt);
+                            if (!in_theta_range || !in_phi_range)
+                            {
+                                test = false;
+                            }
+                        }
+
+                        if (test)
+                        {
+                            is_hit = true;
+                            tvalue = temp;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return is_hit;
 		}
 
 	public:
@@ -2418,23 +2975,34 @@ namespace LaplataRayTracer
 
 		virtual Vec3f GetNormal(const HitRecord& rec) const
 		{
-			Vec3f norm;
-			float x = rec.pt.X();
-			float y = rec.pt.Y();
-			float z = rec.pt.Z();
+//			Vec3f norm;
+//			float x = rec.pt.X();
+//			float y = rec.pt.Y();
+//			float z = rec.pt.Z();
+//
+//			float sx = x*x;
+//			float sy = y*y;
+//			float sz = z*z;
+//			float souter = mSweptRadius*mSweptRadius;
+//			float sinner = mTubeRadius*mTubeRadius;
+//
+//			float nx = 4.0f*x*(sx+sy+sz-(souter+sinner));
+//			float ny = 4.0f*y*((sx+sy+sz)-(souter+sinner)+2.0f*souter);
+//			float nz = 4.0f*z*(sx+sy+sz-(souter+sinner));
+//
+//			norm.Set(nx, ny, nz);
+//			norm.MakeUnit();
 
-			float sx = x*x;
-			float sy = y*y;
-			float sz = z*z;
-			float souter = mSweptRadius*mSweptRadius;
-			float sinner = mTubeRadius*mTubeRadius;
-
-			float nx = 4.0f*x*(sx+sy+sz-(souter+sinner));
-			float ny = 4.0f*y*((sx+sy+sz)-(souter+sinner)+2.0f*souter);
-			float nz = 4.0f*z*(sx+sy+sz-(souter+sinner));
-
-			norm.Set(nx, ny, nz);
-			norm.MakeUnit();
+            Vec3f hitPT = rec.pt - mCenter;
+            float x = hitPT.X();
+            float y = hitPT.Y();
+            float z = hitPT.Z();
+            float nx = 4.0f*x*x*x+4*x*(y*y+z*z-(mSweptRadius*mSweptRadius+mTubeRadius*mTubeRadius));
+            float ny = 4.0f*y*y*y+4.0f*y*(x*x+z*z-(mSweptRadius*mSweptRadius+mTubeRadius*mTubeRadius));
+            float nz = 4.0f*z*z*z+4.0f*z*(x*x+y*y+mSweptRadius*mSweptRadius-mTubeRadius*mTubeRadius);
+            Vec3f norm;
+            norm.Set(nx, ny, nz);
+            norm.MakeUnit();
 
 // 			float param_squared = mSweptRadius * mSweptRadius + mTubeRadius * mTubeRadius;
 // 
@@ -2473,8 +3041,56 @@ namespace LaplataRayTracer
 		inline void SetTubeRadius(float innerRadius) { mTubeRadius = innerRadius; }
 		inline void SetColor(float r, float g, float b) { mColor.Set(r, g, b); }
 
+        inline void SetPartParams(bool partTours, float theta0, float theta1, float phi0, float phi1)
+        {
+		    mPartTorus = partTours;
+
+		    mTheta0 = ANG2RAD(theta0);
+		    mTheta1 = ANG2RAD(theta1);
+
+		    mPhi0 = ANG2RAD(phi0);
+		    mPhi1 = ANG2RAD(phi1);
+		}
+
 	public:
 		inline static float KEpsilon() { return 0.001f; }
+
+	private:
+	    inline bool check_in_theta_range(Vec3f const& hitPt) const
+	    {
+		//    Vec3f z_axis(0.0f, 0.0f, 1.0f);
+            Vec3f x_axis(1.0f, 0.0f, 0.0f);
+		    float cos_theta = Dot(hitPt, x_axis) / (hitPt.Length() * x_axis.Length());
+		    float theta = std::acos(cos_theta);
+		    if (hitPt.Y() < mCenter.Y())
+		    //if (hitPt.X() < mCenter.X())
+            {
+		        theta = 2.0f * PI_CONST - theta;
+            }
+		    if ((theta > mTheta0) && (theta < mTheta1))
+            {
+		        return true;
+            }
+
+		    return false;
+		}
+
+		inline bool check_in_phi_range(Vec3f const& hitPt) const
+        {
+		    float phi = std::acos(
+                    (hitPt.Length() * hitPt.Length() - mSweptRadius * mSweptRadius - mTubeRadius * mTubeRadius)
+                    / (2.0f * mSweptRadius * mTubeRadius));
+		    if (hitPt.Z() < mCenter.Z())
+            {
+		        phi = 2.0f * PI_CONST - phi;
+            }
+		    if ((phi > mPhi0) && (phi < mPhi1))
+            {
+		        return true;
+            }
+
+		    return false;
+        }
 
 	private:
 		Vec3f mCenter;
@@ -2482,6 +3098,16 @@ namespace LaplataRayTracer
 		float mTubeRadius;
 		Color3f mColor;
 
+		// two theta and phi angle to define part torus
+		// both -1 means the full torus
+		// both are in radius.
+		// theta is used to chop off torus
+		// phi is used to open up torus
+		bool mPartTorus;
+		float mTheta0;
+		float mTheta1;
+		float mPhi0;
+		float mPhi1;
 	};
 
 	//
@@ -2632,7 +3258,7 @@ namespace LaplataRayTracer
 		}
 
 		virtual Vec3f GetNormal(const HitRecord& rec) const
-		{
+        {
 			Vec3f norm;
 
 			float nx = 2.0f * mInteceptB * mInteceptB * mInteceptC * mInteceptC * (rec.pt.X() - mCenter.X());
@@ -3475,6 +4101,7 @@ namespace LaplataRayTracer
 			float tmax_copy = FLT_MAX;
 			float t = FLT_MAX;
 			bool bHitAnything = false;
+			Material *material = nullptr;
 			Color3f albedo;
 
 			int numObject = GetCount();
@@ -3490,6 +4117,7 @@ namespace LaplataRayTracer
 					n = rec.n;
 					pt = rec.pt;
 					albedo = rec.albedo;
+					material = rec.pMaterial;
 				}
 			}
 
@@ -3501,7 +4129,8 @@ namespace LaplataRayTracer
 				rec.t = tmax;
 				rec.pt = pt;
 				rec.n = n;
-				rec.pMaterial = nullptr;
+			//	rec.pMaterial = nullptr;
+				rec.pMaterial = material;
 				rec.albedo = albedo;
 			}
 
@@ -3510,6 +4139,12 @@ namespace LaplataRayTracer
 
 		virtual bool IntersectP(Ray const& inRay, float& tvalue) const
 		{
+			// if two objects are close to light including one of them represents the light,
+			// it's better not to add them into compound objects, because
+			// once the shadow ray hits an object, it concludes the test process,
+			// actually the object been hit is just a light source.
+			// here is a single loop, you need a double loop to solve this problem.
+			// but also it's very time-cosuming.
 			bool isHit = false;
 			int numObject = GetCount();
 			for (int i = 0; i < numObject; ++i)
@@ -3559,7 +4194,7 @@ namespace LaplataRayTracer
 
 		virtual Vec3f GetNormal(const HitRecord& rec) const
 		{
-			return WORLD_ORIGIN;
+            return WORLD_ORIGIN;
 		}
 
 		virtual Vec3f RandomSamplePoint() const
@@ -3639,6 +4274,9 @@ namespace LaplataRayTracer
 			if (obj != nullptr) {
 				mvecObjects.push_back(obj);
 			}
+		}
+		inline void SetObject(int idx, GeometricObject *obj) {
+			mvecObjects[idx] = obj;
 		}
 		inline int LastHit() const { return mnLastHitIdx; }
 
