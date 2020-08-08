@@ -329,9 +329,22 @@ namespace LaplataRayTracer
 			float y = atof(section[1].c_str());
 			float z = atof(section[2].c_str());
 			mesh.mesh_vertices.push_back(Vec3f(x, y, z));
-			if (mesh.mesh_support_uv) {
+			if (mNormal) {
+				float nx = atof((section[3].c_str()));
+				float ny = atof((section[4].c_str()));
+				float nz = atof((section[5].c_str()));
+				Vec3f norm(nx, ny, nz);
+				mesh.mesh_normal.push_back(norm);
+			}
+			if (mesh.mesh_support_uv && !mNormal) {
 				float u = atof((section[3].c_str()));
 				float v = atof((section[4].c_str()));
+				mesh.mesh_texU.push_back(static_cast<float>(u));
+				mesh.mesh_texV.push_back(static_cast<float>(v));
+			}
+			if (mesh.mesh_support_uv && mNormal) {
+				float u = atof((section[6].c_str()));
+				float v = atof((section[7].c_str()));
 				mesh.mesh_texU.push_back(static_cast<float>(u));
 				mesh.mesh_texV.push_back(static_cast<float>(v));
 			}

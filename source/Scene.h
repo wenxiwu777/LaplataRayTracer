@@ -124,7 +124,7 @@ namespace LaplataRayTracer
 						}
 					}
                     color /= (float)sampler_count;*/
-                    int N = 30;
+                    int N = 40;
                     for (int m = 0; m < N; ++m)
                     {
                         for (int n = 0; n < N; ++n)

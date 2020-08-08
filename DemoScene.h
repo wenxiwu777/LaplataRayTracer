@@ -34,11 +34,11 @@ public:
 //		mpViewSampler->SetSetCount(1);
 
         //  mpRayTracer = new RayCastTracer;
-        //	mpRayTracer = new AreaLightTracer;
+        //    mpRayTracer = new AreaLightTracer;
 		//	mpRayTracer = new WhittedTracer;
 	 	//    mpRayTracer = new GlobalTracer;
-            mpRayTracer = new PathTracer;
-        //    mpRayTracer = new PathTracer_PBRS;
+        //    mpRayTracer = new PathTracer;
+            mpRayTracer = new PathTracer_PBRS;
 
 		mpViewPlane = new ViewPlane(w, h);
 		mpCamera = new PerspectiveCamera;
@@ -74,7 +74,7 @@ public:
 		//	buildup_test_ambient_occlusion_scene();
         //    BuildupMultiObjIntersectionTestScene();
         //  buildup_test_scene_of_phong_shading_model_with_lights();
-        //    buildup_CornellBox();
+            buildup_CornellBox();
 		//	buildup_test_area_light_shading_scene();
 		//	buildup_test_texutre_area_light_shading_scene();
 		//	buildup_test_retangle_texture_scene();
@@ -101,7 +101,7 @@ public:
         //    buildup_test_obj_model_scene();
 		//    buildup_test_inter_grid_shadow_scne();
         //  builup_shelf_test_scene();
-            buildup_random_sphere_scene();
+        //    buildup_random_sphere_scene();
 
 	}
 
@@ -158,7 +158,7 @@ private:
 
         //
         // Add a glass material ball in the middle of the box.
-        MaterialObject *pGlassBall = new MaterialObject(new SimpleSphere(Vec3f(14, 15, 245), 10),
+        MaterialObject *pGlassBall = new MaterialObject(new MaxAngleSampledShpere(Vec3f(14, 15, 245), 10),
                                                         new GlassMaterial(1.5, Color3f(1,1,1), Color3f(1, 1, 1)));
 //        MaterialObject *pMetalBall = new MaterialObject(new SimpleSphere(Vec3f(10, 50, 240), 5),
 //                                                        new MirrorMaterial(Color3f(0.7,0.7,0.8), 0.6));
@@ -2546,10 +2546,11 @@ private:
         pGlossyMaterial->SetSampler(pSampler);
 
         ////////// The New Metal Material /////////////
-		ImageTexture *tex = new ImageTexture;
-		tex->LoadJPGFromFile("D:/workspace/CG/Ray Tracing/obj_models/dining-room/textures/Teacup.png");
+        ImageTexture *tex = new ImageTexture;
+//		tex->LoadJPGFromFile("D:/workspace/CG/Ray Tracing/obj_models/dining-room/textures/Teacup.png");
+//        tex->LoadJPGFromFile("D:/workspace/CG/Ray Tracing/obj_models/dining-room/textures/Teacup.png");
         MetalMaterial *metal_material = new MetalMaterial;
-//		metal_material->SetDiffuse(0.7, tex);
+        metal_material->SetDiffuse(0.7, tex);
 //		metal_material->SetSpecular(0.6, Color3f(0.9, 0.9, 0.9));
 //		metal_material->SetTransparent(1.5, WHITE, WHITE);
 		metal_material->SetGlossy(0.01, 0.9, 0.35, Color3f(0.9, 0.9, 0.4), 100, 200);
@@ -2610,15 +2611,16 @@ private:
 		obj_model_inst2->Translate(0.0, 0.45, 0);
 		obj_model_inst2->Scale(2.5, 2.5, 2.5);
 //        mvecObjects.push_back(obj_model_inst2);*/
-/*
+
 		SubstrateMaterial *sub_material2 = new SubstrateMaterial(
 			Color3f(0.900000, 0.900000, 0.900000), Color3f(0.400000, 0.400000, 0.400000), 0.01, 0.1, 100, 2000);
-		sub_material2->SetDiffuseEx(tex);
+        sub_material2->SetDiffuseEx(new ConstantTexture(1, 1, 1));
 
 		RegularGridMeshObject *obj_test_model_teapot = new RegularGridMeshObject;
 		obj_test_model_teapot->SetMaterial(sub_material2);
 		obj_test_model_teapot->EnableAcceleration(true);
-		obj_test_model_teapot->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+//		obj_test_model_teapot->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+        obj_test_model_teapot->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
 		obj_test_model_teapot->BuildupAccelerationStructure();
 		Instance *obj_model_teapot_inst = new Instance(obj_test_model_teapot);
 		obj_model_teapot_inst->Translate(0, -0.5, 0);
@@ -2628,14 +2630,15 @@ private:
 		RegularGridMeshObject *obj_test_model_teapot_lid = new RegularGridMeshObject;
 		obj_test_model_teapot_lid->SetMaterial(sub_material2);
 		obj_test_model_teapot_lid->EnableAcceleration(true);
-		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+//		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+        obj_test_model_teapot_lid->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
 		obj_test_model_teapot_lid->BuildupAccelerationStructure();
 		Instance *obj_model_teapot_lid_inst = new Instance(obj_test_model_teapot_lid);
 		obj_model_teapot_lid_inst->Translate(0, -0.5, 0);
 		obj_model_teapot_lid_inst->RotateY(-60);
 		mvecObjects.push_back(obj_model_teapot_lid_inst);
-*/
 
+/*
 		MetalMaterial *metal = new MetalMaterial;
 		//		metal->SetDiffuse(1, new ConstantTexture(0.9, 0.9, 0.9));
 		metal->SetGlossy(1, 0.5, 0.55, Color3f(0.9, 0.9, 0.9));
@@ -2654,7 +2657,7 @@ private:
 		inst_model->RotateY(40);
 		inst_model->Translate(0, -5, 0);
 		mvecObjects.push_back(inst_model);
-
+*/
         //
         Vec3f p0(-20, -5.0f, -100);
         Vec3f a(0, 0, 120);
@@ -2678,13 +2681,13 @@ private:
         mobjSceneLights.AddLight(pPointLight);
 
 		//
-		ImageTexture *pTex = new ImageTexture;
-		pTex->LoadJPGFromFile("D:/workspace/CG/Ray Tracing/TextureImages/TextureFiles/jpg/CloudsHighRes.jpg");
-		pTex->SetMappingMethod(new LightProbMapping);
-		EnvrionmentTextureLight *pEnvLight = new EnvrionmentTextureLight(0.2, pTex);
-		MultiJitteredSampler *pEnvLightSampler = new MultiJitteredSampler(100);
-		pEnvLightSampler->MapSamplesToHemiShpere(4000);
-		pEnvLight->SetSampler(pEnvLightSampler);
+//		ImageTexture *pTex = new ImageTexture;
+//		pTex->LoadJPGFromFile("D:/workspace/CG/Ray Tracing/TextureImages/TextureFiles/jpg/CloudsHighRes.jpg");
+//		pTex->SetMappingMethod(new LightProbMapping);
+//		EnvrionmentTextureLight *pEnvLight = new EnvrionmentTextureLight(0.2, pTex);
+//		MultiJitteredSampler *pEnvLightSampler = new MultiJitteredSampler(100);
+//		pEnvLightSampler->MapSamplesToHemiShpere(4000);
+//		pEnvLight->SetSampler(pEnvLightSampler);
 //		pEnvLight->EnableShadow(false);
 //		mobjSceneLights.AddLight(pEnvLight);
 

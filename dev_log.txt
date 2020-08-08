@@ -1223,3 +1223,14 @@ and the comment line at the beginning, i modified the parser, it can handle both
 2020-07-28 (on mac)
 enhanced the random sphere scene to add some moving spheres.
 
+2020-08-08 (on mac)
+implemented SimpleTriangle::RandomSamplePoint() PDFValue() and RandomSampleDirection()
+implemented MeshTriangle::RandomSamplePoint() PDFValue() and RandomSampleDirection() so that the PathTracer or GlobalTracer can sample from 
+triangle-based light source.
+implemented SimpleSphere update_sphere() to calculate mfArea in constructor, besides the previous calculation for mfArea was wrong.
+added MaxAngleSampledShpere new class to handle PDFValue() and RandomSampleDirection() only for PathTracer and PathTracer_PBRS
+so, re-implemented the SimpleSphere::PDFValue(), RandomSampleDirection() and RandomSamplePoint(), the way is similar to SimpleRectangle 
+and SimpleTriangle, which just samples a random point on the its surface, but in MaxAngleSampledShpere it involves ONB shading coordinate.
+tested cornell-box scene again with MaxAngleSampledShpere by using PathTracer_PBRS, and
+it's correct.
+

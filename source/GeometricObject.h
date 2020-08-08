@@ -422,7 +422,7 @@ namespace LaplataRayTracer
 	public:
 		virtual float Area() const
 		{
-			return 1.0f / (4.0f * PI_CONST);
+            return mfArea;
 		}
 
 		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
@@ -440,9 +440,15 @@ namespace LaplataRayTracer
 
 		virtual Vec3f RandomSamplePoint() const
 		{
-		    Vec3f pt = SamplerBase::SampleInUnitSphere();
-		    pt.MakeUnit();
-			return pt;
+            float u = Random::frand48();
+            float v = Random::frand48();
+
+            float z = 1.0f - 2.0f * u;
+            float r = std::sqrt(1.0f - z * z);
+            float phi = TWO_PI_CONST * v;
+
+            Vec3f pt = mPos + mfRadius * Vec3f(r * std::cos(phi), r * std::sin(phi), z);
+            return pt;
 		}
 
 		virtual void Update(float t)
@@ -457,30 +463,13 @@ namespace LaplataRayTracer
 
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
 		{
-			Ray testRay(o, v, 0.0f);
-			float tvalue = 0.0f;
-			if (this->IntersectP(testRay, tvalue))
-			{
-				Vec3f vec_dir = mPos - o;
-				float len = vec_dir.Length();
-				float cos_theta_max = std::sqrt(1.0f - (mfRadius * mfRadius) / (len * len));
-				float solid_angle = 2.0f * PI_CONST * (1.0f - cos_theta_max);
-				return 1.0f / solid_angle;
-			}
-
-			return 0.0f;
+            return (1.0f / mfArea);
 		}
 
 		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
 		{
-			Vec3f vec_dir = mPos - v;
-			float len = vec_dir.Length();
-			float squd_dist = len * len;
-
-			ONB onb;
-			onb.BuildFromW(vec_dir);
-			Vec3f rand_pt_on_shpere = SamplerBase::RandomToShpere(mfRadius, squd_dist);
-			return (onb.Local2(rand_pt_on_shpere));
+            Vec3f pt = RandomSamplePoint();
+            return (pt - v);
 		}
 
 	public:
@@ -514,7 +503,7 @@ namespace LaplataRayTracer
 	private:
 		inline void update_shpere()
 		{
-
+            mfArea = (2.0f * TWO_PI_CONST) * (mfRadius * mfRadius);
 		}
 
 	private:
@@ -546,6 +535,50 @@ namespace LaplataRayTracer
 		float mCosThetaMin;
 		float mCosThetaMax;
 	};
+
+    class MaxAngleSampledShpere : public SimpleSphere
+    {
+    public:
+        MaxAngleSampledShpere(Vec3f const& pos, float fRadius)
+            : SimpleSphere(pos, fRadius)
+        {
+
+        }
+        virtual ~MaxAngleSampledShpere() { }
+
+    public:
+        virtual void *Clone() { return (GeometricObject *)(new MaxAngleSampledShpere(*this)); }
+
+    public:
+        virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
+        {
+            Ray testRay(o, v, 0.0f);
+            float tvalue = 0.0f;
+            if (this->IntersectP(testRay, tvalue))
+            {
+                Vec3f vec_dir = mPos - o;
+                float len = vec_dir.Length();
+                float cos_theta_max = std::sqrt(1.0f - (mfRadius * mfRadius) / (len * len));
+                float solid_angle = 2.0f * PI_CONST * (1.0f - cos_theta_max);
+                return 1.0f / solid_angle;
+            }
+
+            return 0.0f;
+        }
+
+        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        {
+            Vec3f vec_dir = mPos - v;
+            float len = vec_dir.Length();
+            float squd_dist = len * len;
+
+            ONB onb;
+            onb.BuildFromW(vec_dir);
+            Vec3f rand_pt_on_shpere = SamplerBase::RandomToShpere(mfRadius, squd_dist);
+            return (onb.Local2(rand_pt_on_shpere));
+        }
+
+    };
 
 	class SimpleSphere2 : public GeometricObject
 	{
@@ -1587,7 +1620,7 @@ namespace LaplataRayTracer
 
 		virtual Vec3f RandomSamplePoint() const
 		{
-			return WORLD_ORIGIN;
+            return (SimpleTriangle::RandomSamplePointImpl(v0, v1, v2));
 		}
 
 		virtual void Update(float t)
@@ -1603,12 +1636,13 @@ namespace LaplataRayTracer
 
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
 		{
-			return 0.0f;
+            return (1.0f / mArea);
 		}
 
 		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
 		{
-			return Vec3f(0.0f, 0.0f, 0.0f);
+            Vec3f pt = RandomSamplePoint();
+            return (pt - v);
 		}
 
 	public:
@@ -1743,6 +1777,19 @@ namespace LaplataRayTracer
 		inline static void ComputeAreaImpl(const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, float& area) {
 			area = Cross(v1 - v2, v2 - v0).Length() * 0.5f;
 		}
+
+        inline static Vec3f RandomSamplePointImpl(Vec3f const& v0, Vec3f const& v1, Vec3f const& v2) {
+            float u = Random::frand48();
+            float v = Random::frand48();
+
+            float su = (float)std::sqrt(u);
+            Vec3f pt = (1.0f - su) * v0 + (1.0f - v) * su * v1 + v * su * v2;
+            // u: 1-su
+            // v: v*su
+            // so, 1 - u - v = 1 - (1 - su) - v*su == su - v*su == (1 - v)*su that is exactly v1's factor
+
+            return pt;
+        }
 
 	public:
 		inline static float KEpsilon() { return 0.001f; }

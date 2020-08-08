@@ -76,12 +76,18 @@ namespace LaplataRayTracer
 
 		virtual Vec3f RandomSamplePoint() const
 		{
-			return WORLD_ORIGIN;
+            Vec3f& v0 = mpMeshDesc->mesh_vertices[mnIndex0];
+            Vec3f& v1 = mpMeshDesc->mesh_vertices[mnIndex1];
+            Vec3f& v2 = mpMeshDesc->mesh_vertices[mnIndex2];
+
+            Vec3f pt = SimpleTriangle::RandomSamplePointImpl(v0, v1, v2);
+            return pt;
 		}
 
 		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
 		{
-			return Vec3f(0.0f, 0.0f, 0.0f);
+            Vec3f pt = RandomSamplePoint();
+            return (pt - v);
 		}
 
 		virtual void Update(float t) {
@@ -96,7 +102,7 @@ namespace LaplataRayTracer
 		}
 
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const {
-			return 0.0f;
+            return (1.0f / mfArea);
 		}
 		
 	public:
