@@ -56,7 +56,7 @@ namespace LaplataRayTracer {
 	}
 
 	Vec3f LightPDF::Generate(void) const {
-		return (mpHitables->RandomSampleDirection(mOrigin));
+        return (mpHitables->SampleRandomDirection(mOrigin));
 	}
 
 	////////////////

@@ -476,7 +476,7 @@ namespace LaplataRayTracer
 		virtual Vec3f GetDirection(const HitRecord& hitRec) {
 			mLightNormal = mpLightShape->GetNormal(hitRec);
 
-			mSamplePoint = mpLightShape->RandomSamplePoint();
+            mSamplePoint = mpLightShape->SampleRandomPoint();
 			mWi = mSamplePoint - hitRec.wpt;
 			mWi.MakeUnit();
 

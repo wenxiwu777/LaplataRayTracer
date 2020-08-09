@@ -27,11 +27,11 @@ namespace LaplataRayTracer {
 		virtual float Area() const;
 		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding);
 		virtual Vec3f GetNormal(const HitRecord& rec) const;
-		virtual Vec3f RandomSamplePoint() const;
+        virtual Vec3f SampleRandomPoint() const;
 		virtual void Update(float t);
 		virtual bool IsCompound() const;
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const;
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const;
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const;
 
 	public:
 		inline void SetObject(GeometricObject *ptrObj, bool autoDelete = false)

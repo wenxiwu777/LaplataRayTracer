@@ -34,11 +34,11 @@ public:
 //		mpViewSampler->SetSetCount(1);
 
         //  mpRayTracer = new RayCastTracer;
-        //    mpRayTracer = new AreaLightTracer;
+            mpRayTracer = new AreaLightTracer;
 		//	mpRayTracer = new WhittedTracer;
 	 	//    mpRayTracer = new GlobalTracer;
         //    mpRayTracer = new PathTracer;
-            mpRayTracer = new PathTracer_PBRS;
+        //    mpRayTracer = new PathTracer_PBRS;
 
 		mpViewPlane = new ViewPlane(w, h);
 		mpCamera = new PerspectiveCamera;
@@ -74,7 +74,7 @@ public:
 		//	buildup_test_ambient_occlusion_scene();
         //    BuildupMultiObjIntersectionTestScene();
         //  buildup_test_scene_of_phong_shading_model_with_lights();
-            buildup_CornellBox();
+        //    buildup_CornellBox();
 		//	buildup_test_area_light_shading_scene();
 		//	buildup_test_texutre_area_light_shading_scene();
 		//	buildup_test_retangle_texture_scene();
@@ -98,7 +98,7 @@ public:
 		//	buildup_test_geometric_object_plus();
 		//	 buildup_test_microfacet_brdf_scene();
         //    buildup_test_microfacet_brdf_scene2();
-        //    buildup_test_obj_model_scene();
+            buildup_test_obj_model_scene();
 		//    buildup_test_inter_grid_shadow_scne();
         //  builup_shelf_test_scene();
         //    buildup_random_sphere_scene();
@@ -2553,7 +2553,7 @@ private:
         metal_material->SetDiffuse(0.7, tex);
 //		metal_material->SetSpecular(0.6, Color3f(0.9, 0.9, 0.9));
 //		metal_material->SetTransparent(1.5, WHITE, WHITE);
-		metal_material->SetGlossy(0.01, 0.9, 0.35, Color3f(0.9, 0.9, 0.4), 100, 200);
+        metal_material->SetGlossy(0.01, 0.9, 0.35, Color3f(0.9, 0.9, 0.9), 100, 200);
 //		metal_material->SetGlossy(0.01, 0.6, 0.35, Color3f(0.1, 0.1, 0.1), 100, 2);
 //		metal_material->SetGlossy(17, 1, 0.75, RED);
 
@@ -2617,7 +2617,7 @@ private:
         sub_material2->SetDiffuseEx(new ConstantTexture(1, 1, 1));
 
 		RegularGridMeshObject *obj_test_model_teapot = new RegularGridMeshObject;
-		obj_test_model_teapot->SetMaterial(sub_material2);
+        obj_test_model_teapot->SetMaterial(metal_material);
 		obj_test_model_teapot->EnableAcceleration(true);
 //		obj_test_model_teapot->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
         obj_test_model_teapot->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
@@ -2627,16 +2627,16 @@ private:
 		obj_model_teapot_inst->RotateY(-60);
 		mvecObjects.push_back(obj_model_teapot_inst);
 
-		RegularGridMeshObject *obj_test_model_teapot_lid = new RegularGridMeshObject;
-		obj_test_model_teapot_lid->SetMaterial(sub_material2);
-		obj_test_model_teapot_lid->EnableAcceleration(true);
-//		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
-        obj_test_model_teapot_lid->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
-		obj_test_model_teapot_lid->BuildupAccelerationStructure();
-		Instance *obj_model_teapot_lid_inst = new Instance(obj_test_model_teapot_lid);
-		obj_model_teapot_lid_inst->Translate(0, -0.5, 0);
-		obj_model_teapot_lid_inst->RotateY(-60);
-		mvecObjects.push_back(obj_model_teapot_lid_inst);
+//		RegularGridMeshObject *obj_test_model_teapot_lid = new RegularGridMeshObject;
+//		obj_test_model_teapot_lid->SetMaterial(sub_material2);
+//		obj_test_model_teapot_lid->EnableAcceleration(true);
+////		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+//        obj_test_model_teapot_lid->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+//		obj_test_model_teapot_lid->BuildupAccelerationStructure();
+//		Instance *obj_model_teapot_lid_inst = new Instance(obj_test_model_teapot_lid);
+//		obj_model_teapot_lid_inst->Translate(0, -0.5, 0);
+//		obj_model_teapot_lid_inst->RotateY(-60);
+//		mvecObjects.push_back(obj_model_teapot_lid_inst);
 
 /*
 		MetalMaterial *metal = new MetalMaterial;

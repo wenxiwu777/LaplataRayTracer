@@ -48,11 +48,11 @@ namespace LaplataRayTracer
 		virtual float Area() const = 0;
 		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding) = 0;
 		virtual Vec3f GetNormal(const HitRecord& rec) const = 0;
-		virtual Vec3f RandomSamplePoint() const = 0;
+        virtual Vec3f SampleRandomPoint() const = 0;
 		virtual void Update(float t) = 0;
 		virtual bool IsCompound() const = 0;
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const = 0;
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const = 0;
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const = 0;
 
 	};
 
@@ -131,7 +131,7 @@ namespace LaplataRayTracer
 			return mNormal;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return WORLD_ORIGIN;
 		}
@@ -151,7 +151,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -438,7 +438,7 @@ namespace LaplataRayTracer
 			return temp;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
             float u = Random::frand48();
             float v = Random::frand48();
@@ -466,9 +466,9 @@ namespace LaplataRayTracer
             return (1.0f / mfArea);
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
-            Vec3f pt = RandomSamplePoint();
+            Vec3f pt = SampleRandomPoint();
             return (pt - v);
 		}
 
@@ -566,7 +566,7 @@ namespace LaplataRayTracer
             return 0.0f;
         }
 
-        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
         {
             Vec3f vec_dir = mPos - v;
             float len = vec_dir.Length();
@@ -727,7 +727,7 @@ namespace LaplataRayTracer
 
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return WORLD_ORIGIN;
 		}
@@ -758,7 +758,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			Vec3f vec_dir = mCenter - v;
 			float len = vec_dir.Length();
@@ -868,7 +868,7 @@ namespace LaplataRayTracer
 			return mNormal;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			Point2f pt = SamplerBase::SampleInUnitDisk();
 			Vec3f vecRand = mPos + pt.X() * mBase.U() + pt.Y() * mBase.V();
@@ -890,9 +890,9 @@ namespace LaplataRayTracer
 			return (1.0f / mArea);
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
-			Vec3f randDir = v - RandomSamplePoint();
+            Vec3f randDir = v - SampleRandomPoint();
 			return randDir;
 		}
 
@@ -1061,7 +1061,7 @@ namespace LaplataRayTracer
 			return mNormal;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return WORLD_ORIGIN;
 		}
@@ -1081,7 +1081,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -1340,7 +1340,7 @@ namespace LaplataRayTracer
             return mNormal;
         }
 
-        virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
         {
             Vec3f sample_point = mPos + Random::frand48() * mDirW + Random::frand48() * mDirH;
             return sample_point;
@@ -1372,9 +1372,9 @@ namespace LaplataRayTracer
             return 0.0f;
         }
 
-        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
         {
-            Vec3f pt = RandomSamplePoint();
+            Vec3f pt = SampleRandomPoint();
             return (pt - v);
         }
 
@@ -1451,7 +1451,7 @@ namespace LaplataRayTracer
         }
 
     public:
-        virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
         {
             Vec3f sample_point;
             sample_point.Set(
@@ -1466,9 +1466,9 @@ namespace LaplataRayTracer
             return SimpleRectangle::PDFValue(o, v);
         }
 
-        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
         {
-            Vec3f pt = XYRect::RandomSamplePoint();
+            Vec3f pt = XYRect::SampleRandomPoint();
             return (pt - v);
         }
     };
@@ -1501,7 +1501,7 @@ namespace LaplataRayTracer
         }
 
     public:
-        virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
         {
             Vec3f sample_point;
             sample_point.Set(
@@ -1516,9 +1516,9 @@ namespace LaplataRayTracer
             return SimpleRectangle::PDFValue(o, v);
         }
 
-        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
         {
-            Vec3f pt = XZRect::RandomSamplePoint();
+            Vec3f pt = XZRect::SampleRandomPoint();
             return (pt - v);
         }
     };
@@ -1551,7 +1551,7 @@ namespace LaplataRayTracer
         }
 
     public:
-        virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
         {
             Vec3f sample_point;
             sample_point.Set(
@@ -1566,9 +1566,9 @@ namespace LaplataRayTracer
             return SimpleRectangle::PDFValue(o, v);
         }
 
-        virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
         {
-            Vec3f pt = YZRect::RandomSamplePoint();
+            Vec3f pt = YZRect::SampleRandomPoint();
             return (pt - v);
         }
     };
@@ -1618,9 +1618,9 @@ namespace LaplataRayTracer
 			return vNormal;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
-            return (SimpleTriangle::RandomSamplePointImpl(v0, v1, v2));
+            return (SimpleTriangle::SampleRandomPointImpl(v0, v1, v2));
 		}
 
 		virtual void Update(float t)
@@ -1639,9 +1639,9 @@ namespace LaplataRayTracer
             return (1.0f / mArea);
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
-            Vec3f pt = RandomSamplePoint();
+            Vec3f pt = SampleRandomPoint();
             return (pt - v);
 		}
 
@@ -1778,7 +1778,7 @@ namespace LaplataRayTracer
 			area = Cross(v1 - v2, v2 - v0).Length() * 0.5f;
 		}
 
-        inline static Vec3f RandomSamplePointImpl(Vec3f const& v0, Vec3f const& v1, Vec3f const& v2) {
+        inline static Vec3f SampleRandomPointImpl(Vec3f const& v0, Vec3f const& v1, Vec3f const& v2) {
             float u = Random::frand48();
             float v = Random::frand48();
 
@@ -2031,7 +2031,7 @@ namespace LaplataRayTracer
 			return WORLD_ORIGIN;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return WORLD_ORIGIN;
 		}
@@ -2051,7 +2051,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -2317,7 +2317,7 @@ namespace LaplataRayTracer
 			return Vec3f(pt.X() / mRadius, 0.0f, pt.Z() / mRadius);
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -2337,7 +2337,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -2645,7 +2645,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -2659,7 +2659,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3066,7 +3066,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const { return Vec3f(0.0f, 0.0f, 0.0f); }
+        virtual Vec3f SampleRandomPoint() const { return Vec3f(0.0f, 0.0f, 0.0f); }
 
 		virtual void Update(float t) { }
 
@@ -3077,7 +3077,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3318,7 +3318,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3338,7 +3338,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3573,7 +3573,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3593,7 +3593,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3814,7 +3814,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -3834,7 +3834,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -4060,7 +4060,7 @@ namespace LaplataRayTracer
 			return norm;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -4080,7 +4080,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
@@ -4244,10 +4244,10 @@ namespace LaplataRayTracer
             return WORLD_ORIGIN;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			int index = static_cast<int>(Random::drand48() * this->GetCount());
-			return mvecObjects[index]->RandomSamplePoint();
+            return mvecObjects[index]->SampleRandomPoint();
 		}
 
 		virtual void Update(float t)
@@ -4274,10 +4274,10 @@ namespace LaplataRayTracer
 			return sum;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
 			int index = static_cast<int>(Random::drand48() * this->GetCount());
-			return mvecObjects[index]->RandomSampleDirection(v);
+            return mvecObjects[index]->SampleRandomDirection(v);
 		}
 
 	public:

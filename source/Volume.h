@@ -82,7 +82,7 @@ namespace LaplataRayTracer
 			return WORLD_ORIGIN;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
 			return WORLD_ORIGIN;
 		}
@@ -99,7 +99,7 @@ namespace LaplataRayTracer
 			return 0.0f;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const {
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const {
 			return Vec3f(0.0f, 0.0f, 0.0f);
 		}
 

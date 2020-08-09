@@ -74,19 +74,19 @@ namespace LaplataRayTracer
 			return mNormal;
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
             Vec3f& v0 = mpMeshDesc->mesh_vertices[mnIndex0];
             Vec3f& v1 = mpMeshDesc->mesh_vertices[mnIndex1];
             Vec3f& v2 = mpMeshDesc->mesh_vertices[mnIndex2];
 
-            Vec3f pt = SimpleTriangle::RandomSamplePointImpl(v0, v1, v2);
+            Vec3f pt = SimpleTriangle::SampleRandomPointImpl(v0, v1, v2);
             return pt;
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
-            Vec3f pt = RandomSamplePoint();
+            Vec3f pt = SampleRandomPoint();
             return (pt - v);
 		}
 

@@ -113,9 +113,9 @@ namespace LaplataRayTracer
 			return mpProxyObject->GetNormal(rec);
 		}
 
-		virtual Vec3f RandomSamplePoint() const
+        virtual Vec3f SampleRandomPoint() const
 		{
-			return mpProxyObject->RandomSamplePoint();
+            return mpProxyObject->SampleRandomPoint();
 		}
 
 		virtual void Update(float t)
@@ -132,9 +132,9 @@ namespace LaplataRayTracer
 			return mpProxyObject->PDFValue(o, v);
 		}
 
-		virtual Vec3f RandomSampleDirection(Vec3f const& v) const
+        virtual Vec3f SampleRandomDirection(Vec3f const& v) const
 		{
-			return mpProxyObject->RandomSampleDirection(v);
+            return mpProxyObject->SampleRandomDirection(v);
 		}
 
 	public:

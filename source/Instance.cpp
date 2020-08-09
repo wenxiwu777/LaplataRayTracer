@@ -96,8 +96,8 @@ namespace LaplataRayTracer {
 		return n;
 	}
 
-	Vec3f Instance::RandomSamplePoint() const {
-		Vec3f ret_pt = mTransform.ApplyPoint(mpProxyObject->RandomSamplePoint());
+    Vec3f Instance::SampleRandomPoint() const {
+        Vec3f ret_pt = mTransform.ApplyPoint(mpProxyObject->SampleRandomPoint());
 		return ret_pt;
 	}
 
@@ -114,9 +114,9 @@ namespace LaplataRayTracer {
 		return (mpProxyObject->PDFValue(o, v));
 	}
 
-	Vec3f Instance::RandomSampleDirection(Vec3f const& v) const
+    Vec3f Instance::SampleRandomDirection(Vec3f const& v) const
 	{
-		return (mpProxyObject->RandomSampleDirection(v));
+        return (mpProxyObject->SampleRandomDirection(v));
 	}
 
 	//
