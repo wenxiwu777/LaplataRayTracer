@@ -4209,7 +4209,14 @@ namespace LaplataRayTracer
 	public:
 		virtual float Area() const
 		{
-			return 0.0f;
+            float area = 0.0f;
+            int count = mvecObjects.size();
+            for (int i = 0; i < count; ++i)
+            {
+                area += mvecObjects[i]->Area();
+            }
+
+            return area;
 		}
 
 		virtual bool GetBoundingBox(float t0, float t1, AABB& bounding)
