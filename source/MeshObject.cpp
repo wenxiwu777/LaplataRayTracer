@@ -20,16 +20,7 @@ namespace LaplataRayTracer
 		mbAutoReleaseMesh = false;
 		mbEnableAcceleration = true;
 		mpAllMaterial = nullptr;
-	}
-
-	RegularGridMeshObject::RegularGridMeshObject(RegularGridMeshObject& other) {
-
-	}
-
-	RegularGridMeshObject& RegularGridMeshObject::operator=(RegularGridMeshObject& other) {
-
-		return *this;
-
+        mSpeedupFactor = 2.0f;
 	}
 
 	RegularGridMeshObject::~RegularGridMeshObject() {
@@ -427,7 +418,7 @@ namespace LaplataRayTracer
 		float boundary_height = bounding_box.mY1 - bounding_box.mY0;
 
 		// get the average cube cell length of each cell
-		const float scale_factor = 2.0f;
+        const float scale_factor = mSpeedupFactor;
 		float cube_cell_length = std::pow((boundary_length * boundary_width * boundary_height) / obj_num, 0.333333f);
 
 		// get the cell count in each three directions (length/width/height)
@@ -645,6 +636,10 @@ namespace LaplataRayTracer
 	void RegularGridMeshObject::EnableAcceleration(bool enable) {
 		mbEnableAcceleration = enable;
 	}
+
+    void RegularGridMeshObject::SetSeedupFactor(float factor) {
+        mSpeedupFactor = factor;
+    }
 
 	//
 	void RegularGridMeshObject::TessellateFlatShpere(Vec3f const& pos, int hNum, int vNum) {

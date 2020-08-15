@@ -1237,3 +1237,11 @@ it's correct.
 2020-08-09 (on mac)
 replaced all RandomSamplePoint with SampleRandomPoint
 replaced all RandomSampleDirection with SampleRandomDirection
+
+2020-08-15 (on mac)
+implemetned CompoundObject::Area() functions.
+implemented RegularGridMeshObject::Area(), RegularGridMeshObject::PDFValue() functions.
+removed copy constructor and operator = from RegularGridMeshObject
+added SetSeedupFactor to RegularGridMeshObject, tested and found single sphere at the center of the scene in a speed up RegularGridMeshObject
+may cause holes on the sphere, but adjusted the speeding up factor can avoid it, now i consider its a bug, but use this function can temporary 
+avoid it. 

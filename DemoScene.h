@@ -94,11 +94,11 @@ public:
         //    buildup_test_dielectric_material_scene();
         //    buildup_test_dielectric_material_scene2();
         //buildup_test_glossy_reflective_scene();
-        //    buildup_CornellBox_scene2();
+            buildup_CornellBox_scene2();
 		//	buildup_test_geometric_object_plus();
 		//	 buildup_test_microfacet_brdf_scene();
         //    buildup_test_microfacet_brdf_scene2();
-            buildup_test_obj_model_scene();
+        //    buildup_test_obj_model_scene();
 		//    buildup_test_inter_grid_shadow_scne();
         //  builup_shelf_test_scene();
         //    buildup_random_sphere_scene();
@@ -170,19 +170,19 @@ private:
 //		ConstantMedium *pVolumeShpere = new ConstantMedium(pGlassBall, 0.05f, new IsotropicMaterial(new ConstantTexture(Color3f(0.2F,0.4F,0.9F))));
 //		mvecObjects.push_back(pVolumeShpere);
 
-        SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
-        MaterialObject *box_mat1 = new MaterialObject(box1, new MatteMaterial(Color3f(0.5,0.5,0.5)));
-        Instance *inst_box1 = new Instance(box_mat1);
-        inst_box1->RotateY(60);
-        inst_box1->Translate(-28, 0, 240);
-        mvecObjects.push_back(inst_box1);
+//        SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
+//        MaterialObject *box_mat1 = new MaterialObject(box1, new MatteMaterial(Color3f(0.5,0.5,0.5)));
+//        Instance *inst_box1 = new Instance(box_mat1);
+//        inst_box1->RotateY(60);
+//        inst_box1->Translate(-28, 0, 240);
+//        mvecObjects.push_back(inst_box1);
 
-//        SimpleBox *box2 = new SimpleBox(0, 20, 0, 40, 0, 20);
-//        MaterialObject *box_mat2 = new MaterialObject(box2, new MatteMaterial(Color3f(0.5,0.5,0.5)));
-//        Instance *inst_box2 = new Instance(box_mat2);
-////		inst_box2->RotateY(-30);
-//        inst_box2->Translate(10, 0, 230);
-//        mvecObjects.push_back(inst_box2);
+        SimpleBox *box2 = new SimpleBox(0, 20, 0, 40, 0, 20);
+        MaterialObject *box_mat2 = new MaterialObject(box2, new MatteMaterial(Color3f(0.5,0.5,0.5)));
+        Instance *inst_box2 = new Instance(box_mat2);
+//		inst_box2->RotateY(-30);
+        inst_box2->Translate(10, 0, 230);
+        mvecObjects.push_back(inst_box2);
 
 //        RegularGridMeshObject *model = new RegularGridMeshObject;
 //        model->SetMaterial(new GlassMaterial(1.5, WHITE,WHITE));
@@ -1886,12 +1886,12 @@ private:
 
         //
 		Matte2Material *pMatBox = new Matte2Material;
-		pMatBox->SetKa(1);
+        pMatBox->SetKa(0.3);
 		pMatBox->SetKd(1);
 		pMatBox->SetCd(Color3f(0, 0, 1), new ConstantTexture(Color3f(0, 0, 1)));
 
 		Matte2Material *pMatBox2 = new Matte2Material;
-		pMatBox2->SetKa(1);
+        pMatBox2->SetKa(0.3);
 		pMatBox2->SetKd(1);
 		pMatBox2->SetCd(Color3f(1,1,0), new ConstantTexture(Color3f(1, 1, 0)));
 
@@ -1966,7 +1966,7 @@ private:
         YZRect *p1 = new YZRect(Vec3f(-40, 0, 200), false, 80, 80);
  //       p1->SetColor(Color3f(0,0,0));
         MaterialObject *pLeftWall = new MaterialObject(p1, pMatMaterial2);
-		mvecObjects.push_back(pLeftWall);
+        mvecObjects.push_back(pLeftWall);
 
         YZRect *p2 = new YZRect(Vec3f(40, 0, 200), true, 80, 80);
   //      p2->SetColor(Color3f(0,0,0));
@@ -1983,19 +1983,9 @@ private:
         MaterialObject *pFloorWall = new MaterialObject(p4, pMatMaterial5);
         mvecObjects.push_back(pFloorWall);
 
-        //
-        // Add a glass material ball in the middle of the box.
-        SimpleSphere *pSphere = new SimpleSphere(Vec3f(0, 0, 0), 10);
-//        pSphere->SetColor(Color3f(0,0,0));
-//        MaterialObject *pGlassBall = new MaterialObject(pSphere, transparentMat);
-//        mvecObjects.push_back(pGlassBall);
-		MaterialObject *sphere_mat = new MaterialObject(pSphere, pMatBox);
-		Instance *sphere_inst = new Instance(sphere_mat);
-		sphere_inst->RotateY(60);
-		sphere_inst->Translate(20, 40, 240);
 
 		SolidCylinder *pCylinder = new SolidCylinder(Vec3f(0, 0, 0), 10, 0, 40, RED);
-		ThickRing *pThickRing = new ThickRing(Vec3f(0, 0, 0), 10, 13, 0, 10, RED);
+        ThickRing *pThickRing = new ThickRing(Vec3f(0, 0, 0), 8, 13, 0, 4, RED);
 
         //
         XZRect *p5 = new XZRect(Vec3f(-25, 78, 205), true, 50, 50);
@@ -2005,7 +1995,7 @@ private:
 
 //		MetalMaterial *metal_material = new MetalMaterial;
 //		metal_material->SetSpecular(0.9, WHITE);
-		Glass2Material *glass_material = new Glass2Material;
+//		Glass2Material *glass_material = new Glass2Material;
 
 		//
 		SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
@@ -2022,12 +2012,27 @@ private:
 		inst_box2->Translate(10, 0, 230);
 //		mvecObjects.push_back(inst_box2);
 
-		SimpleSphere *rand_sphere = new SimpleSphere(Vec3f(-25, 40, 210), 6);
-		SimpleSphere *rand_sphere2 = new SimpleSphere(Vec3f(-15, 40, 220), 6);
-		SimpleSphere *rand_sphere3 = new SimpleSphere(Vec3f(-30, 40, 230), 6);
-		SimpleSphere *rand_sphere4 = new SimpleSphere(Vec3f(25, 40, 240), 6);
-		SimpleSphere *rand_sphere5 = new SimpleSphere(Vec3f(30, 40, 250), 6);
-		SimpleSphere *rand_sphere6 = new SimpleSphere(Vec3f(0, 40, 210), 6);
+        const float r = 10;
+        SimpleSphere *rand_sphere = new SimpleSphere(Vec3f(-25, 40, 210), r);
+        SimpleSphere *rand_sphere2 = new SimpleSphere(Vec3f(-15, 40, 220), r);
+        SimpleSphere *rand_sphere3 = new SimpleSphere(Vec3f(-30, 40, 230), r);
+        SimpleSphere *rand_sphere4 = new SimpleSphere(Vec3f(25, 40, 240), r);
+        SimpleSphere *rand_sphere5 = new SimpleSphere(Vec3f(30, 40, 250), r);
+        SimpleSphere *rand_sphere6 = new SimpleSphere(Vec3f(0, 40, 210), r);
+
+        SimpleSphere *rand_sphere7 = new SimpleSphere(Vec3f(-25, 20, 210), r);
+        SimpleSphere *rand_sphere8 = new SimpleSphere(Vec3f(-15, 20, 220), r);
+        SimpleSphere *rand_sphere9 = new SimpleSphere(Vec3f(-30, 20, 230), r);
+        SimpleSphere *rand_sphere10 = new SimpleSphere(Vec3f(25, 20, 240), r);
+        SimpleSphere *rand_sphere11 = new SimpleSphere(Vec3f(30, 20, 250), r);
+        SimpleSphere *rand_sphere12 = new SimpleSphere(Vec3f(0, 20, 210), r);
+
+        SimpleSphere *rand_sphere13 = new SimpleSphere(Vec3f(-25, 60, 210), r);
+        SimpleSphere *rand_sphere14 = new SimpleSphere(Vec3f(-15, 60, 220), r);
+        SimpleSphere *rand_sphere15 = new SimpleSphere(Vec3f(-30, 60, 230), r);
+        SimpleSphere *rand_sphere16 = new SimpleSphere(Vec3f(25, 60, 240), r);
+        SimpleSphere *rand_sphere17 = new SimpleSphere(Vec3f(30, 60, 250), r);
+        SimpleSphere *rand_sphere18 = new SimpleSphere(Vec3f(0, 60, 210), r);
 
 		MaterialObject *mat_1 = new MaterialObject(rand_sphere, pMatMaterial);
 		MaterialObject *mat_2 = new MaterialObject(rand_sphere2, pMatMaterial, true, false);
@@ -2036,31 +2041,83 @@ private:
 		MaterialObject *mat_5 = new MaterialObject(rand_sphere5, pMatMaterial, true, false);
 		MaterialObject *mat_6 = new MaterialObject(rand_sphere6, pMatMaterial, true, false);
 
-//		RegularGridMeshObject *all_objs = new RegularGridMeshObject;
-//		all_objs->AddObject(pBackWall);
-//		all_objs->AddObject(pLeftWall);
-//		all_objs->AddObject(pRightWall);
-//		all_objs->AddObject(pCellWall);
-//		all_objs->AddObject(pCellLight);
-//		all_objs->AddObject(pFloorWall);
-//		all_objs->AddObject(inst_box1);
-//		all_objs->AddObject(inst_box2);
-//		all_objs->AddObject(pCellLight);
-//		all_objs->AddObject(sphere_inst);
-//		all_objs->AddObject(mat_1);
-//		all_objs->AddObject(mat_2);
-//		all_objs->AddObject(mat_3);
-//		all_objs->AddObject(mat_4);
-//		all_objs->AddObject(mat_5);
-//		all_objs->AddObject(mat_6);
-//		all_objs->EnableAcceleration(false);
-//		all_objs->BuildupAccelerationStructure();
-//		mvecObjects.push_back(all_objs);
+        MaterialObject *mat_7 = new MaterialObject(rand_sphere7, pMatMaterial);
+        MaterialObject *mat_8 = new MaterialObject(rand_sphere8, pMatMaterial, true, false);
+        MaterialObject *mat_9 = new MaterialObject(rand_sphere9, pMatMaterial, true, false);
+        MaterialObject *mat_10 = new MaterialObject(rand_sphere10, pMatMaterial, true, false);
+        MaterialObject *mat_11 = new MaterialObject(rand_sphere11, pMatMaterial, true, false);
+        MaterialObject *mat_12 = new MaterialObject(rand_sphere12, pMatMaterial, true, false);
 
+        MaterialObject *mat_13 = new MaterialObject(rand_sphere13, pMatMaterial);
+        MaterialObject *mat_14 = new MaterialObject(rand_sphere14, pMatMaterial, true, false);
+        MaterialObject *mat_15 = new MaterialObject(rand_sphere15, pMatMaterial, true, false);
+        MaterialObject *mat_16 = new MaterialObject(rand_sphere16, pMatMaterial, true, false);
+        MaterialObject *mat_17 = new MaterialObject(rand_sphere17, pMatMaterial, true, false);
+        MaterialObject *mat_18 = new MaterialObject(rand_sphere18, pMatMaterial, true, false);
 
-//		Instance *inst_all = new Instance(all_objs);
-//		inst_all->RotateX(30);
-//		mvecObjects.push_back(inst_all);
+        SimpleSphere *pSphere = new SimpleSphere(Vec3f(0, 20, 240), r);
+//        pSphere->SetColor(Color3f(0,0,0));
+//        MaterialObject *pGlassBall = new MaterialObject(pSphere, transparentMat);
+//        mvecObjects.push_back(pGlassBall);
+        MaterialObject *sphere_mat = new MaterialObject(pSphere, pMatMaterial);
+        Instance *sphere_inst = new Instance(sphere_mat);
+        sphere_inst->RotateX(60);
+        sphere_inst->Translate(20, 60, 240);
+
+        RegularGridMeshObject *all_objs = new RegularGridMeshObject;
+//        all_objs->AddObject(pBackWall);
+//        all_objs->AddObject(pLeftWall);
+//        all_objs->AddObject(pRightWall);
+//        all_objs->AddObject(pCellWall);
+//        all_objs->AddObject(pCellLight);
+//        all_objs->AddObject(pFloorWall);
+//        all_objs->AddObject(inst_box1);//
+//        all_objs->AddObject(inst_box2);
+//        all_objs->AddObject(pCellLight);
+        all_objs->AddObject(sphere_mat);
+        all_objs->AddObject(mat_1);
+        all_objs->AddObject(mat_2);
+        all_objs->AddObject(mat_3);
+        all_objs->AddObject(mat_4);
+        all_objs->AddObject(mat_5);
+        all_objs->AddObject(mat_6);
+
+        all_objs->AddObject(mat_7);
+        all_objs->AddObject(mat_8);
+        all_objs->AddObject(mat_9);
+        all_objs->AddObject(mat_10);
+        all_objs->AddObject(mat_11);
+        all_objs->AddObject(mat_12);
+
+        all_objs->AddObject(mat_13);
+        all_objs->AddObject(mat_14);
+        all_objs->AddObject(mat_15);
+        all_objs->AddObject(mat_16);
+        all_objs->AddObject(mat_17);
+        all_objs->AddObject(mat_18);
+//        all_objs->SetSeedupFactor(1.6);
+        all_objs->EnableAcceleration(true);
+        all_objs->BuildupAccelerationStructure();
+        mvecObjects.push_back(all_objs);
+
+//        RegularGridMeshObject *all_objs2 = new RegularGridMeshObject;
+//        all_objs2->AddObject(mat_1);
+//        all_objs2->AddObject(mat_2);
+//        all_objs2->AddObject(mat_3);
+//        all_objs2->AddObject(mat_4);
+//        all_objs2->AddObject(mat_5);
+//        all_objs2->AddObject(mat_6);
+//        all_objs2->EnableAcceleration(true);
+//        all_objs2->BuildupAccelerationStructure();
+
+        Instance *inst_all = new Instance(all_objs);
+//        inst_all->RotateX(30);
+//        mvecObjects.push_back(inst_all);
+
+//        Instance *inst_all2 = new Instance(all_objs2);
+////        inst_all->RotateX(30);
+//        mvecObjects.push_back(inst_all2);
+
 
 		MetalMaterial *metal = new MetalMaterial;
 //		metal->SetDiffuse(1, new ConstantTexture(0.9, 0.9, 0.9));
@@ -2068,18 +2125,18 @@ private:
 //		metal->SetSpecular(0.9, Color3f(0.9, 0.9, 0.9));
 		metal->SetTransparent(1.5, Color3f(0.9, 0.9, 0.9), Color3f(0.6, 0.6, 0.6));
 
-		RegularGridMeshObject *model = new RegularGridMeshObject;
-		model->SetMaterial(metal);
-//		model->ReverseMeshNormals(); ////////// IMPORTANT SETTING!!!!!!
-		model->EnableAcceleration(true);
-		model->LoadFromFile("D:/workspace/CG/Ray Tracing/59739329PLYFiles.bak/PLYFiles.bak/ply/dragon.ply", EMeshType::SMOOTH_SHADING);
-		model->BuildupAccelerationStructure();
-		Instance *inst_model = new Instance(model);
-//		inst_model->Scale(300, 300, 300); // For stanford bunny10k and dragon
-		inst_model->Scale(300, 300, 300);
-		inst_model->RotateY(40);
-		inst_model->Translate(2, 10, 260);
-		mvecObjects.push_back(inst_model);
+//		RegularGridMeshObject *model = new RegularGridMeshObject;
+//		model->SetMaterial(metal);
+////		model->ReverseMeshNormals(); ////////// IMPORTANT SETTING!!!!!!
+//		model->EnableAcceleration(true);
+//		model->LoadFromFile("D:/workspace/CG/Ray Tracing/59739329PLYFiles.bak/PLYFiles.bak/ply/dragon.ply", EMeshType::SMOOTH_SHADING);
+//		model->BuildupAccelerationStructure();
+//		Instance *inst_model = new Instance(model);
+////		inst_model->Scale(300, 300, 300); // For stanford bunny10k and dragon
+//		inst_model->Scale(300, 300, 300);
+//		inst_model->RotateY(40);
+//		inst_model->Translate(2, 10, 260);
+//		mvecObjects.push_back(inst_model);
 
         //
         AmbientLight *pAmbientLight = new AmbientLight;
@@ -2617,7 +2674,7 @@ private:
         sub_material2->SetDiffuseEx(new ConstantTexture(1, 1, 1));
 
 		RegularGridMeshObject *obj_test_model_teapot = new RegularGridMeshObject;
-        obj_test_model_teapot->SetMaterial(metal_material);
+        obj_test_model_teapot->SetMaterial(sub_material2);
 		obj_test_model_teapot->EnableAcceleration(true);
 //		obj_test_model_teapot->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
         obj_test_model_teapot->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh001.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
@@ -2627,16 +2684,16 @@ private:
 		obj_model_teapot_inst->RotateY(-60);
 		mvecObjects.push_back(obj_model_teapot_inst);
 
-//		RegularGridMeshObject *obj_test_model_teapot_lid = new RegularGridMeshObject;
-//		obj_test_model_teapot_lid->SetMaterial(sub_material2);
-//		obj_test_model_teapot_lid->EnableAcceleration(true);
-////		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
-//        obj_test_model_teapot_lid->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
-//		obj_test_model_teapot_lid->BuildupAccelerationStructure();
-//		Instance *obj_model_teapot_lid_inst = new Instance(obj_test_model_teapot_lid);
-//		obj_model_teapot_lid_inst->Translate(0, -0.5, 0);
-//		obj_model_teapot_lid_inst->RotateY(-60);
-//		mvecObjects.push_back(obj_model_teapot_lid_inst);
+        RegularGridMeshObject *obj_test_model_teapot_lid = new RegularGridMeshObject;
+        obj_test_model_teapot_lid->SetMaterial(sub_material2);
+        obj_test_model_teapot_lid->EnableAcceleration(true);
+//		obj_test_model_teapot_lid->LoadFromFile("D:/workspace/CG/Ray Tracing/obj_models/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+        obj_test_model_teapot_lid->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/teapot/models/Mesh000.obj", EMeshType::SMOOTH_SHADING, EModelType::MODEL_OBJ, false);
+        obj_test_model_teapot_lid->BuildupAccelerationStructure();
+        Instance *obj_model_teapot_lid_inst = new Instance(obj_test_model_teapot_lid);
+        obj_model_teapot_lid_inst->Translate(0, -0.5, 0);
+        obj_model_teapot_lid_inst->RotateY(-60);
+        mvecObjects.push_back(obj_model_teapot_lid_inst);
 
 /*
 		MetalMaterial *metal = new MetalMaterial;

@@ -33,8 +33,6 @@ namespace LaplataRayTracer
 	class RegularGridMeshObject : public CompoundObject, public IGeometricAcceleration, public IMeshFileReaderSink {
 	public:
 		RegularGridMeshObject();
-		RegularGridMeshObject(RegularGridMeshObject& other);
-		RegularGridMeshObject& operator=(RegularGridMeshObject& other);
 		virtual ~RegularGridMeshObject();
 
 	public:
@@ -74,6 +72,8 @@ namespace LaplataRayTracer
 
 		void EnableAcceleration(bool enable);
 
+        void SetSeedupFactor(float factor);
+
     public:
         // tessellate geometry functions
         void TessellateFlatShpere(Vec3f const& pos, int hNum, int vNum);
@@ -103,6 +103,7 @@ namespace LaplataRayTracer
 		bool		mbAutoReleaseMesh;
 		bool		mbEnableAcceleration;
 		Material *  mpAllMaterial;
+        float       mSpeedupFactor;
 
 	};
 }

@@ -297,7 +297,7 @@ namespace LaplataRayTracer
 			return false;
 		}
 
-		virtual bool IntersectP(Ray const& inRay, float& tvalue) const
+        virtual bool IntersectP(Ray const& inRay, float& tvalue) const
 		{
 		//	Vec3f vOC = inRay.O() - mPos;
 			Vec3f vOC = inRay.O() - getPos(inRay.T());
@@ -365,9 +365,9 @@ namespace LaplataRayTracer
 				tvalue = result;
 			}
 			return isHit;
-		}
+        }
 
-		/*virtual bool IntersectP(Ray const& inRay, float& tvalue) const
+        /*virtual bool IntersectP(Ray const& inRay, float& tvalue) const
 		{
 			//	Vec3f vOC = inRay.O() - mPos;
 			Vec3f vOC = inRay.O() - getPos(inRay.T());
@@ -417,7 +417,7 @@ namespace LaplataRayTracer
 
 			tvalue = result;
 			return isHit;
-		}*/
+        }*/
 
 	public:
 		virtual float Area() const
