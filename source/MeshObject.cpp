@@ -375,7 +375,7 @@ namespace LaplataRayTracer
 	// From CompoundObject
 	float RegularGridMeshObject::Area() const
 	{
-		return 0.0f;
+        return CompoundObject::Area();
 	}
 
 	bool RegularGridMeshObject::GetBoundingBox(float t0, float t1, AABB& bounding) {
@@ -395,7 +395,7 @@ namespace LaplataRayTracer
 	}
 
 	void RegularGridMeshObject::Update(float t) {
-		// to do nothing.
+        CompoundObject::Update(t);
 
 	}
 
@@ -404,7 +404,7 @@ namespace LaplataRayTracer
 	}
 
 	float RegularGridMeshObject::PDFValue(Vec3f const& o, Vec3f const& v) const {
-		return 0.0f;
+        return CompoundObject::PDFValue(o, v);
 	}
 
 	//
