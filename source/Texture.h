@@ -31,36 +31,6 @@ namespace LaplataRayTracer
 
 	};
 
-	//
-	class SimpleSkyTexture : public Texture // what the hell? what exactly is it?
-	{
-	public:
-		SimpleSkyTexture() { }
-		virtual ~SimpleSkyTexture() { }
-
-	public:
-		virtual void *Clone() { return (Texture *)(new SimpleSkyTexture); }
-
-	public:
-		virtual Color3f GetTextureColor(HitRecord& hitRec) const
-		{
-			Vec3f pt_temp = hitRec.pt;
-			return Sample(0.0f, MakeUnit<float>(pt_temp).Y());
-		}
-
-		virtual Color3f Sample(float u, float v) const
-		{
-			float t = 0.5f * (v + 1.0f);
-			return (1.0f - t) * Color3f(1.0f, 1.0f, 1.0f) + t * Color3f(0.5f, 0.7f, 1.0f);
-		}
-
-		virtual Color3f GetTexelColor(int texelX, int texelY) const
-		{
-			return Color3f(0.0f, 0.0f, 0.0f);
-		}
-
-	};
-
 	// Constant texture
 	class ConstantTexture : public Texture
 	{

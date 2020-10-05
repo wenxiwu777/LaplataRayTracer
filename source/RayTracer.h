@@ -13,6 +13,7 @@
 #include "ShadeObject.h"
 #include "WorldObjects.h"
 #include "Texture.h"
+#include "SceneEnvrionment.h"
 
 using std::vector;
 
@@ -23,7 +24,7 @@ namespace LaplataRayTracer
 	{
 		SceneObjects *	mpvecHitableObjs;
 		SceneLights *	mpSceneLights;
-		Texture *		mpBackground;
+        WorldEnvironment *  mpBackground;
 
 	};
 
@@ -80,7 +81,7 @@ namespace LaplataRayTracer
 			}
 
 			if (!bHitAnything) {
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			if (hitRec.pMaterial != nullptr) {
@@ -137,7 +138,7 @@ namespace LaplataRayTracer
 			}
 
 			if (!bHitAnything) {
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			if (hitRec.pMaterial != nullptr) {
@@ -237,7 +238,7 @@ namespace LaplataRayTracer
 			}
 
 			if (!bHitAnything) {
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			if (hitRec.pMaterial != nullptr) {
@@ -302,7 +303,7 @@ namespace LaplataRayTracer
 			}
 
 			if (!bHitAnything) {
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			if (hitRec.pMaterial != nullptr) {
@@ -424,7 +425,7 @@ namespace LaplataRayTracer
 			}
 
 			if (!bHitAnything) {
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			// Get the hit object's material, calculate the albedo, then Return it.
@@ -446,15 +447,15 @@ namespace LaplataRayTracer
 	};
 
 	//
-	class PathTracer_PBRS : public RayTracer
+    class PathTracer_MIS : public RayTracer
 	{
 	public:
-		PathTracer_PBRS()
+        PathTracer_MIS()
 		{
 
 		}
 
-		virtual ~PathTracer_PBRS()
+        virtual ~PathTracer_MIS()
 		{
 
 		}
@@ -485,7 +486,7 @@ namespace LaplataRayTracer
 
 			if (!bHitAnything) {
 			//	g_Console.Write("exit\n");
-				return mRTEvn.mpBackground->Sample(0.0f, MakeUnit<float>(ray.D()).Y());
+                return mRTEvn.mpBackground->Shade(ray);
 			}
 
 			if (hitRec.pMaterial != nullptr) {

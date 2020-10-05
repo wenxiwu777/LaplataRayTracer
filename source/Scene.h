@@ -32,6 +32,7 @@
 #include "MeshObject.h"
 #include "MovingObject.h"
 #include "Instance.h"
+#include "SceneEnvrionment.h"
 
 using std::vector;
 
@@ -61,7 +62,7 @@ namespace LaplataRayTracer
 		inline void SetViewPlane(ViewPlane *pViewPlane) { mpViewPlane = pViewPlane; }
 		inline void SetCamera(Camera *pCamear) { mpCamera = pCamear; }
 		inline void SetRayTracer(RayTracer *pRayTracer) { mpRayTracer = pRayTracer; }
-		inline void SetBackground(Texture *pTexture) { mpBackground = pTexture; }
+        inline void SetBackground(WorldEnvironment *pSceneEnv) { mpBackground = pSceneEnv; }
 
 	public:
 		virtual void Setup(int w = 400, int h = 400)
@@ -124,7 +125,7 @@ namespace LaplataRayTracer
 						}
 					}
                     color /= (float)sampler_count;*/
-                    int N = 3;
+                    int N = 20;
                     for (int m = 0; m < N; ++m)
                     {
                         for (int n = 0; n < N; ++n)
@@ -292,7 +293,7 @@ namespace LaplataRayTracer
 		Camera	*		mpCamera;
 		RayTracer *		mpRayTracer;
 
-		Texture *		mpBackground;
+        WorldEnvironment *mpBackground;
 
 	};
 

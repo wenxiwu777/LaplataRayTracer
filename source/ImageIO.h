@@ -30,10 +30,16 @@ namespace LaplataRayTracer
 		}
 
 		//
-		inline static unsigned char *STBILoad(const char* fileName, int *width, int *height,
+        inline static unsigned char *STBILoadImage(const char* fileName, int *width, int *height,
 			int *channelCount, int reqChannelCount) {
 			return stbi_load(fileName, width, height, channelCount, reqChannelCount);
 		}
+
+        //
+        inline static float *STBILoadHDR(const char *fileName, int *width, int *height, int *channelCount, int reqChannelCount) {
+            float *hdr_image = stbi_loadf(fileName, width, height, channelCount, reqChannelCount);
+            return hdr_image;
+        }
 
 	};
 }

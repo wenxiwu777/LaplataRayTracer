@@ -1243,5 +1243,17 @@ implemetned CompoundObject::Area() functions.
 implemented RegularGridMeshObject::Area(), RegularGridMeshObject::PDFValue() functions.
 removed copy constructor and operator = from RegularGridMeshObject
 added SetSeedupFactor to RegularGridMeshObject, tested and found single sphere at the center of the scene in a speed up RegularGridMeshObject
-may cause holes on the sphere, but adjusted the speeding up factor can avoid it, now i consider its a bug, but use this function can temporary 
-avoid it. 
+may cause holes on the sphere, but adjusted the speeding up factor can avoid it, now i consider its a bug, but use this function can temporary avoid it. 
+
+2020-09-12 (on mac)
+changed the implementation of SimpleSphere::PDFValue(), previous implementation is not correct.
+
+2020-10-05 (on mac)
+changed PathTracer_PBRS to PathTracer_MIS, after read 'multiply important sampling' from 'agraphicsguy.wordpress.com'(15 august), i realized the previous implementation for that kind of path tracer is the MIS one.
+renamed ImageIO::STBILoad to STBILoadImage, i will add STBILoadHDR later, so you can easily tell between them
+added STBILoadHDR to ImageIO to prepare for HDR background shading.
+fixed a bug in SimpleSkyTexture::GetTextureColor, it should return BLACK directly, because when this be called a ray hits nothing in the scene, so the parameter hitRec is always useless in this case, only Sample can be used to shade.
+i decided to remove SimpleSkyTexture, it now is replaced with SkylineEnv.
+added SceneEnvrionment.h to implement WorldEnvironment/EmptyEnv/SkylineEnv/HDREvn which support environment shading when a ray hits nothing in scene.
+added PI_HALF macro
+tested it with the random sphere scene.

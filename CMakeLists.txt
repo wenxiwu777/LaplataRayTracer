@@ -56,6 +56,7 @@ file(GLOB SOURCES
         source/ResourcePool.cpp
         source/Sampling.h
         source/Sampling.cpp
+        source/SceneEnvrionment.h
         source/Scene.h
         source/ShadeObject.h
         source/Surface.h

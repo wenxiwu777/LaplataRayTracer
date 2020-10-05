@@ -34,11 +34,11 @@ public:
 //		mpViewSampler->SetSetCount(1);
 
         //  mpRayTracer = new RayCastTracer;
-            mpRayTracer = new AreaLightTracer;
+        //    mpRayTracer = new AreaLightTracer;
 		//	mpRayTracer = new WhittedTracer;
 	 	//    mpRayTracer = new GlobalTracer;
-        //    mpRayTracer = new PathTracer;
-        //    mpRayTracer = new PathTracer_PBRS;
+            mpRayTracer = new PathTracer;
+        //    mpRayTracer = new PathTracer_MIS;
 
 		mpViewPlane = new ViewPlane(w, h);
 		mpCamera = new PerspectiveCamera;
@@ -94,14 +94,14 @@ public:
         //    buildup_test_dielectric_material_scene();
         //    buildup_test_dielectric_material_scene2();
         //buildup_test_glossy_reflective_scene();
-            buildup_CornellBox_scene2();
+        //    buildup_CornellBox_scene2();
 		//	buildup_test_geometric_object_plus();
 		//	 buildup_test_microfacet_brdf_scene();
         //    buildup_test_microfacet_brdf_scene2();
         //    buildup_test_obj_model_scene();
 		//    buildup_test_inter_grid_shadow_scne();
         //  builup_shelf_test_scene();
-        //    buildup_random_sphere_scene();
+            buildup_random_sphere_scene();
 
 	}
 
@@ -110,7 +110,7 @@ private:
 	{
         //
         //
-        mpBackground = new ConstantTexture(Color3f(0.9F, 0.9F, 0.9F));
+        mpBackground = new EmptyEnv(Color3f(0.9F, 0.9F, 0.9F));
 
         mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
         mpCamera->SetEye(Vec3f(1, 41, 370));
@@ -201,13 +201,13 @@ private:
         pLightList->EnableAutoDelete(false);
         pLightList->AddObject(pCellLight);
         pLightList->AddObject(pGlassBall);
-        ((PathTracer_PBRS *)mpRayTracer)->BindLightList(pLightList);
+        ((PathTracer_MIS *)mpRayTracer)->BindLightList(pLightList);
 	}
 
 	void BuildupMultiObjIntersectionTestScene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(0.1F, 0.1F, 0.1F));
+        mpBackground = new EmptyEnv(Color3f(0.1F, 0.1F, 0.1F));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -237,7 +237,7 @@ private:
 	void buildup_checker_texture_test_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(1.0, 1.0, 1.0));
+        mpBackground = new EmptyEnv(Color3f(1.0, 1.0, 1.0));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -263,7 +263,7 @@ private:
 	void buildup_sphere_texture()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(0.0f, 0.0f, 0.0f));
+        mpBackground = new EmptyEnv(Color3f(0.0f, 0.0f, 0.0f));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -293,7 +293,7 @@ private:
 	void buildup_volume_test_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(1.0F, 1.0F, 1.0F));
+        mpBackground = new EmptyEnv(Color3f(1.0F, 1.0F, 1.0F));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -320,7 +320,7 @@ private:
 	void buildup_matte_material_with_texture_test_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(1.0F, 1.0F, 1.0F));
+        mpBackground = new EmptyEnv(Color3f(1.0F, 1.0F, 1.0F));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -342,7 +342,7 @@ private:
 	void buildup_test_retangle_texture_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(1.0F, 1.0F, 1.0F));
+        mpBackground = new EmptyEnv(Color3f(1.0F, 1.0F, 1.0F));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -367,7 +367,7 @@ private:
 	void buildup_test_scene_of_phong_shading_model_with_lights()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(0.2, 0.1, 0.1));
+        mpBackground = new EmptyEnv(Color3f(0.2, 0.1, 0.1));
 
 		mpCamera->SetEye(Vec3f(0, 0, 20));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -439,7 +439,7 @@ private:
 	void buildup_test_hard_shadow_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(0.2, 0.1, 0.1));
+        mpBackground = new EmptyEnv(Color3f(0.2, 0.1, 0.1));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -507,7 +507,7 @@ private:
 	void buildup_test_ambient_occlusion_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(1, 1, 1));
+        mpBackground = new EmptyEnv(Color3f(1, 1, 1));
 
 		mpCamera->SetEye(Vec3f(0, 0, 500));
 		mpCamera->SetLookAt(Vec3f(0, 0, 0));
@@ -632,7 +632,7 @@ private:
 		*/
 
         //
-        mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
         //mpCamera->SetEye(Vec3f(-2, 1, 2));
         mpCamera->SetEye(Vec3f(-20, 10, 20));
@@ -727,7 +727,7 @@ private:
 
 	void buildup_test_texutre_area_light_shading_scene()
 	{
-		mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
 		mpCamera->SetEye(Vec3f(-20, 10, 30));
 		mpCamera->SetLookAt(Vec3f(0, 2, 0));
@@ -823,7 +823,7 @@ private:
 	void build_up_test_ply_model_scene()
 	{
 		//
-		mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
 		//
 		mpCamera->SetEye(Vec3f(-0.3, 0.1, 2.7)); // the perspective for dragon model
@@ -913,7 +913,7 @@ private:
 	void buildup_test_mesh_triangle_model_scene()
 	{
 		// Backgound setting
-		mpBackground = new ConstantTexture(Color3f(0, 0, 0));
+        mpBackground = new EmptyEnv(Color3f(0, 0, 0));
 
 		// Camera setting
 		mpCamera->SetEye(Vec3f(-6, 5, 21));
@@ -1115,7 +1115,7 @@ private:
 
 	void buildup_test_motion_blur_scene()
 	{
-		mpBackground = new SimpleSkyTexture;
+        mpBackground = new SkylineEnv;
 
 		mpCamera->SetExpTime(0, 2);
 		mpCamera->SetEye(Vec3f(0, 0, 200.0f));
@@ -1144,7 +1144,7 @@ private:
 	void buildup_test_other_geometry_objects()
 	{
 	//	mpBackground = new ConstantTexture(Color3f(0.4, 0.6, 0.8));
-        mpBackground = new SimpleSkyTexture;
+        mpBackground = new SkylineEnv;
 
 		mpCamera->SetExpTime(0, 2);
 	//	mpCamera->SetEye(Vec3f(5, 25, 20));		// For torus
@@ -1272,7 +1272,7 @@ private:
 
 	void buildup_test_geometry_tessellation_shpere_scene() {
 	    //
-        mpBackground = new ConstantTexture(Color3f(0.8, 0.7, 0.9));
+        mpBackground = new EmptyEnv(Color3f(0.8, 0.7, 0.9));
 
         //
         mpCamera->SetExpTime(0, 2);
@@ -1350,7 +1350,7 @@ private:
 	}
 
 	void buildup_test_part_geometric_object_scene() {
-        mpBackground = new ConstantTexture(Color3f(0.4, 0.5, 0.4));
+        mpBackground = new EmptyEnv(Color3f(0.4, 0.5, 0.4));
 
         mpCamera->SetExpTime(0, 2);
 //        mpCamera->SetEye(Vec3f(20, 20, 30)); // good
@@ -1407,7 +1407,7 @@ private:
 	}
 
 	void buildup_test_light_prob_env_test_scene() {
-        mpBackground = new SimpleSkyTexture;
+        mpBackground = new SkylineEnv;
 
         mpCamera->SetExpTime(0, 2);
         mpCamera->SetEye(Vec3f(0, 0, 30));
@@ -1435,8 +1435,8 @@ private:
 	}
 
 	void buildup_test_noise_based_texture_scene() {
-        //mpBackground = new SimpleSkyTexture;
-        mpBackground = new ConstantTexture(Color3f(0.5,0.5,0.5));
+        //mpBackground = new SkylineEnv;
+        mpBackground = new EmptyEnv(Color3f(0.5,0.5,0.5));
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1523,7 +1523,7 @@ private:
 	}
 
 	void buildup_test_texture_mapping_scene() {
-        mpBackground = new SimpleSkyTexture;
+        mpBackground = new SkylineEnv;
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1561,7 +1561,7 @@ private:
 
 	void buildup_test_caustic_by_global_tracer_scene() {
 	    //
-        mpBackground = new ConstantTexture(Color3f(0,0,0));
+        mpBackground = new EmptyEnv(Color3f(0,0,0));
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1638,7 +1638,7 @@ private:
 
     void buildup_test_caustic_by_path_tracer_scene() {
         //
-        mpBackground = new ConstantTexture(Color3f(0,0,0));
+        mpBackground = new EmptyEnv(Color3f(0,0,0));
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1681,7 +1681,7 @@ private:
     }
 
 	void buildup_test_dielectric_material_scene() {
-        mpBackground = new ConstantTexture(Color3f(1,1,1));
+        mpBackground = new EmptyEnv(Color3f(1,1,1));
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1731,7 +1731,7 @@ private:
 
 	void buildup_test_dielectric_material_scene2() {
 	    //
-        mpBackground = new ConstantTexture(Color3f(0.0, 0.3, 0.25));
+        mpBackground = new EmptyEnv(Color3f(0.0, 0.3, 0.25));
         //mpBackground = new ConstantTexture(Color3f(1, 1, 1));
 
         mpCamera->SetExpTime(0, 2);
@@ -1829,7 +1829,7 @@ private:
 
 	void buildup_test_glossy_reflective_scene() {
         //
-        mpBackground = new ConstantTexture(Color3f(0,0,0));
+        mpBackground = new EmptyEnv(Color3f(0,0,0));
 
         mpCamera->SetExpTime(0, 2);
 
@@ -1875,7 +1875,7 @@ private:
     {
         //
         //
-        mpBackground = new ConstantTexture(Color3f(0.1F, 0.1F, 0.1F));
+        mpBackground = new EmptyEnv(Color3f(0.1F, 0.1F, 0.1F));
 
         mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
         mpCamera->SetEye(Vec3f(0, 40, 370));
@@ -2071,30 +2071,30 @@ private:
 //        all_objs->AddObject(pCellWall);
 //        all_objs->AddObject(pCellLight);
 //        all_objs->AddObject(pFloorWall);
-//        all_objs->AddObject(inst_box1);//
+//       all_objs->AddObject(inst_box1);//
 //        all_objs->AddObject(inst_box2);
 //        all_objs->AddObject(pCellLight);
         all_objs->AddObject(sphere_mat);
-        all_objs->AddObject(mat_1);
-        all_objs->AddObject(mat_2);
-        all_objs->AddObject(mat_3);
-        all_objs->AddObject(mat_4);
-        all_objs->AddObject(mat_5);
-        all_objs->AddObject(mat_6);
+//        all_objs->AddObject(mat_1);
+//        all_objs->AddObject(mat_2);
+//        all_objs->AddObject(mat_3);
+//        all_objs->AddObject(mat_4);
+//        all_objs->AddObject(mat_5);
+//        all_objs->AddObject(mat_6);
 
-        all_objs->AddObject(mat_7);
-        all_objs->AddObject(mat_8);
-        all_objs->AddObject(mat_9);
-        all_objs->AddObject(mat_10);
-        all_objs->AddObject(mat_11);
-        all_objs->AddObject(mat_12);
+//        all_objs->AddObject(mat_7);
+//        all_objs->AddObject(mat_8);
+//        all_objs->AddObject(mat_9);
+//        all_objs->AddObject(mat_10);
+//        all_objs->AddObject(mat_11);
+//        all_objs->AddObject(mat_12);
 
-        all_objs->AddObject(mat_13);
-        all_objs->AddObject(mat_14);
-        all_objs->AddObject(mat_15);
-        all_objs->AddObject(mat_16);
-        all_objs->AddObject(mat_17);
-        all_objs->AddObject(mat_18);
+//        all_objs->AddObject(mat_13);
+//        all_objs->AddObject(mat_14);
+//        all_objs->AddObject(mat_15);
+//        all_objs->AddObject(mat_16);
+//        all_objs->AddObject(mat_17);
+//        all_objs->AddObject(mat_18);
 //        all_objs->SetSeedupFactor(1.6);
         all_objs->EnableAcceleration(true);
         all_objs->BuildupAccelerationStructure();
@@ -2170,7 +2170,7 @@ private:
     }
 
 	void buildup_test_geometric_object_plus() {
-		mpBackground = new ConstantTexture(Color3f(0.4, 0.5, 0.4));
+        mpBackground = new EmptyEnv(Color3f(0.4, 0.5, 0.4));
 
 		mpCamera->SetExpTime(0, 2);
 		mpCamera->SetEye(Vec3f(20, 20, 30)); // good
@@ -2298,7 +2298,7 @@ private:
 	}
 
 	void buildup_test_microfacet_brdf_scene() {
-		mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
 		mpCamera->SetExpTime(0, 2);
 		mpCamera->SetEye(Vec3f(20, 20, 30)); // good
@@ -2409,7 +2409,7 @@ private:
 	}
 
 	void buildup_test_microfacet_brdf_scene2() {
-        mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
         mpCamera->SetExpTime(0, 2);
         mpCamera->SetEye(Vec3f(20, 20, 30)); // good
@@ -2504,7 +2504,7 @@ private:
 	}
 
 	void buildup_test_obj_model_scene() {
-        mpBackground = new ConstantTexture(Color3f(0.5, 0.5, 0.5));
+        mpBackground = new EmptyEnv(Color3f(0.5, 0.5, 0.5));
 
         mpCamera->SetExpTime(0, 2);
         mpCamera->SetEye(Vec3f(20, 20, 30)); // good
@@ -2755,7 +2755,7 @@ private:
 	void buildup_test_inter_grid_shadow_scne() {
 		//
 		//
-		mpBackground = new ConstantTexture(Color3f(0.1F, 0.1F, 0.1F));
+        mpBackground = new EmptyEnv(Color3f(0.1F, 0.1F, 0.1F));
 
 		mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
 		mpCamera->SetEye(Vec3f(0, 40, 370));
@@ -2820,7 +2820,7 @@ private:
 	}
 
     void builup_shelf_test_scene() {
-        mpBackground = new ConstantTexture(Color3f(0.1F, 0.1F, 0.1F));
+        mpBackground = new EmptyEnv(Color3f(0.1F, 0.1F, 0.1F));
 
         mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
         mpCamera->SetEye(Vec3f(0, 40, 370));
@@ -2848,7 +2848,8 @@ private:
     void buildup_random_sphere_scene() {
         //
         //
-        mpBackground = new SimpleSkyTexture;
+        //mpBackground = new SkylineEnv;
+        mpBackground = new HDREvn("/Users/wuwenxi/workspace/CG/Models_Materials/HDRHaven/abandoned_factory_canteen_1k.hdr");
 
         mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
         mpCamera->SetEye(Vec3f(0, 3.3, 10));

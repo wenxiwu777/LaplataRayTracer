@@ -463,14 +463,15 @@ namespace LaplataRayTracer
 
 		virtual float PDFValue(Vec3f const& o, Vec3f const& v) const
 		{
-            		//return (1.0f / mfArea);
-			Vec3f v0 = o - mPos;
-            		Vec3f norm = v0;
-            		norm.MakeUnit();
-            		Vec3f vd = v - v0;
-            		vd.MakeUnit();
-            		float pdf = Dot(norm, vd);
-            		return pdf;
+        //    return (1.0f / mfArea);
+            Vec3f v0 = o - mPos;
+            Vec3f norm = v0;
+            norm.MakeUnit();
+            Vec3f vd = v - v0;
+            vd.MakeUnit();
+            float pdf = Dot(norm, vd);
+            return pdf;
+
 		}
 
         virtual Vec3f SampleRandomDirection(Vec3f const& v) const

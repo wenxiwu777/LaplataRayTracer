@@ -139,7 +139,7 @@ namespace LaplataRayTracer
 	//	stbi_set_flip_vertically_on_load(true);
 
 		bool loaded_ = false;
-		unsigned char *img_rgb = ImageIO::STBILoad(fileName, &img_width, &img_height, &img_channel_count, STBI_rgb);
+        unsigned char *img_rgb = ImageIO::STBILoadImage(fileName, &img_width, &img_height, &img_channel_count, STBI_rgb);
 		if (img_rgb) {
 			if (img_channel_count == 3) {
 				loaded_ = true;
