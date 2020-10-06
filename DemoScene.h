@@ -101,7 +101,9 @@ public:
         //    buildup_test_obj_model_scene();
 		//    buildup_test_inter_grid_shadow_scne();
         //  builup_shelf_test_scene();
-            buildup_random_sphere_scene();
+        //    buildup_random_sphere_scene();
+        //    buildup_volume_test_scene();
+            buildup_test_hdr_envrionment_scene();
 
 	}
 
@@ -167,8 +169,8 @@ private:
         mvecObjects.push_back(pGlassBall);
 
         //
-//		ConstantMedium *pVolumeShpere = new ConstantMedium(pGlassBall, 0.05f, new IsotropicMaterial(new ConstantTexture(Color3f(0.2F,0.4F,0.9F))));
-//		mvecObjects.push_back(pVolumeShpere);
+        ConstantMedium *pVolumeShpere = new ConstantMedium(pGlassBall, 0.05f, new IsotropicMaterial(new ConstantTexture(Color3f(0.2F,0.4F,0.9F))));
+        mvecObjects.push_back(pVolumeShpere);
 
 //        SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
 //        MaterialObject *box_mat1 = new MaterialObject(box1, new MatteMaterial(Color3f(0.5,0.5,0.5)));
@@ -2848,10 +2850,9 @@ private:
     void buildup_random_sphere_scene() {
         //
         //
-        //mpBackground = new SkylineEnv;
-        mpBackground = new HDREvn("/Users/wuwenxi/workspace/CG/Models_Materials/HDRHaven/abandoned_factory_canteen_1k.hdr");
+        mpBackground = new SkylineEnv;
 
-        mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
+        mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());      
         mpCamera->SetEye(Vec3f(0, 3.3, 10));
         mpCamera->SetLookAt(Vec3f(0, 0, 0));
         mpCamera->SetUpVector(Vec3f(0, 1, 0));
@@ -2922,6 +2923,45 @@ private:
         grid->BuildupAccelerationStructure();
 
         mvecObjects.push_back(grid);
+
+    }
+
+    void buildup_test_hdr_envrionment_scene() {
+        mpBackground = new HDREvn(
+                    "/Users/wuwenxi/workspace/CG/Models_Materials/HDRHaven/quattro_canti_4k.hdr",
+                                  3, 700);
+
+        mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
+        mpCamera->SetEye(Vec3f(-0.3, 3.3, 10.0));
+        mpCamera->SetLookAt(Vec3f(0, 0, 0));
+        mpCamera->SetUpVector(Vec3f(0, 1, 0));
+        ((PerspectiveCamera *)mpCamera)->SetDistance(400);
+        mpCamera->Update();
+
+        //
+        PlaneCheckerTexture *chekcer3d = new PlaneCheckerTexture(
+                    EPlaneOritention::PLANE_XOZ, 0.6, 0, Color3f(0.75, 0.75, 0.75), Color3f(1,1,1), BLACK);
+        //chekcer3d->SetCheckSize(0.6f);
+        //chekcer3d->SetAlternateColor(Color3f(0.75, 0.75, 0.75), Color3f(1, 1, 1));
+        Vec3f p0(-60, 0.0f, -100);
+        Vec3f a(0, 0, 280);
+        Vec3f b(130, 0, 0);
+        SimpleRectangle *rect = new SimpleRectangle(p0, a, b);
+        MaterialObject *mat_rect = new MaterialObject(rect, new MatteMaterial(Color3f(1,1,1)));
+        mvecObjects.push_back(mat_rect);
+
+        MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(0, 1.0, 2.5), 1),
+        new GlassMaterial(1.5, WHITE, WHITE));
+        mvecObjects.push_back(big0);
+
+        MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-2.2, 1.0, 2.6), 1),
+        new MatteMaterial(Color3f(0.9,0.9,0.9)));
+        mvecObjects.push_back(big1);
+
+        MaterialObject *big2 = new MaterialObject(new SimpleSphere(Vec3f(2.7, 1.0, 2.5), 1),
+        new MirrorMaterial(Color3f(1,1,1), 0));
+        mvecObjects.push_back(big2);
+
 
     }
 

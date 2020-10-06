@@ -160,8 +160,11 @@ namespace LaplataRayTracer
 		virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
 		{
 			Vec3f sample = SamplerBase::SampleInUnitSphere();
-			Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
-			out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
+        //    Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
+            Vec3f ptInUnitShpereCenter = hitRec.n + sample;
+            ptInUnitShpereCenter.MakeUnit();
+        //    out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
+            out_ray.Set(hitRec.wpt, ptInUnitShpereCenter, inRay.T());
 			attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
 			return true;
 
@@ -303,50 +306,51 @@ namespace LaplataRayTracer
 	public:
 		virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
 		{
-			Vec3f outfaced_normal;
-			Vec3f reflected = Surface::Reflect(inRay.D(), hitRec.n);
-			float ni_over_nt;
-			Vec3f refracted;
-			float reflected_prob;
-			float consine;
-			//attenunation_albedo = mAlbedo;
+            Vec3f outfaced_normal;
+            Vec3f reflected = Surface::Reflect(inRay.D(), hitRec.n);
+            float ni_over_nt;
+            Vec3f refracted;
+            float reflected_prob;
+            float consine;
+            //attenunation_albedo = mAlbedo;
 
-			if (Dot(inRay.D(), hitRec.n) > 0.0f)
-			{
-				outfaced_normal = -hitRec.n;
-				ni_over_nt = mRefIdx;
-				consine = mRefIdx * Dot(inRay.D(), hitRec.n) / inRay.D().Length();
-			}
-			else
-			{
-				outfaced_normal = hitRec.n;
-				ni_over_nt = 1.0f / mRefIdx;
-				consine = -Dot(inRay.D(), hitRec.n) / inRay.D().Length();
-			}
+            if (Dot(inRay.D(), hitRec.n) > 0.0f)
+            {
+                outfaced_normal = -hitRec.n;
+                ni_over_nt = mRefIdx;
+                consine = Dot(inRay.D(), hitRec.n) / inRay.D().Length();
+            }
+            else
+            {
+                outfaced_normal = hitRec.n;
+                ni_over_nt = 1.0f / mRefIdx;
+                consine = -Dot(inRay.D(), hitRec.n) / inRay.D().Length();
+            }
 
-			if (Surface::Refract(inRay.D(), outfaced_normal, ni_over_nt, refracted))
-			{
-				reflected_prob = Surface::Schlick(consine, mRefIdx);
-			}
-			else
-			{
-			//	out_ray.Set(hitRec.pt, reflected);
-				reflected_prob = 1.0f;
-			}
+            if (Surface::Refract(inRay.D(), outfaced_normal, ni_over_nt, refracted))
+            {
+                reflected_prob = Surface::Schlick(consine, mRefIdx);
+            }
+            else
+            {
+            //	out_ray.Set(hitRec.pt, reflected);
+                reflected_prob = 1.0f;
+            }
 
-			float prob_value = Random::frand48();
-			if (prob_value < reflected_prob)
-			{
+            float prob_value = Random::frand48();
+            if (prob_value < reflected_prob)
+            {
                 out_ray.Set(hitRec.wpt, reflected, inRay.T());
-				attenunation_albedo = mAlbedoOut;
-			}
-			else
-			{
-				out_ray.Set(hitRec.wpt, refracted, inRay.T());
-				attenunation_albedo = mAlbedoIn;
-			}
+                attenunation_albedo = mAlbedoOut;
+            }
+            else
+            {
+                out_ray.Set(hitRec.wpt, refracted, inRay.T());
+                attenunation_albedo = mAlbedoIn;
+            }
 
-			return true;
+            return true;
+
 		}
 
 //		virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)

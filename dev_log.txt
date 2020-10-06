@@ -1257,3 +1257,9 @@ i decided to remove SimpleSkyTexture, it now is replaced with SkylineEnv.
 added SceneEnvrionment.h to implement WorldEnvironment/EmptyEnv/SkylineEnv/HDREvn which support environment shading when a ray hits nothing in scene.
 added PI_HALF macro
 tested it with the random sphere scene.
+
+2020-10-06 (on mac)
+built up a test scene for HDR environment test and verified the correctness in comparison to RayTracer-master, Raytracer2 from git, and the result is not bad.
+modified MatteMaterial::Shade the way to calculate the outgoing direction vector, i guess both are correct, but
+the reflection result is better after modifying.
+

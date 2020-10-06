@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common.h"
 #include "Vec3.h"
 #include "ImageIO.h"
 #include "Utility.h"
@@ -54,8 +55,10 @@ public:
 class HDREvn : public WorldEnvironment
 {
 public:
-    HDREvn(const char *fileName) : mHDRI(nullptr) {
+    HDREvn(const char *fileName, float scale = 2.0f, int offset = 0) : mHDRI(nullptr) {
         mHDRI = ImageIO::STBILoadHDR(fileName, &mHDRIW, &mHDRIH, &mHDRIC, 0);
+        mScale = scale;
+        mOffset = offset;
     }
     virtual ~HDREvn() {
         if (mHDRI != nullptr) { delete mHDRI; }
@@ -66,13 +69,13 @@ public:
         Vec3f dir = MakeUnit(ray.D());
         float theta1 = std::atan2(dir.Z(), dir.X())+PI_CONST;
         float theta2 = std::atan(dir.Y()/(std::sqrt(dir.X()*dir.X()+dir.Z()*dir.Z())))+PI_HALF;
-        int offset = 0;
+        int offset = mOffset;
         int u = ((int)(theta1/(TWO_PI_CONST)*mHDRIW)+offset)%mHDRIW;
         int v = mHDRIH-(int)(theta2/(PI_CONST)*mHDRIH);
         int addr = mHDRIC*u+mHDRIC*mHDRIW*v;
-        float r = RTMath::Clamp(mHDRI[addr]*2, 0.0f, 1.0f);
-        float g = RTMath::Clamp(mHDRI[addr+1]*2, 0.0f, 1.0f);
-        float b = RTMath::Clamp(mHDRI[addr+2]*2, 0.0f, 1.0f);
+        float r = RTMath::Clamp(mHDRI[addr]*mScale, 0.0f, 1.0f);
+        float g = RTMath::Clamp(mHDRI[addr+1]*mScale, 0.0f, 1.0f);
+        float b = RTMath::Clamp(mHDRI[addr+2]*mScale, 0.0f, 1.0f);
 //        std::cout << c.R() << " " << c.G() << " " << c.B() << std::endl;
         return Color3f(r, g, b);
     }
@@ -82,6 +85,8 @@ private:
     int mHDRIH;
     int mHDRIC;
     float *mHDRI;
+    float mScale;
+    int mOffset;
 
 };
 
