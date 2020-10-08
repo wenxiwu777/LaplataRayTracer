@@ -1,4 +1,4 @@
-#include <sys/time.h>
+﻿#include <sys/time.h>
 #include <iostream>
 
 #include "DemoScene.h"
@@ -24,7 +24,22 @@ public:
 public:
     virtual void OnNotifyRenderProgress(int row, int total_row) {
         float per = (float)(row + 1) / (float)total_row;
+        this->draw_progress_bar(per, '=');
         std::cout << std::fixed << std::setprecision(2) << "[" << 100.0f * per << "%" << "]" << std::endl;
+    }
+
+private:
+    inline void draw_progress_bar(float per, char tag) {
+        const int MAX_TAG = 40;
+        std::cout << "[";
+        int draw_count = MAX_TAG * per;
+        for (int i = 0; i < draw_count; ++i) {
+            std::cout << tag;
+        }
+        for (int i = draw_count; i < MAX_TAG; ++i) {
+            std::cout << " ";
+        }
+        std::cout << "]";
     }
 
 };

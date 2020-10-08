@@ -1263,3 +1263,7 @@ built up a test scene for HDR environment test and verified the correctness in c
 modified MatteMaterial::Shade the way to calculate the outgoing direction vector, i guess both are correct, but
 the reflection result is better after modifying.
 
+2020-10-08 (on mac)
+added progress bar to indicate the rendering process, previously it was only a percentage number, and now it has both.
+added GammaCorrection to ImageProc
+added GAMMA_CORRECTION macro to enable or disable gamma correction in result image postpone processing
