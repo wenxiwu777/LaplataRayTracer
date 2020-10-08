@@ -1,1 +1,7 @@
 this is a test from my new laptop.  
+
+
+recent changing:
+1. added scale factor to HDREnv to control the brightness;
+2. added progress bar to indicate the rendering process, previously it was only a percentage number, not it has both;
+3. added gamma correction function to ImageProc to handle the gamma correction in the postpone image processing phase.
