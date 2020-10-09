@@ -51,17 +51,18 @@ int main() {
     long long begin_time = GetCurrentTime();
 
     CDemoScene demo;
+    std::string saved_file = "./result_output.tga";
 
     RenderProcessCallback renderProcCallback;
     demo.SetRenderWndSink(&renderProcCallback);
     demo.Setup(400, 400);
     demo.BuildScene();
     demo.RenderScene();
-    demo.SaveScene("./result_output.tga");
+    demo.SaveScene(saved_file.c_str());
 
     long long end_time = GetCurrentTime();
     long long delta_time = end_time - begin_time;
-    std::cout << "render done!" << " elapse: " << delta_time << " ms" << std::endl;
+    std::cout << "render done!" << " elapsed time: " << delta_time << "ms" << " output file: " << saved_file << std::endl;
 
     return 0;
 }

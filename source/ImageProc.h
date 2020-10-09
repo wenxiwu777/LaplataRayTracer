@@ -57,10 +57,10 @@ namespace LaplataRayTracer
 			return col_temp;
 		}
 
-        inline static void GammaCorrection(Color3f& col) {
-            float r = std::pow(col.R(), 1.0f/2.2f);
-            float g = std::pow(col.G(), 1.0f/2.2f);
-            float b = std::pow(col.B(), 1.0f/2.2f);
+        inline static void GammaCorrection(Color3f& col, float gamma) {
+            float r = std::pow(col.R(), gamma);
+            float g = std::pow(col.G(), gamma);
+            float b = std::pow(col.B(), gamma);
             col.Set(r, g, b);
         }
 

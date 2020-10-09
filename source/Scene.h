@@ -164,7 +164,7 @@ namespace LaplataRayTracer
                     // Postphone processing
 					ImageProc::De_NAN(color);
 #ifdef GAMMA_CORRECTION
-                    ImageProc::GammaCorrection(color);
+                    ImageProc::GammaCorrection(color, 0.4f);
 #else
                     ImageProc::HDR_Operator_MaxToOne(color);
 #endif // GAMMA_CORRECTION
