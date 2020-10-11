@@ -31,6 +31,44 @@ namespace LaplataRayTracer
 			}
 		}
 
+        inline static void HDR_Operator_Gamma1(Color3f& col, float gamma) {
+            float r = col.R();
+            float g = col.G();
+            float b = col.B();
+            r = std::pow(r, gamma);
+            g = std::pow(g, gamma);
+            b = std::pow(b, gamma);
+            col.Set(r, g, b);
+        }
+
+        inline static void HDR_Operator_Gamma2(Color3f& col, float gamma) {
+            float r = col.R();
+            float g = col.G();
+            float b = col.B();
+            r = r/(1.0f+r);
+            g = g/(1.0f+g);
+            b = b/(1.0f+b);
+            r = std::pow(r, gamma);
+            g = std::pow(g, gamma);
+            b = std::pow(b, gamma);
+            col.Set(r, g, b);
+        }
+
+        inline static void HDR_operator_Uncharted2Tonemap(Color3f& col, float gamma) {
+            float r = col.R();
+            float g = col.G();
+            float b = col.B();
+            Color3f exp_bias(r*2.0f, g*2.0f, b*2.0f);
+            Color3f curr_col = uncharted_2_tonemap(exp_bias);
+            Color3f temp_col = uncharted_2_tonemap(Color3f(11.2f, 11.2f, 11.2f));
+            Color3f white_scale(1.0f / temp_col.R(), 1.0f / temp_col.G(), 1.0f / temp_col.B());
+            Color3f color = curr_col * white_scale;
+            r = std::pow(color.R(), gamma);
+            g = std::pow(color.G(), gamma);
+            b = std::pow(color.B(), gamma);
+            col.Set(r, g, b);
+        }
+
 		inline static Color3f De_NAN(Color3f const& col) {
 			Color3f col_temp = col;
 
@@ -57,11 +95,17 @@ namespace LaplataRayTracer
 			return col_temp;
 		}
 
-        inline static void GammaCorrection(Color3f& col, float gamma) {
-            float r = std::pow(col.R(), gamma);
-            float g = std::pow(col.G(), gamma);
-            float b = std::pow(col.B(), gamma);
-            col.Set(r, g, b);
+    private:
+        inline static Color3f uncharted_2_tonemap(const Color3f& x) {
+            static const float A = 0.15f;
+            static const float B = 0.50f;
+            static const float C = 0.10f;
+            static const float D = 0.20f;
+            static const float E = 0.02f;
+            static const float F = 0.30f;
+            static const float W = 11.2f;
+
+            return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
         }
 
 	};

@@ -1271,3 +1271,8 @@ added GAMMA_CORRECTION macro to enable or disable gamma correction in result ima
 2020-10-09 (on mac)
 added gamma parameter to ImageProc::GammaCorrection;
 added output file path to result hint
+
+2020-10-11 (on mac)
+removed GAMMA_CORRECTION, basicly, they are all HDR operators;
+renamed ImageProc::GammaCorrection to HDR_Operator_Gamma1,
+added HDR_Operator_Gamma2, HDR_Operator_Uncharted2Tonemap operators

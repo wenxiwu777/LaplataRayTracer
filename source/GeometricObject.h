@@ -1710,7 +1710,7 @@ namespace LaplataRayTracer
 			if (beta < 0.0f)
 				return (false);
 
-			float r = r = e * l - h * i;
+			float r = e * l - h * i;
 			float e2 = a * n + d * q + c * r;
 			float gamma = e2 * inv_denom;
 
