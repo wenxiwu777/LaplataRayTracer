@@ -26,7 +26,7 @@ namespace LaplataRayTracer
 	//-----------------------------------------------------------------
 	// RegularGridMeshObject impl IGeometricAcceleration, IMeshFileReaderSink
 	// BVHMeshObject impl IGeometricAcceleration, IMeshFileReaderSink
-	// most of the .ply or .obj file parser codes are alread in seperated classes.
+	// most of the .ply or .obj file parser codes are already in separated classes.
 	//-----------------------------------------------------------------
 
 	//
