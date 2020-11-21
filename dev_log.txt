@@ -1276,3 +1276,7 @@ added output file path to result hint
 removed GAMMA_CORRECTION, basicly, they are all HDR operators;
 renamed ImageProc::GammaCorrection to HDR_Operator_Gamma1,
 added HDR_Operator_Gamma2, HDR_Operator_Uncharted2Tonemap operators
+
+2020-11-20 (on mac)
+in RegularGridMeshObject::LoadFromMeshDesc, if mesh_normal is not empty then we don't need to calculate vertex normal
+

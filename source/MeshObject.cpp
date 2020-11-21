@@ -601,8 +601,10 @@ namespace LaplataRayTracer
 				mesh_desc->mesh_face_datas[i].index2);
 		}
 
-		if (mMeshType == SMOOTH_SHADING || mMeshType == SMOOTH_UV_SHADING) {
-			update_mesh_normals(mesh_desc);
+		if (mesh_desc->mesh_normal.size() == 0) {
+		    if (mMeshType == SMOOTH_SHADING || mMeshType == SMOOTH_UV_SHADING) {
+		        update_mesh_normals(mesh_desc);
+		    }
 		}
 
 		return true;
