@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
 
 #include "DemoScene.h"
@@ -15,7 +15,7 @@ int main() {
     demo.BuildScene();
     demo.RenderScene();
     demo.SaveScene(saved_file.c_str());
-
+ 
     renderProcReporter.ShowRenderReport((void *)&saved_file);
 
     return 0;
