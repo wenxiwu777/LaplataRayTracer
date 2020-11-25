@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <sys/time.h>
 #include <iostream>
@@ -19,7 +19,7 @@ namespace LaplataRayTracer
         virtual void OnBeginRender(void *param) = 0;
 		virtual void OnNotifyRenderProgress(int row, int total_row) = 0;
         virtual void OnEndRender(void *param) = 0;
-        virtual string GetRenderReport(void *param) = 0;
+        virtual string ShowRenderReport(void *param) = 0;
 
 	};
 
@@ -53,9 +53,10 @@ namespace LaplataRayTracer
             std::cout << "rendering done!" << std::endl;
         }
 
-        virtual string GetRenderReport(void *param) {
+        virtual string ShowRenderReport(void *param) {
             long long delta_time = mEndTime - mBeginTime;
             std::cout << "elapsed time: " << delta_time << "ms" << " output file: " << *(string *)param << std::endl;
+            return "";
         }
 
     private:

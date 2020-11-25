@@ -16,8 +16,7 @@ int main() {
     demo.RenderScene();
     demo.SaveScene(saved_file.c_str());
 
-    std::string report_str = renderProcReporter.GetRenderReport((void *)&saved_file);
-    std::cout << report_str << std::endl;
+    renderProcReporter.ShowRenderReport((void *)&saved_file);
 
     return 0;
 }
