@@ -94,6 +94,11 @@ namespace LaplataRayTracer
 			bool enableZoom = mpCamera->IsZoomMode();
 			float zoomFactor = mpCamera->GetZoomFactor();
 
+            if (mpRenderWndSink)
+            {
+                mpRenderWndSink->OnBeginRender(nullptr);
+            }
+
 			for (int row = 0; row < h; ++row)
 			{
 				for (int col = 0; col < w; ++col)
@@ -185,6 +190,11 @@ namespace LaplataRayTracer
 					mpRenderWndSink->OnNotifyRenderProgress(row, h);
 				}
 			}
+
+            if (mpRenderWndSink)
+            {
+                mpRenderWndSink->OnEndRender(nullptr);
+            }
 		}
 
 		virtual void RenderText(const int x, const int y, std::string const& text, int r, int g, int b)

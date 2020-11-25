@@ -1280,3 +1280,9 @@ added HDR_Operator_Gamma2, HDR_Operator_Uncharted2Tonemap operators
 2020-11-20 (on mac)
 in RegularGridMeshObject::LoadFromMeshDesc, if mesh_normal is not empty then we don't need to calculate vertex normal
 
+2020-11-25 (on mac)
+added other 3 interfaces for IWindowSink, see class definition.
+implemented a build-in RenderProcessReporter class to simplify the setting-up for rendering output, like progress bar/percentage info so that
+each test or demo setting-up in main can directly use this class instead of the boring copy.
+
+
