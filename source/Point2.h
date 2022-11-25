@@ -70,6 +70,12 @@ namespace LaplataRayTracer
 		return Point2<T>(a * p.X(), a * p.Y());
 	}
 
+    template<typename T>
+    inline Point2<T> operator-(Point2<T> const a, Point2<T> const b)
+    {
+        return Point2<T>(a.X() - b.X(), a.Y() - b.Y());
+    }
+
 	typedef Point2<float>	Point2f;
 	typedef Point2<double>	Point2d;
 	typedef Point2<int>		Point2i;

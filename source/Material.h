@@ -238,7 +238,7 @@ namespace LaplataRayTracer
 
 	private:
 		MatteMaterial(MatteMaterial const&) { }
-		MatteMaterial& operator=(MatteMaterial const&) { }
+        MatteMaterial& operator=(MatteMaterial const&);
 
 	private:
 	//	Color3f mAlbedo;
@@ -425,7 +425,7 @@ namespace LaplataRayTracer
 
 	private:
 		EmissiveMaterial(const EmissiveMaterial& rhs) { }
-		EmissiveMaterial& operator=(const EmissiveMaterial& rhs) { }
+        EmissiveMaterial& operator=(const EmissiveMaterial& rhs);
 
 	private:
 		Texture *		mpTex;
@@ -466,7 +466,7 @@ namespace LaplataRayTracer
 
 	private:
 		IsotropicMaterial(const IsotropicMaterial& rhs) { }
-		IsotropicMaterial& operator=(const IsotropicMaterial& rhs) { }
+        IsotropicMaterial& operator=(const IsotropicMaterial& rhs);
 
 	private:
 		Texture *	mpTex;
@@ -518,7 +518,7 @@ namespace LaplataRayTracer
 
 	private:
 		TextureOnlyMaterial(const TextureOnlyMaterial& rhs) { }
-		TextureOnlyMaterial& operator=(const TextureOnlyMaterial& rhs) { }
+        TextureOnlyMaterial& operator=(const TextureOnlyMaterial& rhs);
 
 	private:
 		Texture *	mpTexture;
@@ -582,7 +582,6 @@ namespace LaplataRayTracer
 					}
 				}
 			}
-
 			return L;
 		}
 
@@ -1559,7 +1558,6 @@ namespace LaplataRayTracer
             mpAmbientBRDF->SetCd2(0.01f, 0.01f, 0.01f);
 
             mpLambertianBRDF = nullptr;
-            mpOrenNayarBRDF = nullptr;
             mbDiffuse = false;
             mbOrenNayar = false;
 
@@ -1629,9 +1627,6 @@ namespace LaplataRayTracer
                         if (mbDiffuse && !mbOrenNayar) {
                             L += (mpLambertianBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
                                     light->Li(hitRec, sceneObjects) * ndotwi;
-                        } else if (mbDiffuse && mbOrenNayar) {
-                            L += (mpOrenNayarBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
-                                    light->Li(hitRec, sceneObjects) * ndotwi;
                         } else {
                             L += (mpGlossyBRDF->F(hitRec, wo, wi)) *
                                  light->Li(hitRec, sceneObjects) * ndotwi;
@@ -1662,9 +1657,6 @@ namespace LaplataRayTracer
                     if (!in_shadow) {
                         if (mbDiffuse && !mbOrenNayar) {
                             L += (mpLambertianBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
-                                 light->Li(hitRec, sceneObjects) * light->G(hitRec) * ndotwi / light->Pdf(hitRec);
-                        } else if (mbDiffuse && mbOrenNayar){
-                            L += (mpOrenNayarBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
                                  light->Li(hitRec, sceneObjects) * light->G(hitRec) * ndotwi / light->Pdf(hitRec);
                         } else {
                             L += (mpGlossyBRDF->F(hitRec, wo, wi)) *
@@ -1742,29 +1734,11 @@ namespace LaplataRayTracer
 	    inline void SetDiffuse(float kd, Texture *diffuse) {
             mbDiffuse = true;
             mbOrenNayar = false;
-            if (mpOrenNayarBRDF != nullptr) {
-                delete mpOrenNayarBRDF;
-                mpOrenNayarBRDF = nullptr;
-            }
             if (mpLambertianBRDF == nullptr) {
                 mpLambertianBRDF = new TextureLambertian;
             }
             mpLambertianBRDF->SetKd(kd);
             mpLambertianBRDF->SetCd(diffuse);
-	    }
-
-	    inline void SetDiffuseEx(Texture *r, Texture *sigma) {
-	        mbDiffuse = true;
-            mbOrenNayar = true;
-            if (mpLambertianBRDF != nullptr) {
-                delete mpLambertianBRDF;
-                mpLambertianBRDF = nullptr;
-            }
-            if (mpOrenNayarBRDF == nullptr) {
-                mpOrenNayarBRDF = new OrenNayar;
-            }
-            mpOrenNayarBRDF->SetR(r);
-            mpOrenNayarBRDF->SetSigma(sigma);
 	    }
 
 	    inline void SetSpecular(float kr, Color3f const& cr) {
@@ -1827,7 +1801,6 @@ namespace LaplataRayTracer
 	    inline void release_brdfs() {
 	        if (mpAmbientBRDF != nullptr) { delete mpAmbientBRDF; mpAmbientBRDF = nullptr; }
             if (mpLambertianBRDF != nullptr) { delete mpLambertianBRDF; mpLambertianBRDF = nullptr; }
-            if (mpOrenNayarBRDF != nullptr) { delete mpOrenNayarBRDF; mpOrenNayarBRDF = nullptr; }
             if (mpPerfectSpecularBRDF != nullptr) { delete mpPerfectSpecularBRDF; mpPerfectSpecularBRDF = nullptr; }
 			if (mpTransparentBRDF != nullptr) { delete mpTransparentBRDF; mpTransparentBRDF = nullptr; }
             if (mpGlossyBRDF != nullptr) { delete mpGlossyBRDF; mpGlossyBRDF = nullptr; }
@@ -1845,12 +1818,6 @@ namespace LaplataRayTracer
 	            this->mpLambertianBRDF = (TextureLambertian *)rhs.mpLambertianBRDF->Clone();
 	        } else {
 	            this->mpLambertianBRDF = nullptr;
-	        }
-
-	        if (rhs.mpOrenNayarBRDF != nullptr) {
-	            this->mpOrenNayarBRDF = (OrenNayar *)rhs.mpOrenNayarBRDF->Clone();
-	        } else {
-	            this->mpOrenNayarBRDF = nullptr;
 	        }
 
 	        if (rhs.mpPerfectSpecularBRDF != nullptr) {
@@ -1888,7 +1855,6 @@ namespace LaplataRayTracer
 	private:
         Lambertian *	mpAmbientBRDF;
         TextureLambertian *mpLambertianBRDF;
-        OrenNayar *	    mpOrenNayarBRDF;
         PerfectSpecular *	mpPerfectSpecularBRDF;
         TransparentSpecular * mpTransparentBRDF;
 #ifdef MICROFACET_COOK

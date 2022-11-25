@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef _WIN32
+
 namespace LaplataRayTracer
 {
 	class CMemBuffer
@@ -51,3 +53,5 @@ namespace LaplataRayTracer
 
 	};
 }
+
+#endif // _WIN32

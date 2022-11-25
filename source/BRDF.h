@@ -98,80 +98,6 @@ namespace LaplataRayTracer
 			mpSampler = sampler; // no cares about what if sampler is NULL.
 		}
 
-	public:
-/*		inline static float CosTheta(const Vec3f& w) { return w.Z(); }
-		inline static float Cos2Theta(const Vec3f& w) { return w.Z() * w.Z(); }
-		inline static float AbsCosTheta(const Vec3f& w) { return std::abs(w.Z()); }
-		inline static float Sin2Theta(const Vec3f &w) { return std::max<float>(0.0f, 1.0f - Cos2Theta(w)); }
-		inline static float SinTheta(const Vec3f& w) { return std::sqrt(Sin2Theta(w)); }
-		inline static float TanTheta(const Vec3f& w) { return SinTheta(w) / CosTheta(w); }
-		inline static float Tan2Theta(const Vec3f& w) { return Sin2Theta(w) / Cos2Theta(w); }
-		inline static float CosPhi(const Vec3f& w) {
-			float sinTheta = SinTheta(w);
-			return (sinTheta == 0) ? 1 : RTMath::Clamp(w.X() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float SinPhi(const Vec3f& w) {
-			float sinTheta = SinTheta(w);
-			return (RTMath::IsZero(sinTheta)) ? 0.0f : RTMath::Clamp(w.Y() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float Cos2Phi(const Vec3f& w) { return CosPhi(w) * CosPhi(w); }
-		inline static float Sin2Phi(const Vec3f &w) { return SinPhi(w) * SinPhi(w); }
-		inline static float CosDPhi(const Vec3f &wa, const Vec3f &wb) {
-			return RTMath::Clamp(
-				(wa.X() * wb.X() + wa.Y() * wb.Y()) / std::sqrt((wa.X() * wa.X() + wa.Y() * wa.Y()) *
-				(wb.X() * wb.X() + wb.Y() * wb.Y())),
-				-1.0f, 1.0f);
-		}
-        inline static bool SameHemisphere(const Vec3f &w, const Vec3f &wp) {
-            return w.Z() * wp.Z() > 0;
-        }*/
-
-		inline static float CosTheta(const Vec3f& w, const Vec3f& n) {
-			Vec3f t = w;
-			t.MakeUnit();
-			return Dot(t, n);
-		}
-		inline static float Cos2Theta(const Vec3f& w, const Vec3f& n) {
-			float cosTheta = CosTheta(w, n);
-			return (cosTheta * cosTheta);
-		}
-		inline static float AbsCosTheta(const Vec3f& w, const Vec3f& n) {
-			return std::abs(CosTheta(w, n));
-		}
-		inline static float Sin2Theta(const Vec3f &w, const Vec3f& n) { 
-			return std::max<float>(0.0f, 1.0f - Cos2Theta(w, n)); 
-		}
-		inline static float SinTheta(const Vec3f& w, const Vec3f& n) {
-			return std::sqrt(Sin2Theta(w, n)); 
-		}
-		inline static float TanTheta(const Vec3f& w, const Vec3f& n) { 
-			return SinTheta(w, n) / CosTheta(w, n);
-		}
-		inline static float Tan2Theta(const Vec3f& w, const Vec3f& n) { 
-			return Sin2Theta(w, n) / Cos2Theta(w, n); 
-		}
-		inline static float CosPhi(const Vec3f& w, const Vec3f& n) {
-			float sinTheta = SinTheta(w, n);
-			return (sinTheta == 0) ? 1 : RTMath::Clamp(w.X() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float SinPhi(const Vec3f& w, const Vec3f& n) {
-			float sinTheta = SinTheta(w, n);
-			return (RTMath::IsZero(sinTheta)) ? 0.0f : RTMath::Clamp(w.Y() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float Cos2Phi(const Vec3f& w, const Vec3f& n) { return CosPhi(w, n) * CosPhi(w, n); }
-		inline static float Sin2Phi(const Vec3f &w, const Vec3f& n) { return SinPhi(w, n) * SinPhi(w, n); }
-//		inline static float CosDPhi(const Vec3f &wa, const Vec3f &wb) {
-//			return RTMath::Clamp(
-//				(wa.X() * wb.X() + wa.Y() * wb.Y()) / std::sqrt((wa.X() * wa.X() + wa.Y() * wa.Y()) *
-//				(wb.X() * wb.X() + wb.Y() * wb.Y())),
-//				-1.0f, 1.0f);
-//		}
-		inline static bool SameHemisphere(const Vec3f &w, const Vec3f &wp, const Vec3f& n) {
-			float cosTheta1 = CosTheta(w, n);
-			float cosTheta2 = CosTheta(wp, n);
-			return (cosTheta1 * cosTheta2 > 0.0f);
-		}
-
 	protected:
 		SamplerBase *		mpSampler;	// for indirect illumination, XX and the outer should be response for releasing its memory XX ??.
 
@@ -319,31 +245,15 @@ namespace LaplataRayTracer
 
 	class OrenNayar : public BRDF {
 	public:
-		OrenNayar()
-			: BRDF(), mpR(nullptr), mpSigma(nullptr) {
-			//Random::SetSeed(time(0));
-		}
-
-		OrenNayar(const OrenNayar& rhs)
-			: BRDF(rhs), mpR(nullptr), mpSigma(nullptr) {
-			copy_constructor(rhs);
-		}
-
-		OrenNayar& operator=(const OrenNayar& rhs) {
-			if (this == &rhs) {
-				return *this;
-			}
-
-			BRDF::operator=(rhs);
-			copy_constructor(rhs);
-
-			return *this;
-		}
-
-		virtual ~OrenNayar() {
-			release_object();
-
-		}
+		OrenNayar(const Color3f& R, float sigma)
+            : BRDF(), mA(0.0f), mB(0.0f), mR(R) {
+                sigma = ANG2RAD(sigma);
+                float sigma2 = sigma * sigma;
+                mA = 1.0f - (sigma2 / (2.0f * (sigma2 + 0.33f)));
+                mB = 0.45f * sigma2 / (sigma2 + 0.09f);
+            }
+        
+		virtual ~OrenNayar() { }
 
 	public:
 		virtual void *Clone() {
@@ -352,91 +262,32 @@ namespace LaplataRayTracer
 
 	public:
 		virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) const {
-			Color3f texSigma = mpSigma->GetTextureColor((HitRecord&)hitRec);
-			float sigma = texSigma[0];
-			float rad_sigma = ANG2RAD(sigma);
-			float square_sigma = rad_sigma * rad_sigma;
-			float A = 1.0f - (square_sigma / (2.0f * (square_sigma + 0.33f)));
-			float B = 0.45f * square_sigma / (square_sigma + 0.09f);
-
-			float sin_theta_i = SinTheta(wi, hitRec.n);
-			float sin_theta_o = SinTheta(wo, hitRec.n);
-			float max_cos = 0.0f;
-			if (sin_theta_i > 1e-4 && sin_theta_o > 1e-4) {
-				float sin_phi_i = SinPhi(wi, hitRec.n);
-				float cos_phi_i = CosPhi(wi, hitRec.n);
-				float sin_phi_o = SinPhi(wo, hitRec.n);
-				float cos_phi_o = CosPhi(wo, hitRec.n);
-				float d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
-				max_cos = std::max<float>((float)0, d_cos);
-			}
-
-			float sin_alpha;
-			float tan_beta;
-			if (AbsCosTheta(wi, hitRec.n) > AbsCosTheta(wo, hitRec.n)) {
-				sin_alpha = sin_theta_o;
-				tan_beta = sin_theta_i / AbsCosTheta(wi, hitRec.n);
-			}
-			else {
-				sin_alpha = sin_theta_i;
-				tan_beta = sin_theta_o / AbsCosTheta(wo, hitRec.n);
-			}
-
-			Color3f L = mpR->GetTextureColor((HitRecord&)hitRec);
-			float temp = INV_PI_CONST * (A + B * max_cos * sin_alpha * tan_beta);
-			return (temp * L);
+            float cos_delta_phi = (wi.X() * wo.X() + wi.Y() * wo.Y()) /
+            std::sqrt(((wi.X() * wi.X()) + (wi.Y() * wi.Y())) * ((wo.X() * wo.X()) + (wo.Y() * wo.Y())));
+            cos_delta_phi = RTMath::Clamp(cos_delta_phi, 0.0f, 1.0f);
+            
+            float D = std::sqrt((1.0 - (wi.Z() * wi.Z())) * (1.0 - (wo.Z() * wo.Z()))) / std::max(wi.Z(), wo.Z());
+            
+            return (mR * INV_PI_CONST * (mA + mB * cos_delta_phi * D));
 		}
-
-	public:
-		inline void SetR(Texture *texR) {
-			if (this->mpR != nullptr) {
-				delete mpR;
-			}
-
-			mpR = texR;
-		}
-
-		inline void SetSigma(Texture *texSigma) {
-			if (this->mpSigma != nullptr) {
-				delete mpSigma;
-			}
-
-			mpSigma = texSigma;
-		}
+        
+        virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
+            // 1.get wi reflectance direction
+            wi = SamplerBase::WeightedSampleHemishpere(SamplerBase::URand2());
+            if (wo.Z() < 0.0f) {
+                wi[2] *= -1.0f;
+            }
+            
+            // 2.get pdf of generated direction
+            pdf = (std::abs(wi.Z()) * INV_PI_CONST);
+            
+            // 3.get reflectance albedo
+            return this->F(hitRec, wo, wi);
+        }
 
 	private:
-		inline void copy_constructor(OrenNayar const& rhs) {
-			release_object();
-
-			if (rhs.mpR != nullptr) {
-				this->mpR = (Texture *)rhs.mpR->Clone();
-			}
-			else {
-				this->mpR = nullptr;
-			}
-
-			if (rhs.mpSigma != nullptr) {
-				this->mpSigma = (Texture *)rhs.mpSigma->Clone();
-			}
-			else {
-				this->mpSigma = nullptr;
-			}
-		}
-
-		inline void release_object() {
-			if (this->mpR != nullptr) {
-				delete mpR;
-				mpR = nullptr;
-			}
-			if (this->mpSigma != nullptr) {
-				delete mpSigma;
-				mpSigma = nullptr;
-			}
-		}
-
-	private:
-		Texture *	mpR;
-		Texture *	mpSigma;
+        float mA, mB;
+        Color3f mR;
 
 	};
 

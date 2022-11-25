@@ -108,7 +108,7 @@ namespace LaplataRayTracer
                 return;
             }
 
-            float alpha;
+            float alpha = 0.0f;
             if (mType == EMappingType::PROBE) {
                 alpha = std::acos(z);
             } else if (mType == EMappingType::PANORAMIC) {
