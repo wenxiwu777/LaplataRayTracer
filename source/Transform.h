@@ -123,4 +123,58 @@ namespace LaplataRayTracer
 		Vec3f axis[3];
 
 	};
+
+    //
+    class CoordinateSystem {
+    public:
+        CoordinateSystem() { }
+        CoordinateSystem(const Vec3f& n) {
+            setup_coordinate_system(n);
+        }
+        
+    public:
+        inline Vec3f To(const Vec3f& v) {
+            float x = Dot(mU, v); // mU.X() * v.X() + mU.Y() * v.Y() + mU.Z() * v.Z();
+            float y = Dot(mV, v); //mV.X() * v.X() + mV.Y() * v.Y() + mV.Z() * v.Z();
+            float z = Dot(mW, v); //mW.X() * v.X() + mW.Y() * v.Y() + mW.Z() * v.Z();
+            Vec3f vTo(x, y, z);
+            return vTo;
+        }
+        inline Vec3f From(const Vec3f& v) {
+            float x = mU.X() * v.X() + mV.X() * v.Y() + mW.X() * v.Z();
+            float y = mU.Y() * v.X() + mV.Y() * v.Y() + mW.Y() * v.Z();
+            float z = mU.Z() * v.X() + mV.Z() * v.Y() + mW.Z() * v.Z();
+            Vec3f vFrom(x, y, z);
+            return vFrom;
+        }
+        
+        inline const Vec3f& Normal() const {
+            return mW;
+        }
+        
+    public:
+        inline Vec3f SetupAndFromNormal(const Vec3f& n, const Vec3f& v) {
+            setup_coordinate_system(n);
+            return this->From(v);
+        }
+        
+    private:
+        inline void setup_coordinate_system(const Vec3f& n) {
+            mW = n;
+            if (std::abs(n.X()) > std::abs(n.Y())) {
+                float invLen = 1.0f / std::sqrt((float)(n.X() * n.X() + n.Z() * n.Z()));
+                mU.Set(-invLen * n.Z(), 0.0f, invLen * n.X());
+            } else {
+                float invLen = 1.0f / std::sqrt((float)(n.Y() * n.Y() + n.Z() * n.Z()));
+                mU.Set(0.0f, invLen * n.Z(), -invLen * n.Y());
+            }
+            mV = Cross(mW, mU);
+        }
+        
+    private:
+        Vec3f mU;
+        Vec3f mV;
+        Vec3f mW;
+        
+    };
 }
