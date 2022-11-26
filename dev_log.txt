@@ -1295,3 +1295,14 @@ the CoordinateSystem class was added to support coordinate transform in the furt
 3.added operator- override method in Point2 class
 4.removed the previous related implementation of OrenNayar model
 5.removed some Sin Cos Theta dummy conversion methods in BRDF.h
+
+2022-11-26
+1.in RayTracer.h changed the following:
+int count = mRTEvn.mpvecHitableObjs->size();
+to
+unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+in case overflow due to the scene that consists of trillions of triangle objects.
+2. in PDF.h added OrenNayarPDF class to support PathTracerMIS integrator
+3. Modified Material.h to integrator OrenNayar brdf into MatteMaterial to support this type of brdf and now both PathTacer and 
+PathTracerMIS support OrenNayr brdf, not test yet. Further will implement another MIS PathTracer used power heuristic weighted function
+to blend light and brdf sampling like the one in PBRT does.

@@ -14,6 +14,7 @@
 #include "ICloneable.h"
 #include "Sampling.h"
 #include "Surface.h"
+#include "Transform.h"
 
 namespace LaplataRayTracer
 {
@@ -141,13 +142,22 @@ namespace LaplataRayTracer
 	class MatteMaterial : public MaterialBase
 	{
 	public:
-		MatteMaterial() : mpAlbedo(nullptr) { mpCosinePDF = new CosinePDF; }
+		MatteMaterial() {
+            mpAlbedo = nullptr;
+            mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
+            mSigma = 0.0f; // 0.0 means OrenNayar is disabled by default
+        }
 		MatteMaterial(Color3f const& albedo)
 		{
 			mpAlbedo = new ConstantTexture(albedo);
 			mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
 		}
-		MatteMaterial(Texture *albedo) : mpAlbedo(albedo) { mpCosinePDF = new CosinePDF; }
+		MatteMaterial(Texture *albedo) : mpAlbedo(albedo) {
+            mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
+        }
 		virtual ~MatteMaterial()
 		{
 			release();
@@ -159,13 +169,26 @@ namespace LaplataRayTracer
 	public:
 		virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
 		{
-			Vec3f sample = SamplerBase::SampleInUnitSphere();
-        //    Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
-            Vec3f ptInUnitShpereCenter = hitRec.n + sample;
-            ptInUnitShpereCenter.MakeUnit();
-        //    out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
-            out_ray.Set(hitRec.wpt, ptInUnitShpereCenter, inRay.T());
-			attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+            if (mSigma > 0.0f) {
+                attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+                OrenNayar orenNayarDiffuse(attenunation_albedo, mSigma);
+                CoordinateSystem cs(hitRec.n);
+                Vec3f swi;
+                Vec3f swo = cs.To(-inRay.D());
+                float pdf;
+                attenunation_albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                Vec3f wi = cs.From(swi);
+                out_ray.Set(hitRec.wpt, wi, inRay.T());
+            } else {
+                Vec3f sample = SamplerBase::SampleInUnitSphere();
+            //    Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
+                Vec3f ptInUnitShpereCenter = hitRec.n + sample;
+                ptInUnitShpereCenter.MakeUnit();
+            //    out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
+                out_ray.Set(hitRec.wpt, ptInUnitShpereCenter, inRay.T());
+                attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+            }
+
 			return true;
 
 		//	return (Dot(out_ray.D(), hitRec.n) > 0.0f);
@@ -186,9 +209,23 @@ namespace LaplataRayTracer
 		virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
 		{
 			scatterRec.is_specular = false;
-			scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
-			mpCosinePDF->SetW(hitRec.n);
-			scatterRec.pPDF = mpCosinePDF;
+            if (mSigma > 0.0f) {
+                scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
+                OrenNayar orenNayarDiffuse(scatterRec.albedo, mSigma);
+                CoordinateSystem cs(hitRec.n);
+                Vec3f swi;
+                Vec3f swo = cs.To(-inRay.D());
+                float pdf;
+                scatterRec.albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                Vec3f wi = cs.From(swi);
+                mpOrenNayarPDF->SetReturnedPDF(pdf);
+                mpOrenNayarPDF->SetReturnedDirection(wi);
+                scatterRec.pPDF = mpOrenNayarPDF;
+            } else {
+                scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
+                mpCosinePDF->SetW(hitRec.n);
+                scatterRec.pPDF = mpCosinePDF;
+            }
 			return true;
 		}
 
@@ -219,6 +256,10 @@ namespace LaplataRayTracer
 				mpAlbedo = new ConstantTexture(albedo);
 			}
 		}
+        
+        inline void Set_sigma(float sigma) {
+            mSigma = sigma;
+        }
 
 	private:
 		inline void release()
@@ -234,6 +275,12 @@ namespace LaplataRayTracer
 				delete mpCosinePDF;
 				mpCosinePDF = nullptr;
 			}
+            
+            if (mpOrenNayarPDF)
+            {
+                delete mpOrenNayarPDF;
+                mpOrenNayarPDF = nullptr;
+            }
 		}
 
 	private:
@@ -244,6 +291,8 @@ namespace LaplataRayTracer
 	//	Color3f mAlbedo;
 		Texture *mpAlbedo;
 		CosinePDF *mpCosinePDF;
+        OrenNayarPDF *mpOrenNayarPDF;
+        float mSigma; // For OrenNayar brdf
 
 	};
 
