@@ -1306,3 +1306,14 @@ in case overflow due to the scene that consists of trillions of triangle objects
 3. Modified Material.h to integrator OrenNayar brdf into MatteMaterial to support this type of brdf and now both PathTacer and 
 PathTracerMIS support OrenNayr brdf, not test yet. Further will implement another MIS PathTracer used power heuristic weighted function
 to blend light and brdf sampling like the one in PBRT does.
+
+2022-11-28
+defined DistributionFuncTerm/GGXTerm/BlinTerm/BeckmannTerm/MicrofacetBRDF classes, not implement yet.
+
+2022-12-01
+Working on the implementation of Microfacet related classes, added ComplexIOR/FresnelTerm and its sub-classes, added Calc_D/Calc_G2/Calc_Fresnel function definitions and its related data members.
+
+2022-12-04
+1.Added D() pure virtual function to MicrofacetDTerm，modifled Sample_wh() and Pdf() paramters.
+2.implemented the Sample_wh() function for GGXTerm/BlinTerm/BeckmannTerm.
+3.Extracted code from ConductorFresnel and DielectricFresnel 's Evaluate() to be static function: FrDielectric and FrConductor so that they can be called without class objects in some scenarios, like to randomly choose between the reflect or refract ray to be generated from the given wo vector.
