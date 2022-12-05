@@ -98,80 +98,6 @@ namespace LaplataRayTracer
 			mpSampler = sampler; // no cares about what if sampler is NULL.
 		}
 
-	public:
-/*		inline static float CosTheta(const Vec3f& w) { return w.Z(); }
-		inline static float Cos2Theta(const Vec3f& w) { return w.Z() * w.Z(); }
-		inline static float AbsCosTheta(const Vec3f& w) { return std::abs(w.Z()); }
-		inline static float Sin2Theta(const Vec3f &w) { return std::max<float>(0.0f, 1.0f - Cos2Theta(w)); }
-		inline static float SinTheta(const Vec3f& w) { return std::sqrt(Sin2Theta(w)); }
-		inline static float TanTheta(const Vec3f& w) { return SinTheta(w) / CosTheta(w); }
-		inline static float Tan2Theta(const Vec3f& w) { return Sin2Theta(w) / Cos2Theta(w); }
-		inline static float CosPhi(const Vec3f& w) {
-			float sinTheta = SinTheta(w);
-			return (sinTheta == 0) ? 1 : RTMath::Clamp(w.X() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float SinPhi(const Vec3f& w) {
-			float sinTheta = SinTheta(w);
-			return (RTMath::IsZero(sinTheta)) ? 0.0f : RTMath::Clamp(w.Y() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float Cos2Phi(const Vec3f& w) { return CosPhi(w) * CosPhi(w); }
-		inline static float Sin2Phi(const Vec3f &w) { return SinPhi(w) * SinPhi(w); }
-		inline static float CosDPhi(const Vec3f &wa, const Vec3f &wb) {
-			return RTMath::Clamp(
-				(wa.X() * wb.X() + wa.Y() * wb.Y()) / std::sqrt((wa.X() * wa.X() + wa.Y() * wa.Y()) *
-				(wb.X() * wb.X() + wb.Y() * wb.Y())),
-				-1.0f, 1.0f);
-		}
-        inline static bool SameHemisphere(const Vec3f &w, const Vec3f &wp) {
-            return w.Z() * wp.Z() > 0;
-        }*/
-
-		inline static float CosTheta(const Vec3f& w, const Vec3f& n) {
-			Vec3f t = w;
-			t.MakeUnit();
-			return Dot(t, n);
-		}
-		inline static float Cos2Theta(const Vec3f& w, const Vec3f& n) {
-			float cosTheta = CosTheta(w, n);
-			return (cosTheta * cosTheta);
-		}
-		inline static float AbsCosTheta(const Vec3f& w, const Vec3f& n) {
-			return std::abs(CosTheta(w, n));
-		}
-		inline static float Sin2Theta(const Vec3f &w, const Vec3f& n) { 
-			return std::max<float>(0.0f, 1.0f - Cos2Theta(w, n)); 
-		}
-		inline static float SinTheta(const Vec3f& w, const Vec3f& n) {
-			return std::sqrt(Sin2Theta(w, n)); 
-		}
-		inline static float TanTheta(const Vec3f& w, const Vec3f& n) { 
-			return SinTheta(w, n) / CosTheta(w, n);
-		}
-		inline static float Tan2Theta(const Vec3f& w, const Vec3f& n) { 
-			return Sin2Theta(w, n) / Cos2Theta(w, n); 
-		}
-		inline static float CosPhi(const Vec3f& w, const Vec3f& n) {
-			float sinTheta = SinTheta(w, n);
-			return (sinTheta == 0) ? 1 : RTMath::Clamp(w.X() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float SinPhi(const Vec3f& w, const Vec3f& n) {
-			float sinTheta = SinTheta(w, n);
-			return (RTMath::IsZero(sinTheta)) ? 0.0f : RTMath::Clamp(w.Y() / sinTheta, -1.0f, 1.0f);
-		}
-		inline static float Cos2Phi(const Vec3f& w, const Vec3f& n) { return CosPhi(w, n) * CosPhi(w, n); }
-		inline static float Sin2Phi(const Vec3f &w, const Vec3f& n) { return SinPhi(w, n) * SinPhi(w, n); }
-//		inline static float CosDPhi(const Vec3f &wa, const Vec3f &wb) {
-//			return RTMath::Clamp(
-//				(wa.X() * wb.X() + wa.Y() * wb.Y()) / std::sqrt((wa.X() * wa.X() + wa.Y() * wa.Y()) *
-//				(wb.X() * wb.X() + wb.Y() * wb.Y())),
-//				-1.0f, 1.0f);
-//		}
-		inline static bool SameHemisphere(const Vec3f &w, const Vec3f &wp, const Vec3f& n) {
-			float cosTheta1 = CosTheta(w, n);
-			float cosTheta2 = CosTheta(wp, n);
-			return (cosTheta1 * cosTheta2 > 0.0f);
-		}
-
 	protected:
 		SamplerBase *		mpSampler;	// for indirect illumination, XX and the outer should be response for releasing its memory XX ??.
 
@@ -319,31 +245,15 @@ namespace LaplataRayTracer
 
 	class OrenNayar : public BRDF {
 	public:
-		OrenNayar()
-			: BRDF(), mpR(nullptr), mpSigma(nullptr) {
-			//Random::SetSeed(time(0));
-		}
-
-		OrenNayar(const OrenNayar& rhs)
-			: BRDF(rhs), mpR(nullptr), mpSigma(nullptr) {
-			copy_constructor(rhs);
-		}
-
-		OrenNayar& operator=(const OrenNayar& rhs) {
-			if (this == &rhs) {
-				return *this;
-			}
-
-			BRDF::operator=(rhs);
-			copy_constructor(rhs);
-
-			return *this;
-		}
-
-		virtual ~OrenNayar() {
-			release_object();
-
-		}
+		OrenNayar(const Color3f& R, float sigma)
+            : BRDF(), mA(0.0f), mB(0.0f), mR(R) {
+                sigma = ANG2RAD(sigma);
+                float sigma2 = sigma * sigma;
+                mA = 1.0f - (sigma2 / (2.0f * (sigma2 + 0.33f)));
+                mB = 0.45f * sigma2 / (sigma2 + 0.09f);
+            }
+        
+		virtual ~OrenNayar() { }
 
 	public:
 		virtual void *Clone() {
@@ -352,91 +262,32 @@ namespace LaplataRayTracer
 
 	public:
 		virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) const {
-			Color3f texSigma = mpSigma->GetTextureColor((HitRecord&)hitRec);
-			float sigma = texSigma[0];
-			float rad_sigma = ANG2RAD(sigma);
-			float square_sigma = rad_sigma * rad_sigma;
-			float A = 1.0f - (square_sigma / (2.0f * (square_sigma + 0.33f)));
-			float B = 0.45f * square_sigma / (square_sigma + 0.09f);
-
-			float sin_theta_i = SinTheta(wi, hitRec.n);
-			float sin_theta_o = SinTheta(wo, hitRec.n);
-			float max_cos = 0.0f;
-			if (sin_theta_i > 1e-4 && sin_theta_o > 1e-4) {
-				float sin_phi_i = SinPhi(wi, hitRec.n);
-				float cos_phi_i = CosPhi(wi, hitRec.n);
-				float sin_phi_o = SinPhi(wo, hitRec.n);
-				float cos_phi_o = CosPhi(wo, hitRec.n);
-				float d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
-				max_cos = std::max<float>((float)0, d_cos);
-			}
-
-			float sin_alpha;
-			float tan_beta;
-			if (AbsCosTheta(wi, hitRec.n) > AbsCosTheta(wo, hitRec.n)) {
-				sin_alpha = sin_theta_o;
-				tan_beta = sin_theta_i / AbsCosTheta(wi, hitRec.n);
-			}
-			else {
-				sin_alpha = sin_theta_i;
-				tan_beta = sin_theta_o / AbsCosTheta(wo, hitRec.n);
-			}
-
-			Color3f L = mpR->GetTextureColor((HitRecord&)hitRec);
-			float temp = INV_PI_CONST * (A + B * max_cos * sin_alpha * tan_beta);
-			return (temp * L);
+            float cos_delta_phi = (wi.X() * wo.X() + wi.Y() * wo.Y()) /
+            std::sqrt(((wi.X() * wi.X()) + (wi.Y() * wi.Y())) * ((wo.X() * wo.X()) + (wo.Y() * wo.Y())));
+            cos_delta_phi = RTMath::Clamp(cos_delta_phi, 0.0f, 1.0f);
+            
+            float D = std::sqrt((1.0 - (wi.Z() * wi.Z())) * (1.0 - (wo.Z() * wo.Z()))) / std::max(wi.Z(), wo.Z());
+            
+            return (mR * INV_PI_CONST * (mA + mB * cos_delta_phi * D));
 		}
-
-	public:
-		inline void SetR(Texture *texR) {
-			if (this->mpR != nullptr) {
-				delete mpR;
-			}
-
-			mpR = texR;
-		}
-
-		inline void SetSigma(Texture *texSigma) {
-			if (this->mpSigma != nullptr) {
-				delete mpSigma;
-			}
-
-			mpSigma = texSigma;
-		}
+        
+        virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
+            // 1.get wi reflectance direction
+            wi = SamplerBase::WeightedSampleHemishpere(SamplerBase::URand2());
+            if (wo.Z() < 0.0f) {
+                wi[2] *= -1.0f;
+            }
+            
+            // 2.get pdf of generated direction
+            pdf = (std::abs(wi.Z()) * INV_PI_CONST);
+            
+            // 3.get reflectance albedo
+            return this->F(hitRec, wo, wi);
+        }
 
 	private:
-		inline void copy_constructor(OrenNayar const& rhs) {
-			release_object();
-
-			if (rhs.mpR != nullptr) {
-				this->mpR = (Texture *)rhs.mpR->Clone();
-			}
-			else {
-				this->mpR = nullptr;
-			}
-
-			if (rhs.mpSigma != nullptr) {
-				this->mpSigma = (Texture *)rhs.mpSigma->Clone();
-			}
-			else {
-				this->mpSigma = nullptr;
-			}
-		}
-
-		inline void release_object() {
-			if (this->mpR != nullptr) {
-				delete mpR;
-				mpR = nullptr;
-			}
-			if (this->mpSigma != nullptr) {
-				delete mpSigma;
-				mpSigma = nullptr;
-			}
-		}
-
-	private:
-		Texture *	mpR;
-		Texture *	mpSigma;
+        float mA, mB;
+        Color3f mR;
 
 	};
 
@@ -1237,5 +1088,267 @@ namespace LaplataRayTracer
 		Color3f mReflection;
 
 	};
+
+    // Microfacet related classes
+    //
+class MicrofacetDTerm {
+public:
+    MicrofacetDTerm() { }
+    virtual ~MicrofacetDTerm() { }
+    
+public:
+    virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const = 0;
+    virtual float Pdf(const Vec3f& wh, float roughness) const = 0;
+    virtual float D(const Vec3f& wh, float roughness) const = 0;
+    
+};
+
+class GGXTerm : public MicrofacetDTerm {
+public:
+    GGXTerm() { }
+    virtual ~GGXTerm() { }
+    
+public:
+    virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
+        float phi = uv[0] * TWO_PI_CONST;
+        float cosTheta = std::sqrt((1.0f - uv[1]) / (uv[1] * (roughness * roughness - 1.0f) + 1.0f));
+        float sinTheta = std::sqrt(1.0 - cosTheta * cosTheta);
+        return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
+    }
+    
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        return D(wh, roughness) * wh.Z();
+    }
+    
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float r2 = roughness * roughness;
+        float v = (r2 - 1.0f) * wh.Z() * wh.Z() + 1.0f;
+        float DV = r2 / (PI_CONST * v * v);
+        return DV;
+    }
+};
+
+class BlinTerm : public MicrofacetDTerm {
+public:
+    BlinTerm() { }
+    virtual ~BlinTerm() { }
+
+public:
+    virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
+        float phi = uv[0] * TWO_PI_CONST;
+        float cosTheta = std::pow(1.0f - uv[1], 1.0f/(uv[1] + 2.0f));
+        float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
+        return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
+    }
+    
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        float sinTheta = std::sqrt(1.0f - wh.Z() * wh.Z());
+        return D(wh, roughness) * sinTheta * wh.Z();
+    }
+    
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float DV = ((roughness + 2.0f) / TWO_PI_CONST) * std::pow(wh.Z(), roughness);
+        return DV;
+    }
+};
+
+class BeckmannTerm : public MicrofacetDTerm {
+public:
+    BeckmannTerm() { }
+    virtual  ~BeckmannTerm() { }
+    
+public:
+    virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
+        float phi = uv[0] * TWO_PI_CONST;
+        float cosTheta = std::sqrt(1.0f/(1.0f - roughness * roughness * std::log(1.0f - uv[1])));
+        float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
+        return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
+    }
+    
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        float cosTheta = wh.Z();
+        float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
+        return D(wh, roughness) * 2.0f * PI_CONST * sinTheta * cosTheta;
+    }
+    
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float cos2Theta = wh.Z() * wh.Z();
+        float sin2Theta = 1.0f - cos2Theta;
+        float cos4Theta = cos2Theta * cos2Theta;
+        float tan2Theta = sin2Theta / cos2Theta;
+        float r2 = roughness * roughness;
+        float DV = (1.0f / (PI_CONST * r2 * cos4Theta)) * std::exp(-tan2Theta / r2);
+        return DV;
+    }
+};
+
+class ComplexIOR {
+public:
+    Color3f mReal;
+    Color3f mImaginary;
+    
+    ComplexIOR() { mReal.Set(0.0f, 0.0f, 0.0f); mImaginary.Set(0.0f, 0.0f, 0.0f); }
+    ComplexIOR(const Color3f& real, const Color3f& imagninary)
+    : mReal(real), mImaginary(imagninary) { }
+    ComplexIOR(const ComplexIOR& rhs) : mReal(rhs.mReal), mImaginary(rhs.mImaginary) { }
+};
+
+class FresnelTerm {
+public:
+    virtual ~FresnelTerm() { }
+    
+    virtual Color3f Evaluate(float n, float cosTheta) = 0;
+};
+
+class SchlickFresnel : public FresnelTerm {
+public:
+    SchlickFresnel() { }
+    virtual ~SchlickFresnel() { }
+    
+public:
+    virtual Color3f Evaluate(float n, float cosTheta) {
+        float exp = std::pow(1.0f - cosTheta, 5.0f);
+        return (n + (1.0f - n) * exp);
+    }
+};
+
+class DielectricFresnel : public FresnelTerm {
+public:
+    DielectricFresnel() { }
+    virtual ~DielectricFresnel() { }
+    
+public:
+    // n = n2/n1
+    virtual Color3f Evaluate(float n, float cosTheta) {
+        return DielectricFresnel::FrDielectric(n, cosTheta);
+    }
+    
+public:
+    inline static Color3f FrDielectric(float n, float cosTheta) {
+        double g2 = n * n + cosTheta * cosTheta - 1.0f;
+        if (g2 < 0.0f) {
+            return 1.0;
+        }
+        double g = std::sqrt(g2);
+        double g_p_c = g + cosTheta;
+        double g_m_c = g - cosTheta;
+
+        float temp1 = g_m_c / g_p_c;
+        float temp2 = (g_p_c * cosTheta - 1.0) / (g_m_c * cosTheta + 1.0);
+        float x = 0.5 * (temp1 * temp1) * (1.0 + temp2 * temp2);
+        return Color3f(x, x, x);
+    }
+};
+
+class ConductorFresnel : public FresnelTerm {
+public:
+    ConductorFresnel(const ComplexIOR& complexIOR) : mComplexIOR(complexIOR) { }
+    virtual ~ConductorFresnel() { }
+    
+public:
+    virtual Color3f Evaluate(float n, float cosTheta) {
+        return ConductorFresnel::FrConductor(n, cosTheta, mComplexIOR);
+    }
+    
+public:
+    inline static Color3f FrConductor(float n, float cosTheta, const ComplexIOR& complexIOR) {
+        float cos_theta2 = cosTheta * cosTheta;
+        float sin_theta2 = 1.0 - cos_theta2;
+        
+        Color3f eta2 = complexIOR.mReal / n;
+        eta2 *= eta2;
+        Color3f eta_k2 = complexIOR.mImaginary / n;
+        eta_k2 *= eta_k2;
+        
+        Color3f t0 = eta2 - eta_k2;
+        t0 = t0 - sin_theta2;
+        Color3f temp1 = t0;
+        temp1 *= temp1;
+        Color3f temp2 = eta2 * eta_k2;
+        temp2 = temp2 * 4.0f;
+        Color3f temp3 = temp1 + temp2;
+        Color3f a2_p_b2 = temp3.Sqrt();
+        Color3f t1 = a2_p_b2 + cos_theta2;
+        Color3f temp4 = a2_p_b2 + t0;
+        temp4 = temp4 * 5.0f;
+        Color3f temp5 = temp4.Sqrt();
+        Color3f t2 = temp5 * (cosTheta * 2.0f);
+        Color3f r_perpendicual = (t1 - t2) / (t1 + t2);
+        
+        float temp6 = sin_theta2 * sin_theta2;
+        Color3f temp7 = a2_p_b2 * cos_theta2;
+        Color3f t3 = temp7 + temp6;
+        Color3f t4 = t2 * sin_theta2;
+        Color3f temp8 = (t3 - t4) / (t3 + t4);
+        Color3f r_parallel = temp8 * r_perpendicual;
+        
+        return (r_parallel + r_perpendicual) * 0.5f;
+    }
+    
+private:
+    ComplexIOR mComplexIOR;
+};
+
+class MicrofacetBRDF : public BRDF {
+public:
+    MicrofacetBRDF(float roughness, bool complexIOR,
+                   MicrofacetDTerm *distriTerm, FresnelTerm *fresnelTerm, bool autoDel = false)
+    : mRoughness(roughness), mIsComplexIOR(complexIOR),
+      mpDTerm(distriTerm), mpFresnelOp(fresnelTerm), mAutoDel(autoDel) {
+        
+    }
+    virtual ~MicrofacetBRDF() {
+        if (mAutoDel) {
+            if (mpDTerm != nullptr) {
+                delete mpDTerm;
+                mpDTerm = nullptr;
+            }
+            if (mpFresnelOp != nullptr) {
+                delete mpFresnelOp;
+                mpFresnelOp = nullptr;
+            }
+        }
+    }
+
+public:
+    virtual void *Clone() {
+        return (void *)(new MicrofacetBRDF(*this));
+    }
+
+public:
+    virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) const {
+        return Color3f(0.0f, 0.0f, 0.0f);
+    }
+    
+    virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
+        return Color3f(0.0f, 0.0f, 0.0f);
+    }
+    
+public:
+    virtual float Calc_D(const Vec3f& wh) {
+        return mpDTerm->D(wh, mRoughness);
+    }
+    
+    virtual float Calc_G2(const Vec3f& wi, const Vec3f& wo) {
+        float r2 = mRoughness * mRoughness;
+        auto lambda = [&](auto& w) { return std::sqrt(r2 + (1.0f - r2) * w.Z() * w.Z()); };
+        float G2 = (2.0f * wi.Z() * wo.Z()) / (wo.Z() * lambda(wi) + wi.Z() * lambda(wo));
+        return G2;
+    }
+    
+    virtual Color3f Calc_Fresnel(float n, float cosTheta) {
+        return mpFresnelOp->Evaluate(n, cosTheta);
+    }
+
+private:
+    float mRoughness;
+// The following two should be in Material
+//   Color3f mReflectance;
+//   Color3f mTransimitance;
+    bool mIsComplexIOR;
+    MicrofacetDTerm *mpDTerm;
+    FresnelTerm *mpFresnelOp;
+    bool mAutoDel;
+};
 
 }

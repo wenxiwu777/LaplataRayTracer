@@ -789,21 +789,21 @@ I tested several scenes, it works well on mac os x now.
 
 
 
-2020-06-24 (on mac)
+2020-06-24
 
 implemented rotational sweeping geometric object, about 25% totoally.
 
 
 
 
-2020-06-25 (on mac)
+2020-06-25
 finally, i completed the code for rotational sweeping geometric object, 100%, not debugged yet.
 found out that GetNormal interface in GeometricObject is actually trivial, but currently it remains unchanged.
 completed SolidCylinder geometric object, not debugged yet
 
 
 
-2020-06-26 (on mac)
+2020-06-26
 
 tested SolidCylinder, it's ok.
 tested RotationalSweeping, fixed two major errors, but there is still a minor error when drawing, the overall is ok.
@@ -814,7 +814,7 @@ and also i tested other geometric objects in scenes, like tori, cylinder, and th
 different materials(matte, glass wine) reflected on a mirror plane.
  
 
-2020-06-28 (on mac)
+2020-06-28
 
 completed tessellation sphere rendering and built up test scenes to test it with ambient occulusion light and a point light.
 worked on part torus, not completed yet.
@@ -825,7 +825,7 @@ if (hitPt.Z() > mCenter.Z())
 	theta = 2.0f * PI_CONST - theta;
 }
 
-2020-06-29 (on mac)
+2020-06-29
 
 tested part torus again, was still wrong, it turns out that in <<RTGU>> the torus building up is in local(model) coordinate
 which is different from world coordinate see it in the book, and i derivated the equation several times and believed it was wrong, which may cause the error, so i referenced the torus part from libingzeng's blog, and this one is right, it is based on <<A introduction to ray tracing>>,and this time it's local coordinate is exactly as the same as the world coordinate and the equation is correct too, so the result is desirable and good.
@@ -839,7 +839,7 @@ added pos parameter to tessellated sphere and rotational sweeping in order to mo
 
 
 
-2020-07-02 (on win)
+2020-07-02
 added Average / Filter functions to Vec3 class.
 begin to develop fresnel/dielectric material/brdf/btdf
 added Fresnel to Surface class
@@ -851,7 +851,7 @@ added virtual bool WhittedShade(const Ray& inRay, HitRecord& hitRec, int& featur
 modified WhittedTracer to support dielectric material through new brach to handle 4 cases.
 total process about 80%
 
-2020-07-03 (on win)
+2020-07-03
 added IsTotalInternalReflection() function to FresnelTransmitter
 added DielectricMaterial material and implemented it, completed fresnel/dielectric material 100%, not test yet.
 changed WhittedShade parameter list from 3 to the rest ones, put them into a struct called WhittedRecord defined in HitRecord.h
@@ -870,20 +870,20 @@ optimized the global tracer by introducing path depth to reduce the noise, not t
 (15900)
 
 
-2020-07-04 (on mac)
+2020-07-04
 added new feature to part torus, previously i introduced theta to chop off torus, and now phi is introduced to open up torus.
 tested it a lot, a interesting thing is when calling Light::EnableShadow(false) can avoid self-shadow, sometimes it's very helpful especially when
 rendering complex geometric objects like torus, sweeping.
 added mSelfShadow to MaterialBase to enable self-shadow or not.
 
-2020-07-05 (on mac)
+2020-07-05
 added mbTransformTexture and function EnableTextureTransform() to control texture transformation in Instance.
 added Scale() function to Instance, because BART needs it(in its AFF definition file)
 added InverseApplyPoint() and InverseApplyVector() to Transform class because TextureTransform needs it.
 implemented TextureTransform class in Texture.h to support texture transformation(usually for Checker3d or Plane3d, etc)
 implemented part sphere object based on original sphere object.
 
-2020-07-06 (on mac)
+2020-07-06
 fixed a long-term bug, added wpt to HitRecord structure, because this one represents the hit point in world after the instance
 transformations in comparison to pt which represents the local hit point in object space. Now everything looks reasonable.
 wpt is assigned in each ray tracer, after get the nearest hit point, i use the original ray to calculate the wpt in world space.
@@ -901,7 +901,7 @@ added and implemented SphericalMapping
 added and implemented LightProbMapping
 changed SetInverseMapping in ImageTexture to SetMappingMethod and modified the related codes.
 
-2020-07-07 (on mac)
+2020-07-07
 debugged for PanoramicCamera, before, i missed "return true" in GenerateRay, but the Clang compiler has no any error prompt, now it works fine.
 added SaveScene() to Scene base class instead of saving the result directly in RenderScene, because sometimes we might want only to
 RenderImage, but the world objects is empty, in this case we can't output the result image, because the RenderScene just returns directly, and removed the saving codes from RenderScene at the end of the tracing.
@@ -917,7 +917,7 @@ along the implementations.(17700)
 changed mpDiffuseBRDF member type in Matte2Material from Lambertian to TextureLambertian, so all matte material
 only supports texture * to represent its BRDF.
 
-2020-07-08 (on mac)
+2020-07-08
 debugged for noise-based texture, wrapped/marble/sandstone, works fine.(but before LatticeNoise member mfbmMin and mfbmMax were not assigned)
 due to complexity of wood noise(from RenderMan), i didn't do implement it.
 added RotateX and RotateY to TextureTransform
@@ -928,7 +928,7 @@ added IsNan() to RTMath class, and reviewed other places to add the check for Na
 added SetSampler() function to related material classes in order to support global path
 tested phong material with TextureLambetian brdf to render like a global with texture lighten up by a point light.
 
-2020-07-09 (on mac)
+2020-07-09
 
 continue to debugged for GlobalPath with buildup_test_caustic_scene(),
 it turns out that there were two errors, one was pEmissive->SetRadiance(30.0f); was too small, like 2.0f,
@@ -940,7 +940,7 @@ most importantly, all geometric objects's color should be set to BLACK before be
 
 
 
-2020-07-10 (on mac)
+2020-07-10
 
 spent almost a day to debug another foolish and stupid bug which is in a very basic geometric object, the SimpleRectangle,
 in its IntersectP function, it always returned true before, and also it set the tvalue to a meaningless t when actually it 
@@ -950,7 +950,7 @@ use before, because when the rectangle is not a regular one like XY,YZ,XZ parall
 
 
 
-2020-07-11 (on mac)
+2020-07-11
 
 fixed a bug introduced by part sphere,
 before the check: if (Dot(rec.n, inRay.D()) > 0.0f), should have the condition: if (mbPart)
@@ -971,7 +971,7 @@ according to my understanding from the book.
 
 
 
-2020-07-12 (on mac)
+2020-07-12
 
 introduced mPart mTheta0 mTheta1 check_in_theta_range to implement part cylinder and tested it, correct.
 implemented part cone, but found a bug, i introduced check_part to solve it, see code for details.
@@ -979,7 +979,7 @@ and now both of part cylinder and cone can work fine.
 
 
 
-2020-07-13 (on win)
+2020-07-13
 tested spherical texture mapping with BilliardBall.jpg to rotate around Y-axis, found out that if you want the texutre rotating with the ball, you have to
 call TextureTransform::RotateY() to rotate the same angle like the calling from Instance::RotateY()
 tested global tracer with an area light and a dielectric glass sphere in cornell box, found out if ka and kd should not be set too large, because the shade or areashade 
@@ -1004,7 +1004,7 @@ so in FlatRimmedBowl i added SetMaterial to allow user to set material, if you d
 so it can be used as normal geometric object or MeshObject. See DemoScene::buildup_test_geometric_object_plus() for the details.
 i changed the former SolidCylinder in this way as well.
 
-2020-07-14 (on win)
+2020-07-14
 added single SetPartMaterial for SolidCylinder and FlatRimmedBowl to aovid many material setting parameters.
 removed SetXXX functions form SolidCylinder and FlatRimmedBowl, becuase once the object is created, nothing happens when you call these functions.
 implemented new ThickRing geometric object which is similar to the above two.
@@ -1012,7 +1012,7 @@ introduced interceptionH for SimpleCone to implement clipping cone in Y directio
 implemented new SolidCone and FrustumCone geometric objects. the radius of top disk need to calculate accroding to similar triangle.
 implemented new ThickTrimedCone.(18841)
 
-2020-07-15 (on win)
+2020-07-15
 added SetDiffuseBRDF to Matte2Material class to allow user to replace the pre-defined diffuse brdf with their own brdf, like OrenNayar,
 and the previous call from mpDiffuseBRDF need to cast to TextureLambertian, once the pre-defined mpDiffuseBRDF is replaced, the SetXXX functions cannot
 be used anymore.
@@ -1021,7 +1021,7 @@ set Texture 3 pure virtual functions to const function
 implemented new diffuse OrenNayar BRDF type in BRDF.h
 implemented new MicrofacetSpecular BRDF type in BRDF.h, and tested both, the result is fairly good.
 
-2020-07-16 (on win)
+2020-07-16
 tested microfacet brdf, checker size is related to camera setting-up
 light direction vector is exactly the same as other vectors in coordinates.
 compared with my microfacet brdf rendering image, looks almost as the same as the one i rendered by PBRT.(same dragon model, same light direction, 
@@ -1029,7 +1029,7 @@ the setting-up for test scene is same.
 
 
 
-2020-07-18 (on mac)
+2020-07-18
 
 added a bunch of math functions to RTMath;
 added reflection.h/cpp to try to implement MicrofacetReflection from PBRT, but failed.
@@ -1043,7 +1043,7 @@ vertex indices by 1., and my ray tracer now supports OBJ model file.
 
 
 
-2020-07-19 (on mac)
+2020-07-19
 
 1. implemented a new type of material: MetalMaterial, so i can never use the cool metal material inherited from Phong shading model,
 and it supports blend effect
@@ -1059,22 +1059,22 @@ slow and the result is not ideal.
 
 
 
-2020-07-20 (on win)
+2020-07-20
 1. moved platform definition macros to common.h to reduce the places to modify when change platform;
 2. tested OBJ model file reader on win, its slightly different, when reverse capacity for vector, you must assign an empty value in a loop for all the slots in vector on win;
 3. added Transparent brdf for MetalMaterial;
 
-2020-07-21 (on win)
+2020-07-21
 1. found SimpleSphere::IntersetP was still wrong, the logic of current version is correct
 2. modified the Transparent brdf setting parameters, added another memebers to distinct mCTIn and mCTOut, and also changed it for previous GlassMaterial.
 3. implemented new brdf, FresnelBlend as well as new material, SubstrateMaterial, the result is similar to pbrt.
 
-2020-07-22 (on win)
+2020-07-22
 implemented microfacet new distribution funciton GGX and Smith model, and tested with point light, the result is close to cook torrance model,
 but i found a serious problem, because i almost didn't implement its pdf and light pdf, so when i change the light type, it's result is poor in comparison to
 pbrt.
 
-2020-07-23 (on win)
+2020-07-23
 removed all pre-compiled macros from each file to Common.h universally
 added MICROFACET_SMITH_GGX to decide if we use simth GGX model.
 found a serious problem, the nested object in mesh object cannot be seen.
@@ -1197,7 +1197,7 @@ with each other, but if the world has at least two objects, mesh object can refl
 i mean, even if mesh object contains many sub-objects, it still counts for one object with the respect to the world object.
 i guess the reason is it matters with the sequence of the sub-objects. i leave it unsolved for now.
 
-2020-07-24 (on win)
+2020-07-24
 added one constructor for ConstantTexture for convenient call
 built up a scene to test inter grid object inner shadow and proved the remain issue, it's because the sequence of the inside objects,
 and no need to fix, because the environment objects usually aren't be added to a grid.
@@ -1212,7 +1212,7 @@ and also tested setting up the grid object without reading from ply or obj file,
 it fills up the MeshDesc structure each member one by one, and it works fine, no bug found.
 added SetDiffuseEx to FresnelBlend.
 
-2020-07-27 (on mac)
+2020-07-27
 confirmed the correctness of path tracer, and adjusted the light and wall color in cornel box scene, and now it looks
 almost the same as the v3 cover;
 tested mirror material and set its fuzz parameter, the result is good for metal
@@ -1220,10 +1220,10 @@ built up the v1 cover (random sphere scene), the result is good.
 found the obj loader still has slight problem when the 'f' section is like this: f 1 2 3 not in this form: f 1/1/1 2/2/2 3/3/3,
 and the comment line at the beginning, i modified the parser, it can handle both now.
 
-2020-07-28 (on mac)
+2020-07-28
 enhanced the random sphere scene to add some moving spheres.
 
-2020-08-08 (on mac)
+2020-08-08
 implemented SimpleTriangle::RandomSamplePoint() PDFValue() and RandomSampleDirection()
 implemented MeshTriangle::RandomSamplePoint() PDFValue() and RandomSampleDirection() so that the PathTracer or GlobalTracer can sample from 
 triangle-based light source.
@@ -1234,21 +1234,21 @@ and SimpleTriangle, which just samples a random point on the its surface, but in
 tested cornell-box scene again with MaxAngleSampledShpere by using PathTracer_PBRS, and
 it's correct.
 
-2020-08-09 (on mac)
+2020-08-09
 replaced all RandomSamplePoint with SampleRandomPoint
 replaced all RandomSampleDirection with SampleRandomDirection
 
-2020-08-15 (on mac)
+2020-08-15
 implemetned CompoundObject::Area() functions.
 implemented RegularGridMeshObject::Area(), RegularGridMeshObject::PDFValue() functions.
 removed copy constructor and operator = from RegularGridMeshObject
 added SetSeedupFactor to RegularGridMeshObject, tested and found single sphere at the center of the scene in a speed up RegularGridMeshObject
 may cause holes on the sphere, but adjusted the speeding up factor can avoid it, now i consider its a bug, but use this function can temporary avoid it. 
 
-2020-09-12 (on mac)
+2020-09-12
 changed the implementation of SimpleSphere::PDFValue(), previous implementation is not correct.
 
-2020-10-05 (on mac)
+2020-10-05
 changed PathTracer_PBRS to PathTracer_MIS, after read 'multiply important sampling' from 'agraphicsguy.wordpress.com'(15 august), i realized the previous implementation for that kind of path tracer is the MIS one.
 renamed ImageIO::STBILoad to STBILoadImage, i will add STBILoadHDR later, so you can easily tell between them
 added STBILoadHDR to ImageIO to prepare for HDR background shading.
@@ -1258,31 +1258,65 @@ added SceneEnvrionment.h to implement WorldEnvironment/EmptyEnv/SkylineEnv/HDREv
 added PI_HALF macro
 tested it with the random sphere scene.
 
-2020-10-06 (on mac)
+2020-10-06
 built up a test scene for HDR environment test and verified the correctness in comparison to RayTracer-master, Raytracer2 from git, and the result is not bad.
 modified MatteMaterial::Shade the way to calculate the outgoing direction vector, i guess both are correct, but
 the reflection result is better after modifying.
 
-2020-10-08 (on mac)
+2020-10-08
 added progress bar to indicate the rendering process, previously it was only a percentage number, and now it has both.
 added GammaCorrection to ImageProc
 added GAMMA_CORRECTION macro to enable or disable gamma correction in result image postpone processing
 
-2020-10-09 (on mac)
+2020-10-09
 added gamma parameter to ImageProc::GammaCorrection;
 added output file path to result hint
 
-2020-10-11 (on mac)
+2020-10-11
 removed GAMMA_CORRECTION, basicly, they are all HDR operators;
 renamed ImageProc::GammaCorrection to HDR_Operator_Gamma1,
 added HDR_Operator_Gamma2, HDR_Operator_Uncharted2Tonemap operators
 
-2020-11-20 (on mac)
+2020-11-20
 in RegularGridMeshObject::LoadFromMeshDesc, if mesh_normal is not empty then we don't need to calculate vertex normal
 
-2020-11-25 (on mac)
+2020-11-25
 added other 3 interfaces for IWindowSink, see class definition.
 implemented a build-in RenderProcessReporter class to simplify the setting-up for rendering output, like progress bar/percentage info so that
 each test or demo setting-up in main can directly use this class instead of the boring copy.
 
 
+2022-11-23
+the CoordinateSystem class was added to support coordinate transform in the further brdf and related material components like OrenNayar and Microfacet model.
+
+2022-11-25
+1.Implemented OrenNaya brdf model
+2.added several other sampling methods in Samping.h: URand2/UniformSampleTriangle/UniformSampleCone/UniformSampleDisk/ConcentricSampleDisk/WeightedSampleHemishpere 
+3.added operator- override method in Point2 class
+4.removed the previous related implementation of OrenNayar model
+5.removed some Sin Cos Theta dummy conversion methods in BRDF.h
+
+2022-11-26
+1.in RayTracer.h changed the following:
+int count = mRTEvn.mpvecHitableObjs->size();
+to
+unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+in case overflow due to the scene that consists of trillions of triangle objects.
+2. in PDF.h added OrenNayarPDF class to support PathTracerMIS integrator
+3. Modified Material.h to integrator OrenNayar brdf into MatteMaterial to support this type of brdf and now both PathTacer and 
+PathTracerMIS support OrenNayr brdf, not test yet. Further will implement another MIS PathTracer used power heuristic weighted function
+to blend light and brdf sampling like the one in PBRT does.
+
+2022-11-28
+defined DistributionFuncTerm/GGXTerm/BlinTerm/BeckmannTerm/MicrofacetBRDF classes, not implement yet.
+
+2022-12-01
+Working on the implementation of Microfacet related classes, added ComplexIOR/FresnelTerm and its sub-classes, added Calc_D/Calc_G2/Calc_Fresnel function definitions and its related data members.
+
+2022-12-04
+1.Added D() pure virtual function to MicrofacetDTerm，modifled Sample_wh() and Pdf() paramters.
+2.implemented the Sample_wh()/Pdf()/D() function for GGXTerm/BlinTerm/BeckmannTerm.
+3.Extracted code from ConductorFresnel and DielectricFresnel 's Evaluate() to be static function: FrDielectric and FrConductor so that they can be called without class objects in some scenarios, like to randomly choose between the reflect or refract ray to be generated from the given wo vector.
+
+2022-12-05
+1.implemented Calc_D/Calc_G2/Calc_Fresnel functions for MicrofacetBRDF
