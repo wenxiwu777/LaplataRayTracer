@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 
 #include "Vec3.h"
 #include "Transform.h"
@@ -34,8 +34,37 @@ namespace LaplataRayTracer {
 	private:
         ONB		m_onb_coord;
 
-
 	};
+
+    // This PDF class is decomposed from OrenNayar brdf, the returned pdf and
+    // direction is acutally provied by OrenNayar brdf which is in the MatteMaterial
+    // via the SetReturnedPDF and SetReturnedDirection method calls.
+    class OrenNayarPDF : public PDF {
+    public:
+        OrenNayarPDF() { }
+        virtual ~OrenNayarPDF() { }
+
+    public:
+        virtual float Value(Vec3f const& vec_direction) const {
+            return mPDF;
+        }
+        virtual Vec3f Generate(void) const {
+            return mDirection;
+        }
+        
+    public:
+        inline void SetReturnedDirection(const Vec3f& vecDir) {
+            mDirection = vecDir;
+        }
+        inline void SetReturnedPDF(float pdf) {
+            mPDF = pdf;
+        }
+        
+    private:
+        Vec3f mDirection;
+        float mPDF;
+        
+    };
 
 	//
 	class GeometricObject;

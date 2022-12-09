@@ -14,6 +14,7 @@
 #include "ICloneable.h"
 #include "Sampling.h"
 #include "Surface.h"
+#include "Transform.h"
 
 namespace LaplataRayTracer
 {
@@ -141,13 +142,22 @@ namespace LaplataRayTracer
 	class MatteMaterial : public MaterialBase
 	{
 	public:
-		MatteMaterial() : mpAlbedo(nullptr) { mpCosinePDF = new CosinePDF; }
+		MatteMaterial() {
+            mpAlbedo = nullptr;
+            mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
+            mSigma = 0.0f; // 0.0 means OrenNayar is disabled by default
+        }
 		MatteMaterial(Color3f const& albedo)
 		{
 			mpAlbedo = new ConstantTexture(albedo);
 			mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
 		}
-		MatteMaterial(Texture *albedo) : mpAlbedo(albedo) { mpCosinePDF = new CosinePDF; }
+		MatteMaterial(Texture *albedo) : mpAlbedo(albedo) {
+            mpCosinePDF = new CosinePDF;
+            mpOrenNayarPDF = new OrenNayarPDF;
+        }
 		virtual ~MatteMaterial()
 		{
 			release();
@@ -159,13 +169,26 @@ namespace LaplataRayTracer
 	public:
 		virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
 		{
-			Vec3f sample = SamplerBase::SampleInUnitSphere();
-        //    Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
-            Vec3f ptInUnitShpereCenter = hitRec.n + sample;
-            ptInUnitShpereCenter.MakeUnit();
-        //    out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
-            out_ray.Set(hitRec.wpt, ptInUnitShpereCenter, inRay.T());
-			attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+            if (mSigma > 0.0f) {
+                attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+                OrenNayar orenNayarDiffuse(attenunation_albedo, mSigma);
+                CoordinateSystem cs(hitRec.n);
+                Vec3f swi;
+                Vec3f swo = cs.To(-inRay.D());
+                float pdf;
+                attenunation_albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                Vec3f wi = cs.From(swi);
+                out_ray.Set(hitRec.wpt, wi, inRay.T());
+            } else {
+                Vec3f sample = SamplerBase::SampleInUnitSphere();
+            //    Vec3f ptInUnitShpereCenter = hitRec.wpt + hitRec.n + sample;
+                Vec3f ptInUnitShpereCenter = hitRec.n + sample;
+                ptInUnitShpereCenter.MakeUnit();
+            //    out_ray.Set(hitRec.wpt, ptInUnitShpereCenter - hitRec.wpt, inRay.T());
+                out_ray.Set(hitRec.wpt, ptInUnitShpereCenter, inRay.T());
+                attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
+            }
+
 			return true;
 
 		//	return (Dot(out_ray.D(), hitRec.n) > 0.0f);
@@ -186,9 +209,23 @@ namespace LaplataRayTracer
 		virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
 		{
 			scatterRec.is_specular = false;
-			scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
-			mpCosinePDF->SetW(hitRec.n);
-			scatterRec.pPDF = mpCosinePDF;
+            if (mSigma > 0.0f) {
+                scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
+                OrenNayar orenNayarDiffuse(scatterRec.albedo, mSigma);
+                CoordinateSystem cs(hitRec.n);
+                Vec3f swi;
+                Vec3f swo = cs.To(-inRay.D());
+                float pdf;
+                scatterRec.albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                Vec3f wi = cs.From(swi);
+                mpOrenNayarPDF->SetReturnedPDF(pdf);
+                mpOrenNayarPDF->SetReturnedDirection(wi);
+                scatterRec.pPDF = mpOrenNayarPDF;
+            } else {
+                scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
+                mpCosinePDF->SetW(hitRec.n);
+                scatterRec.pPDF = mpCosinePDF;
+            }
 			return true;
 		}
 
@@ -219,6 +256,10 @@ namespace LaplataRayTracer
 				mpAlbedo = new ConstantTexture(albedo);
 			}
 		}
+        
+        inline void Set_sigma(float sigma) {
+            mSigma = sigma;
+        }
 
 	private:
 		inline void release()
@@ -234,16 +275,24 @@ namespace LaplataRayTracer
 				delete mpCosinePDF;
 				mpCosinePDF = nullptr;
 			}
+            
+            if (mpOrenNayarPDF)
+            {
+                delete mpOrenNayarPDF;
+                mpOrenNayarPDF = nullptr;
+            }
 		}
 
 	private:
 		MatteMaterial(MatteMaterial const&) { }
-		MatteMaterial& operator=(MatteMaterial const&) { }
+        MatteMaterial& operator=(MatteMaterial const&);
 
 	private:
 	//	Color3f mAlbedo;
 		Texture *mpAlbedo;
 		CosinePDF *mpCosinePDF;
+        OrenNayarPDF *mpOrenNayarPDF;
+        float mSigma; // For OrenNayar brdf
 
 	};
 
@@ -425,7 +474,7 @@ namespace LaplataRayTracer
 
 	private:
 		EmissiveMaterial(const EmissiveMaterial& rhs) { }
-		EmissiveMaterial& operator=(const EmissiveMaterial& rhs) { }
+        EmissiveMaterial& operator=(const EmissiveMaterial& rhs);
 
 	private:
 		Texture *		mpTex;
@@ -466,7 +515,7 @@ namespace LaplataRayTracer
 
 	private:
 		IsotropicMaterial(const IsotropicMaterial& rhs) { }
-		IsotropicMaterial& operator=(const IsotropicMaterial& rhs) { }
+        IsotropicMaterial& operator=(const IsotropicMaterial& rhs);
 
 	private:
 		Texture *	mpTex;
@@ -518,7 +567,7 @@ namespace LaplataRayTracer
 
 	private:
 		TextureOnlyMaterial(const TextureOnlyMaterial& rhs) { }
-		TextureOnlyMaterial& operator=(const TextureOnlyMaterial& rhs) { }
+        TextureOnlyMaterial& operator=(const TextureOnlyMaterial& rhs);
 
 	private:
 		Texture *	mpTexture;
@@ -582,7 +631,6 @@ namespace LaplataRayTracer
 					}
 				}
 			}
-
 			return L;
 		}
 
@@ -1559,7 +1607,6 @@ namespace LaplataRayTracer
             mpAmbientBRDF->SetCd2(0.01f, 0.01f, 0.01f);
 
             mpLambertianBRDF = nullptr;
-            mpOrenNayarBRDF = nullptr;
             mbDiffuse = false;
             mbOrenNayar = false;
 
@@ -1629,9 +1676,6 @@ namespace LaplataRayTracer
                         if (mbDiffuse && !mbOrenNayar) {
                             L += (mpLambertianBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
                                     light->Li(hitRec, sceneObjects) * ndotwi;
-                        } else if (mbDiffuse && mbOrenNayar) {
-                            L += (mpOrenNayarBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
-                                    light->Li(hitRec, sceneObjects) * ndotwi;
                         } else {
                             L += (mpGlossyBRDF->F(hitRec, wo, wi)) *
                                  light->Li(hitRec, sceneObjects) * ndotwi;
@@ -1662,9 +1706,6 @@ namespace LaplataRayTracer
                     if (!in_shadow) {
                         if (mbDiffuse && !mbOrenNayar) {
                             L += (mpLambertianBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
-                                 light->Li(hitRec, sceneObjects) * light->G(hitRec) * ndotwi / light->Pdf(hitRec);
-                        } else if (mbDiffuse && mbOrenNayar){
-                            L += (mpOrenNayarBRDF->F(hitRec, wo, wi) + mpGlossyBRDF->F(hitRec, wo, wi)) *
                                  light->Li(hitRec, sceneObjects) * light->G(hitRec) * ndotwi / light->Pdf(hitRec);
                         } else {
                             L += (mpGlossyBRDF->F(hitRec, wo, wi)) *
@@ -1742,29 +1783,11 @@ namespace LaplataRayTracer
 	    inline void SetDiffuse(float kd, Texture *diffuse) {
             mbDiffuse = true;
             mbOrenNayar = false;
-            if (mpOrenNayarBRDF != nullptr) {
-                delete mpOrenNayarBRDF;
-                mpOrenNayarBRDF = nullptr;
-            }
             if (mpLambertianBRDF == nullptr) {
                 mpLambertianBRDF = new TextureLambertian;
             }
             mpLambertianBRDF->SetKd(kd);
             mpLambertianBRDF->SetCd(diffuse);
-	    }
-
-	    inline void SetDiffuseEx(Texture *r, Texture *sigma) {
-	        mbDiffuse = true;
-            mbOrenNayar = true;
-            if (mpLambertianBRDF != nullptr) {
-                delete mpLambertianBRDF;
-                mpLambertianBRDF = nullptr;
-            }
-            if (mpOrenNayarBRDF == nullptr) {
-                mpOrenNayarBRDF = new OrenNayar;
-            }
-            mpOrenNayarBRDF->SetR(r);
-            mpOrenNayarBRDF->SetSigma(sigma);
 	    }
 
 	    inline void SetSpecular(float kr, Color3f const& cr) {
@@ -1827,7 +1850,6 @@ namespace LaplataRayTracer
 	    inline void release_brdfs() {
 	        if (mpAmbientBRDF != nullptr) { delete mpAmbientBRDF; mpAmbientBRDF = nullptr; }
             if (mpLambertianBRDF != nullptr) { delete mpLambertianBRDF; mpLambertianBRDF = nullptr; }
-            if (mpOrenNayarBRDF != nullptr) { delete mpOrenNayarBRDF; mpOrenNayarBRDF = nullptr; }
             if (mpPerfectSpecularBRDF != nullptr) { delete mpPerfectSpecularBRDF; mpPerfectSpecularBRDF = nullptr; }
 			if (mpTransparentBRDF != nullptr) { delete mpTransparentBRDF; mpTransparentBRDF = nullptr; }
             if (mpGlossyBRDF != nullptr) { delete mpGlossyBRDF; mpGlossyBRDF = nullptr; }
@@ -1845,12 +1867,6 @@ namespace LaplataRayTracer
 	            this->mpLambertianBRDF = (TextureLambertian *)rhs.mpLambertianBRDF->Clone();
 	        } else {
 	            this->mpLambertianBRDF = nullptr;
-	        }
-
-	        if (rhs.mpOrenNayarBRDF != nullptr) {
-	            this->mpOrenNayarBRDF = (OrenNayar *)rhs.mpOrenNayarBRDF->Clone();
-	        } else {
-	            this->mpOrenNayarBRDF = nullptr;
 	        }
 
 	        if (rhs.mpPerfectSpecularBRDF != nullptr) {
@@ -1888,7 +1904,6 @@ namespace LaplataRayTracer
 	private:
         Lambertian *	mpAmbientBRDF;
         TextureLambertian *mpLambertianBRDF;
-        OrenNayar *	    mpOrenNayarBRDF;
         PerfectSpecular *	mpPerfectSpecularBRDF;
         TransparentSpecular * mpTransparentBRDF;
 #ifdef MICROFACET_COOK

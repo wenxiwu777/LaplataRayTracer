@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Common.h"
 
@@ -130,7 +130,7 @@ namespace LaplataRayTracer
 						}
 					}
                     color /= (float)sampler_count;*/
-                    int N = 30;
+                    int N = 10;
                     for (int m = 0; m < N; ++m)
                     {
                         for (int n = 0; n < N; ++n)
@@ -152,7 +152,7 @@ namespace LaplataRayTracer
                             Ray ray;
                             if (mpCamera->GenerateRay(x, y, ray))
                             {
-                                color += mpRayTracer->Run(ray, 0, 10);
+                                color += mpRayTracer->Run(ray, 0, 6);
                             }
                         }
                     }

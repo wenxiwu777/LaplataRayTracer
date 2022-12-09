@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Console.h"
 
@@ -31,3 +33,5 @@ namespace LaplataRayTracer
 	OutputConsole g_Console;
 
 }
+
+#endif // _WIN32

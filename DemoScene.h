@@ -90,7 +90,7 @@ public:
         //    buildup_test_noise_based_texture_scene();
         //     buildup_test_texture_mapping_scene();
         //     buildup_test_caustic_by_global_tracer_scene();
-        //     buildup_test_caustic_by_path_tracer_scene();
+             buildup_test_caustic_by_path_tracer_scene();
         //    buildup_test_dielectric_material_scene();
         //    buildup_test_dielectric_material_scene2();
         //buildup_test_glossy_reflective_scene();
@@ -103,7 +103,7 @@ public:
         //  builup_shelf_test_scene();
         //    buildup_random_sphere_scene();
         //    buildup_volume_test_scene();
-            buildup_test_hdr_envrionment_scene();
+        //    buildup_test_hdr_envrionment_scene();
 
 	}
 
@@ -128,7 +128,7 @@ private:
 
         // left wall
         MaterialObject *pLeftWall = new MaterialObject(new YZRect(Vec3f(-40, 0, 200), false, 80, 80),
-                                                       new MatteMaterial(Color3f(0.12, 0.45, 0.15)));
+                                                       new MatteMaterial(Color3f(0.12, 0.65, 0.15)));
 
         // right wall
         MaterialObject *pRightWall = new MaterialObject(new YZRect(Vec3f(40, 0, 200), true, 80, 80),
@@ -152,7 +152,7 @@ private:
         //
         // lighting set-up to light the scene up
         AreaLightObject *pCellLight = new AreaLightObject(new XZRect(Vec3f(-10, 79.9, 228), true, 20, 20),
-                                                          new ConstantTexture(Color3f(25, 25, 25)),
+                                                          new ConstantTexture(Color3f(10, 10, 10)),
                                                           new ConstantTexture(Color3f(0.0f, 0.0f, 0.0f)));
         pCellLight->TurnON();
 
@@ -169,22 +169,22 @@ private:
         mvecObjects.push_back(pGlassBall);
 
         //
-        ConstantMedium *pVolumeShpere = new ConstantMedium(pGlassBall, 0.05f, new IsotropicMaterial(new ConstantTexture(Color3f(0.2F,0.4F,0.9F))));
-        mvecObjects.push_back(pVolumeShpere);
+//        ConstantMedium *pVolumeShpere = new ConstantMedium(pGlassBall, 0.05f, new IsotropicMaterial(new ConstantTexture(Color3f(0.2F,0.4F,0.9F))));
+//        mvecObjects.push_back(pVolumeShpere);
 
-//        SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
-//        MaterialObject *box_mat1 = new MaterialObject(box1, new MatteMaterial(Color3f(0.5,0.5,0.5)));
-//        Instance *inst_box1 = new Instance(box_mat1);
-//        inst_box1->RotateY(60);
-//        inst_box1->Translate(-28, 0, 240);
-//        mvecObjects.push_back(inst_box1);
+        SimpleBox *box1 = new SimpleBox(0, 20, 0, 55, 0, 20);
+        MaterialObject *box_mat1 = new MaterialObject(box1, new MatteMaterial(Color3f(0.5,0.5,0.5)));
+        Instance *inst_box1 = new Instance(box_mat1);
+        inst_box1->RotateY(60);
+        inst_box1->Translate(-28, 0, 240);
+        mvecObjects.push_back(inst_box1);
 
-        SimpleBox *box2 = new SimpleBox(0, 20, 0, 40, 0, 20);
-        MaterialObject *box_mat2 = new MaterialObject(box2, new MatteMaterial(Color3f(0.5,0.5,0.5)));
-        Instance *inst_box2 = new Instance(box_mat2);
-//		inst_box2->RotateY(-30);
-        inst_box2->Translate(10, 0, 230);
-        mvecObjects.push_back(inst_box2);
+//        SimpleBox *box2 = new SimpleBox(0, 20, 0, 40, 0, 20);
+//        MaterialObject *box_mat2 = new MaterialObject(box2, new MatteMaterial(Color3f(0.5,0.5,0.5)));
+//        Instance *inst_box2 = new Instance(box_mat2);
+////		inst_box2->RotateY(-30);
+//        inst_box2->Translate(10, 0, 230);
+//        mvecObjects.push_back(inst_box2);
 
 //        RegularGridMeshObject *model = new RegularGridMeshObject;
 //        model->SetMaterial(new GlassMaterial(1.5, WHITE,WHITE));
@@ -972,12 +972,9 @@ private:
 		pMatMaterial2->SetCd(Color3f(1, 1, 1), tex);
 
 		//////////////////////////////////////////////////////////////////
-		OrenNayar *diffuse_oren_naya = new OrenNayar;
-		diffuse_oren_naya->SetSigma(new FixedFloatTexture(80));
-		diffuse_oren_naya->SetR(new ConstantTexture(Color3f(0.9, 0.9, 0.3)));
-//		diffuse_oren_naya->SetR(new ConstantTexture(Color3f(1, 1, 1)));
-		Matte2Material *pOrenNayaMatte = new Matte2Material;
-		pOrenNayaMatte->SetDiffuseBRDF(diffuse_oren_naya);
+        Lambertian *diffuse_lambertian = new Lambertian;
+        diffuse_lambertian->SetKa(0.9);
+        diffuse_lambertian->SetCd2(0.9, 0.9, 0.3);
 
 		Lambertian *diffuse_ambient = new Lambertian;
 		diffuse_ambient->SetKa(0.3);
@@ -987,7 +984,7 @@ private:
 		MicrofacetSpecular *microfacet_specular = new MicrofacetSpecular(0.001, 1, 0.25, Color3f(0.03, 0.03, 0.01));
 		PlasticMaterial *plastic_material = new PlasticMaterial;
 		plastic_material->SetAmbientBRDF(diffuse_ambient);
-		plastic_material->SetDiffuseBRDF(diffuse_oren_naya);
+		plastic_material->SetDiffuseBRDF(diffuse_lambertian);
 		plastic_material->SetGlossyBRDF(microfacet_specular);
 //		pReflectiveMaterial->SetAmbientBRDF(diffuse_ambient);
 //		pReflectiveMaterial->SetDiffuseBRDF(diffuse_oren_naya);
@@ -1015,7 +1012,7 @@ private:
 
 		GlossyReflectiveMaterial *pGlossyReflection = new GlossyReflectiveMaterial;
 		pGlossyReflection->SetAmbientBRDF(diffuse_ambient);
-		pGlossyReflection->SetDiffuseBRDF(diffuse_oren_naya);
+		pGlossyReflection->SetDiffuseBRDF(diffuse_lambertian);
 		pGlossyReflection->SetGlossyBRDF(microfacet_specular);
 		//////////////////////////////////////////////////////////////////
 		Glass2Material *glass_material = new Glass2Material(2.5, WHITE, Color3f(0.8, 0.8, 0.8));
@@ -2323,20 +2320,17 @@ private:
 		pPhongMaterial->SetEXP(150);
 
 		//////////////////////////////////////////////////////////////////
-		OrenNayar *diffuse_oren_naya = new OrenNayar;
-		diffuse_oren_naya->SetSigma(new FixedFloatTexture(80));
-		//		diffuse_oren_naya->SetR(new ConstantTexture(Color3f(0.9, 0.9, 0.0)));
-		diffuse_oren_naya->SetR(new ConstantTexture(Color3f(191 / 255.0, 173 / 255.0, 111 / 255.0)));
-		Matte2Material *pOrenNayaMatte = new Matte2Material;
-		pOrenNayaMatte->SetDiffuseBRDF(diffuse_oren_naya);
-
+        Lambertian *diffuse_lambertian = new Lambertian;
+        diffuse_lambertian->SetKa(0.9);
+        diffuse_lambertian->SetCd2(0.9, 0.9, 0.3);
+        
 		Lambertian *diffuse_ambient = new Lambertian;
 		diffuse_ambient->SetKa(0.3);
 		diffuse_ambient->SetCd2(0.1, 0.1, 0.1);
 		MicrofacetSpecular *microfacet_specular = new MicrofacetSpecular(0.001, 1, 0.25, Color3f(191 / 255.0, 173 / 255.0, 111 / 255.0));
 		PlasticMaterial *plastic_material = new PlasticMaterial;
 		plastic_material->SetAmbientBRDF(diffuse_ambient);
-		plastic_material->SetDiffuseBRDF(diffuse_oren_naya);
+		plastic_material->SetDiffuseBRDF(diffuse_lambertian);
 		plastic_material->SetGlossyBRDF(microfacet_specular);
 		//////////////////////////////////////////////////////////////////
 		Matte2Material *pMatPlane = new Matte2Material;
@@ -2378,7 +2372,7 @@ private:
 
 		GlossyReflectiveMaterial *pGlossyReflection = new GlossyReflectiveMaterial;
 		pGlossyReflection->SetAmbientBRDF(diffuse_ambient);
-		pGlossyReflection->SetDiffuseBRDF(diffuse_oren_naya);
+		pGlossyReflection->SetDiffuseBRDF(diffuse_lambertian);
 		pGlossyReflection->SetGlossyBRDF(microfacet_specular);
 		//////////////////////////////////////////////////////////////////
 
@@ -2426,12 +2420,9 @@ private:
         chekcer3d->SetAlternateColor(Color3f(0.75, 0.75, 0.75), Color3f(1, 1, 1));
 
         //////////////////////////////////////////////////////////////////
-        OrenNayar *diffuse_oren_naya = new OrenNayar;
-        diffuse_oren_naya->SetSigma(new FixedFloatTexture(80));
-//        diffuse_oren_naya->SetR(new ConstantTexture(Color3f(191 / 255.0, 173 / 255.0, 111 / 255.0)));
-        diffuse_oren_naya->SetR(new ConstantTexture(Color3f(0.01,0.01,0.01)));
-        Matte2Material *pOrenNayaMatte = new Matte2Material;
-        pOrenNayaMatte->SetDiffuseBRDF(diffuse_oren_naya);
+        Lambertian *diffuse_lambertian = new Lambertian;
+        diffuse_lambertian->SetKa(0.9);
+        diffuse_lambertian->SetCd2(0.9, 0.9, 0.9);
 
         Lambertian *diffuse_ambient = new Lambertian;
         diffuse_ambient->SetKa(0.0);
@@ -2471,7 +2462,7 @@ private:
 
         GlossyReflectiveMaterial *pGlossyReflection = new GlossyReflectiveMaterial;
         pGlossyReflection->SetAmbientBRDF(diffuse_ambient);
-        pGlossyReflection->SetDiffuseBRDF(diffuse_oren_naya);
+        pGlossyReflection->SetDiffuseBRDF(diffuse_lambertian);
         pGlossyReflection->SetGlossyBRDF(fresnel_blend);
         //////////////////////////////////////////////////////////////////
 		Glass2Material *glass_material = new Glass2Material;
@@ -2521,16 +2512,14 @@ private:
         chekcer3d->SetAlternateColor(Color3f(0.75, 0.75, 0.75), Color3f(1, 1, 1));
 
         //////////////////////////////////////////////////////////////////
-        OrenNayar *diffuse_oren_naya = new OrenNayar;
-        diffuse_oren_naya->SetSigma(new FixedFloatTexture(80));
-        diffuse_oren_naya->SetR(new ConstantTexture(Color3f(0.9, 0.9, 0.0)));
-//        diffuse_oren_naya->SetR(new ConstantTexture(Color3f(0.9,0.8,0.3)));
-        Matte2Material *pOrenNayaMatte = new Matte2Material;
-        pOrenNayaMatte->SetDiffuseBRDF(diffuse_oren_naya);
 
         Lambertian *diffuse_ambient = new Lambertian;
         diffuse_ambient->SetKa(0.0);
         diffuse_ambient->SetCd2(0.9, 0.9, 0.01);
+        
+        Lambertian *diffuse_lambertian = new Lambertian;
+        diffuse_lambertian->SetKa(0.9);
+        diffuse_lambertian->SetCd2(0.9, 0.9, 0.9);
 
 		Matte2Material *matte_material = new Matte2Material;
 		matte_material->SetKa(0.9);
@@ -2556,7 +2545,7 @@ private:
 
         GlossyReflectiveMaterial *pGlossyReflection = new GlossyReflectiveMaterial;
         pGlossyReflection->SetAmbientBRDF(diffuse_ambient);
-        pGlossyReflection->SetDiffuseBRDF(diffuse_oren_naya);
+        pGlossyReflection->SetDiffuseBRDF(diffuse_lambertian);
         pGlossyReflection->SetGlossyBRDF(microfacet_specular);
         //////////////////////////////////////////////////////////////////
         // For other materials testing.
@@ -2932,8 +2921,8 @@ private:
                                   3, 700);
 
         mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
-        mpCamera->SetEye(Vec3f(-0.3, 3.3, 10.0));
-        mpCamera->SetLookAt(Vec3f(0, 0, 0));
+        mpCamera->SetEye(Vec3f(-0.3, 18, 9.0));
+        mpCamera->SetLookAt(Vec3f(0, 16, 0));
         mpCamera->SetUpVector(Vec3f(0, 1, 0));
         ((PerspectiveCamera *)mpCamera)->SetDistance(400);
         mpCamera->Update();
@@ -2943,22 +2932,22 @@ private:
                     EPlaneOritention::PLANE_XOZ, 0.6, 0, Color3f(0.75, 0.75, 0.75), Color3f(1,1,1), BLACK);
         //chekcer3d->SetCheckSize(0.6f);
         //chekcer3d->SetAlternateColor(Color3f(0.75, 0.75, 0.75), Color3f(1, 1, 1));
-        Vec3f p0(-60, 0.0f, -100);
-        Vec3f a(0, 0, 280);
-        Vec3f b(130, 0, 0);
+        Vec3f p0(-60, 15.0f, -100);
+        Vec3f a(0, 0, 220);
+        Vec3f b(120, 0, 0);
         SimpleRectangle *rect = new SimpleRectangle(p0, a, b);
         MaterialObject *mat_rect = new MaterialObject(rect, new MatteMaterial(Color3f(1,1,1)));
         mvecObjects.push_back(mat_rect);
 
-        MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(0, 1.0, 2.5), 1),
+        MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(0, 16.0, 0), 1),
         new GlassMaterial(1.5, WHITE, WHITE));
         mvecObjects.push_back(big0);
 
-        MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-2.2, 1.0, 2.6), 1),
+        MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-2.2, 16.0, 0), 1),
         new MatteMaterial(Color3f(0.9,0.9,0.9)));
         mvecObjects.push_back(big1);
 
-        MaterialObject *big2 = new MaterialObject(new SimpleSphere(Vec3f(2.7, 1.0, 2.5), 1),
+        MaterialObject *big2 = new MaterialObject(new SimpleSphere(Vec3f(2.7, 16.0, 0), 1),
         new MirrorMaterial(Color3f(1,1,1), 0));
         mvecObjects.push_back(big2);
 

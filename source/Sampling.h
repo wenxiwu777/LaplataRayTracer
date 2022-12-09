@@ -108,7 +108,54 @@ namespace LaplataRayTracer
 			float y = std::sin(phi) * std::sqrt(1.0f - z * z);
 			return Vec3f(x, y, z);
 		}
+        
+        inline static Point2f URand2() {
+            return Point2f(Random::frand48(), Random::frand48());
+        }
 
+        inline static Point2f UniformSampleTriangle(const Point2f& urand2) {
+            float su0 = std::sqrt(urand2[0]);
+            return Point2f(1 - su0, urand2[1] * su0);
+        }
+        
+        inline static Vec3f UniformSampleCone(const Point2f& urand2, float cosThetaMax) {
+            float cosTheta = ((float)1.0f - urand2[0]) + urand2[0] * cosThetaMax;
+            float sinTheta = std::sqrt((float)1.0f - cosTheta * cosTheta);
+            float phi = urand2[1] * 2.0f * PI_CONST;
+            return Vec3f(std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, cosTheta);
+        }
+        
+        inline static Point2f UniformSampleDisk(const Point2f& urand2) {
+            float r = std::sqrt(urand2[0]);
+            float theta = 2.0f * PI_CONST *urand2[1];
+            return Point2f(r * std::cos(theta), r * std::sin(theta));
+        }
+        
+        inline static Point2f ConcentricSampleDisk(const Point2f& urand2) {
+            Point2f temp = 2.0f * urand2;
+            Point2f uOffset = temp - Point2f(1.0f, 1.0f);
+            
+            if (uOffset.x == 0 && uOffset.y == 0)
+                return Point2f(0.0f, 0.0f);
+            
+            float theta, r;
+            if (std::abs(uOffset.x) > std::abs(uOffset.y)) {
+                r = uOffset.x;
+                theta = PI_OVER_4 * (uOffset.y / uOffset.x);
+            }
+            else {
+                r = uOffset.y;
+                theta = PI_HALF - PI_OVER_4 * (uOffset.x / uOffset.y);
+            }
+            return Point2f(std::cos(theta), std::sin(theta)) * r;
+        }
+        
+        inline static Vec3f WeightedSampleHemishpere(const Point2f& urand2) {
+            Point2f sample = SamplerBase::UniformSampleDisk(urand2);
+            float z = std::sqrt(std::max(0.0f, 1.0f - sample[0] * sample[0] - sample[1] * sample[1]));
+            return Vec3f(sample[0], sample[1], z);
+        }
+        
 	protected:
 		int 					mnSampleCount;
 		int 					mnSets;

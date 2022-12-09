@@ -143,8 +143,8 @@ namespace LaplataRayTracer
 	public:
 		virtual Color3f GetTextureColor(HitRecord& hitRec) const
 		{
-			float a_;
-			float b_;
+			float a_ = 0.0f;
+			float b_ = 0.0f;
 
 			if (mPlaneOritention == PLANE_XOZ)
 			{

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <stdlib.h>
 
@@ -24,7 +24,8 @@
 #define ANG2RAD(x)		(x*PI_CONST/180.0f)
 #define PI_ON_180		0.01745f
 #define PI_UNDER_180	57.29578f		// 180_OVER_PI
-#define PI_HALF         1.571
+#define PI_HALF         1.571f
+#define PI_OVER_4       0.7854f
 
 using std::vector;
 using std::map;

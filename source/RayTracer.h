@@ -65,8 +65,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+			unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
@@ -122,8 +122,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+            unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
@@ -222,8 +222,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+            unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
@@ -287,8 +287,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+            unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
@@ -407,8 +407,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+            unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
@@ -472,8 +472,8 @@ namespace LaplataRayTracer
 			bool bHitAnything = false;
 			HitRecord hitRec;
 			HitRecord hitTempRec;
-			int count = mRTEvn.mpvecHitableObjs->size();
-			for (int i = 0; i < count; ++i)
+            unsigned long count = (unsigned long)mRTEvn.mpvecHitableObjs->size();
+			for (unsigned long i = 0; i < count; ++i)
 			{
 				bool bHit = (*mRTEvn.mpvecHitableObjs)[i]->HitTest(ray, ft, t, hitTempRec);
 				if (bHit)
