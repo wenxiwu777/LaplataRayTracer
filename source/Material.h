@@ -2121,8 +2121,8 @@ namespace LaplataRayTracer
             Vec3f swi;
             Vec3f swo = cs.To(-inRay.D());
             float pdf;
-            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
-            cr_brdf /= pdf;
+            attenunation_albedo = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            attenunation_albedo /= pdf;
             Vec3f wi = cs.From(swi);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
             
@@ -2142,7 +2142,7 @@ namespace LaplataRayTracer
             Vec3f swi;
             Vec3f swo = cs.To(-inRay.D());
             float pdf;
-            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            scatterRec.albedo = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
             Vec3f wi = cs.From(swi);
             mpMicrofacetPDF->SetReturnedPDF(pdf);
             mpMicrofacetPDF->SetReturnedDirection(wi);
@@ -2217,13 +2217,13 @@ namespace LaplataRayTracer
             Vec3f swi;
             Vec3f swo = cs.To(-inRay.D());
             float pdf;
-            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            attenunation_albedo= mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
             if (Dot(swi, hitRec.n) > 0.0f) {
-                cr_brdf *= mReflectance;
+                attenunation_albedo *= mReflectance;
             } else {
-                cr_brdf *= mTransmitance;
+                attenunation_albedo *= mTransmitance;
             }
-            cr_brdf /= pdf;
+            attenunation_albedo /= pdf;
             Vec3f wi = cs.From(swi);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
             
@@ -2249,6 +2249,7 @@ namespace LaplataRayTracer
             } else {
                 cr_brdf *= mTransmitance;
             }
+            scatterRec.albedo = cr_brdf;
             Vec3f wi = cs.From(swi);
             mpMicrofacetPDF->SetReturnedPDF(pdf);
             mpMicrofacetPDF->SetReturnedDirection(wi);
