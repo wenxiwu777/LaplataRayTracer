@@ -245,8 +245,8 @@ namespace LaplataRayTracer
 
 	class OrenNayar : public BRDF {
 	public:
-		OrenNayar(const Color3f& R, float sigma)
-            : BRDF(), mA(0.0f), mB(0.0f), mR(R) {
+		OrenNayar(float sigma)
+            : BRDF(), mA(0.0f), mB(0.0f) {
                 sigma = ANG2RAD(sigma);
                 float sigma2 = sigma * sigma;
                 mA = 1.0f - (sigma2 / (2.0f * (sigma2 + 0.33f)));
@@ -268,7 +268,7 @@ namespace LaplataRayTracer
             
             float D = std::sqrt((1.0 - (wi.Z() * wi.Z())) * (1.0 - (wo.Z() * wo.Z()))) / std::max(wi.Z(), wo.Z());
             
-            return (mR * INV_PI_CONST * (mA + mB * cos_delta_phi * D));
+            return (INV_PI_CONST * (mA + mB * cos_delta_phi * D));
 		}
         
         virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
@@ -287,8 +287,6 @@ namespace LaplataRayTracer
 
 	private:
         float mA, mB;
-        Color3f mR;
-
 	};
 
 	//
@@ -1091,15 +1089,18 @@ namespace LaplataRayTracer
 
     // Microfacet related classes
     //
-class MicrofacetDTerm {
+class MicrofacetDTerm : public ICloneable {
 public:
     MicrofacetDTerm() { }
     virtual ~MicrofacetDTerm() { }
     
 public:
+    virtual void *Clone() = 0;
+    
+public:
     virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const = 0;
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const = 0;
-    virtual float D(const Vec3f& wh, float roughness) = 0;
+    virtual float Pdf(const Vec3f& wh, float roughness) const = 0;
+    virtual float D(const Vec3f& wh, float roughness) const = 0;
     
 };
 
@@ -1109,6 +1110,11 @@ public:
     virtual ~GGXTerm() { }
     
 public:
+    virtual void *Clone() {
+        return (new GGXTerm);
+    }
+    
+public:
     virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
         float phi = uv[0] * TWO_PI_CONST;
         float cosTheta = std::sqrt((1.0f - uv[1]) / (uv[1] * (roughness * roughness - 1.0f) + 1.0f));
@@ -1116,15 +1122,15 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        
-        
-        
-        return 0.0f;
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        return D(wh, roughness) * wh.Z();
     }
     
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float r2 = roughness * roughness;
+        float v = (r2 - 1.0f) * wh.Z() * wh.Z() + 1.0f;
+        float DV = r2 / (PI_CONST * v * v);
+        return DV;
     }
 };
 
@@ -1134,6 +1140,11 @@ public:
     virtual ~BlinTerm() { }
 
 public:
+    virtual void *Clone() {
+        return new BlinTerm;
+    }
+    
+public:
     virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
         float phi = uv[0] * TWO_PI_CONST;
         float cosTheta = std::pow(1.0f - uv[1], 1.0f/(uv[1] + 2.0f));
@@ -1141,12 +1152,14 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        return 0.0f;
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        float sinTheta = std::sqrt(1.0f - wh.Z() * wh.Z());
+        return D(wh, roughness) * sinTheta * wh.Z();
     }
     
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float DV = ((roughness + 2.0f) / TWO_PI_CONST) * std::pow(wh.Z(), roughness);
+        return DV;
     }
 };
 
@@ -1156,6 +1169,11 @@ public:
     virtual  ~BeckmannTerm() { }
     
 public:
+    virtual void *Clone() {
+        return new BeckmannTerm;
+    }
+    
+public:
     virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const {
         float phi = uv[0] * TWO_PI_CONST;
         float cosTheta = std::sqrt(1.0f/(1.0f - roughness * roughness * std::log(1.0f - uv[1])));
@@ -1163,12 +1181,20 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        return 0.0f;
+    virtual float Pdf(const Vec3f& wh, float roughness) const {
+        float cosTheta = wh.Z();
+        float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
+        return D(wh, roughness) * 2.0f * PI_CONST * sinTheta * cosTheta;
     }
     
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
+    virtual float D(const Vec3f& wh, float roughness) const {
+        float cos2Theta = wh.Z() * wh.Z();
+        float sin2Theta = 1.0f - cos2Theta;
+        float cos4Theta = cos2Theta * cos2Theta;
+        float tan2Theta = sin2Theta / cos2Theta;
+        float r2 = roughness * roughness;
+        float DV = (1.0f / (PI_CONST * r2 * cos4Theta)) * std::exp(-tan2Theta / r2);
+        return DV;
     }
 };
 
@@ -1183,9 +1209,11 @@ public:
     ComplexIOR(const ComplexIOR& rhs) : mReal(rhs.mReal), mImaginary(rhs.mImaginary) { }
 };
 
-class FresnelTerm {
+class FresnelTerm : public ICloneable {
 public:
     virtual ~FresnelTerm() { }
+    
+    virtual void *Clone() = 0;
     
     virtual Color3f Evaluate(float n, float cosTheta) = 0;
 };
@@ -1194,6 +1222,11 @@ class SchlickFresnel : public FresnelTerm {
 public:
     SchlickFresnel() { }
     virtual ~SchlickFresnel() { }
+    
+public:
+    virtual void *Clone() {
+        return new SchlickFresnel;
+    }
     
 public:
     virtual Color3f Evaluate(float n, float cosTheta) {
@@ -1206,6 +1239,11 @@ class DielectricFresnel : public FresnelTerm {
 public:
     DielectricFresnel() { }
     virtual ~DielectricFresnel() { }
+    
+public:
+    virtual void *Clone() {
+        return new DielectricFresnel;
+    }
     
 public:
     // n = n2/n1
@@ -1234,6 +1272,11 @@ class ConductorFresnel : public FresnelTerm {
 public:
     ConductorFresnel(const ComplexIOR& complexIOR) : mComplexIOR(complexIOR) { }
     virtual ~ConductorFresnel() { }
+    
+public:
+    virtual void *Clone() {
+        return new ConductorFresnel(mComplexIOR);
+    }
     
 public:
     virtual Color3f Evaluate(float n, float cosTheta) {
@@ -1281,13 +1324,186 @@ private:
 
 class MicrofacetBRDF : public BRDF {
 public:
-    MicrofacetBRDF(float roughness, bool complexIOR,
-                   MicrofacetDTerm *distriTerm, FresnelTerm *fresnelTerm, bool autoDel = false)
-    : mRoughness(roughness), mIsComplexIOR(complexIOR),
-      mpDTerm(distriTerm), mpFresnelOp(fresnelTerm), mAutoDel(autoDel) {
-        
+    enum DirType { Unknown = 0, Reflect, Refract, };
+    enum FresnelType { Schlick = 1, Conductor, Dielectic, };
+    enum DFuncType { GGX = 1, Blin, Beckmann, };
+    
+public:
+    MicrofacetBRDF(float roughness, float etaI, float etaT, bool autoDel = false)
+    : BRDF() {
+        mRoughness = roughness;
+        mEtaI = etaI;
+        mEtaT = etaT;
+        mDirType = MicrofacetBRDF::Unknown;
+        mAutoDel = autoDel;
     }
+    
+    MicrofacetBRDF(const MicrofacetBRDF& rhs)
+    : BRDF(rhs) {
+        copy_constructor(rhs);
+    }
+    
+    MicrofacetBRDF& operator=(const MicrofacetBRDF& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+        
+        BRDF::operator=(rhs);
+        release_ptrs();
+        copy_constructor(rhs);
+        
+        return *this;
+    }
+    
     virtual ~MicrofacetBRDF() {
+        release_ptrs();
+    }
+
+public:
+    virtual void *Clone() {
+        return (void *)(new MicrofacetBRDF(*this));
+    }
+
+public:
+    virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) {
+        Vec3f wh = wo + wi;
+        wh.MakeUnit();
+        
+        Vec3f swo = MakeUnit(wo);
+        Vec3f swi = MakeUnit(wi);
+        Color3f crFresnel = Calc_Fresnel(mEtaI / mEtaT, Dot(swo, wh));
+        float G2 = Calc_G2(swi, swo);
+        float D = Calc_D(wh);
+        
+        if (mDirType == MicrofacetBRDF::Reflect) {
+            Color3f cr_brdf = (crFresnel * G2 * D) / (4.0f * std::abs(swi.Z()) * std::abs(swo.Z()));
+            return cr_brdf;
+        } else if (mDirType == MicrofacetBRDF::Refract) {
+            float d1 = mEtaI * swi.Z() + mEtaT * swo.Z();
+            Color3f cr_btdf = ((Color3f(1.0f, 1.0f, 1.0f) - crFresnel) * G2 * D) / (d1 * d1);
+            float d2 = (std::abs(swi.Z()) * std::abs(swo.Z()))
+            / (std::abs(Dot(swi, hitRec.n)) * std::abs(Dot(swo, hitRec.n)));
+            d2 *= mEtaT * mEtaT;
+            cr_btdf *= d2;
+            return cr_btdf;
+        }
+        
+        return BLACK;
+    }
+    
+    virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) {
+        Vec3f wh = mpDTerm->Sample_wh(SamplerBase::URand2(), mRoughness);
+        
+        if (mIsComplexIOR) {
+            mDirType = MicrofacetBRDF::Reflect;
+            Color3f cr_brdf = handle_reflect_brdf(hitRec, wh, wo, wi, pdf);
+            return cr_brdf;
+        }
+        
+        Color3f Fr = DielectricFresnel::FrDielectric(mEtaI / mEtaT, std::abs(wo.Z()));
+        float u = Random::frand48();
+        if (u < Fr.R()) { // reflect ray
+            mDirType = MicrofacetBRDF::Reflect;
+            Color3f cr_brdf = handle_reflect_brdf(hitRec, wh, wo, wi, pdf);
+            return cr_brdf;
+        } else { // refract ray
+            mDirType = MicrofacetBRDF::Refract;
+            Color3f cr_btdf = handle_refract_brdf(hitRec, wh, wo, wi, pdf);
+            return cr_btdf;
+        }
+        
+        return BLACK;
+    }
+    
+public:
+    virtual float Calc_D(const Vec3f& wh) const {
+        return mpDTerm->D(wh, mRoughness);
+    }
+    
+    virtual float Calc_G2(const Vec3f& wi, const Vec3f& wo) const {
+        float r2 = mRoughness * mRoughness;
+        auto lambda = [&](auto& w) { return std::sqrt(r2 + (1.0f - r2) * w.Z() * w.Z()); };
+        float G2 = (2.0f * wi.Z() * wo.Z()) / (wo.Z() * lambda(wi) + wi.Z() * lambda(wo));
+        return G2;
+    }
+    
+    virtual Color3f Calc_Fresnel(float n, float cosTheta) const {
+        return mpFresnelOp->Evaluate(n, cosTheta);
+    }
+    
+public:
+    inline void SetFresnelFunc(FresnelType ft, const Color3f& etaI, const Color3f& etaT) {
+        if (mpFresnelOp != nullptr) {
+            delete mpFresnelOp;
+            mpFresnelOp = nullptr;
+        }
+        
+        if (ft == MicrofacetBRDF::Schlick) {
+            mpFresnelOp = new SchlickFresnel;
+            mIsComplexIOR = false;
+        } else if (ft == MicrofacetBRDF::Conductor) {
+            ComplexIOR complexIOR = { etaI, etaT };
+            mpFresnelOp = new ConductorFresnel(complexIOR);
+            mIsComplexIOR = true;
+        } else if (ft == MicrofacetBRDF::Dielectic) {
+            mpFresnelOp = new DielectricFresnel;
+            mIsComplexIOR = false;
+        }
+    }
+    
+    inline void SetDTermFunc(DFuncType dtf) {
+        if (mpDTerm != nullptr) {
+            delete mpDTerm;
+            mpDTerm = nullptr;
+        }
+        
+        if (dtf == MicrofacetBRDF::GGX) {
+            mpDTerm = new GGXTerm;
+        } else if (dtf == MicrofacetBRDF::Blin) {
+            mpDTerm = new BlinTerm;
+        } else if (dtf == MicrofacetBRDF::Beckmann) {
+            mpDTerm = new BeckmannTerm;
+        }
+    }
+    
+private:
+    inline Color3f handle_reflect_brdf(const HitRecord& hitRec, const Vec3f& wh, const Vec3f& wo, Vec3f& wi, float& pdf) {
+        wi = Surface::Reflect(wo, wh);
+        
+        pdf = mpDTerm->Pdf(wh, mRoughness) / (4.0f * Dot(wo, wh));
+        
+        return MicrofacetBRDF::F(hitRec, wo, wi);
+    }
+    
+    inline Color3f handle_refract_brdf(const HitRecord& hitRec, const Vec3f& wh, const Vec3f& wo, Vec3f& wi, float& pdf) {
+        Surface::Refract(wo, wh, mEtaI / mEtaT, wi);
+        
+        if (wi.Z() * wo.Z() > 0) {
+            return BLACK;
+        }
+        float eta = wo.Z() > 0.0f ? (mEtaT / mEtaI) : (mEtaI / mEtaT);
+        Vec3f wh2 = wo + wi * eta;
+        wh2.MakeUnit();
+        float sqrtDenom = Dot(wo, wh2) + eta * Dot(wi, wh2);
+        float dwh_dwi = std::abs((eta * eta * Dot(wi, wh2)) / (sqrtDenom * sqrtDenom));
+        pdf = mpDTerm->Pdf(wh2, mRoughness) * dwh_dwi;
+        
+        return MicrofacetBRDF::F(hitRec, wo, wi);
+    }
+    
+private:
+    inline void copy_constructor(const MicrofacetBRDF& rhs) {
+        this->mRoughness = rhs.mRoughness;
+        this->mEtaI = rhs.mEtaI;
+        this->mEtaT = rhs.mEtaT;
+        this->mIsComplexIOR = rhs.mIsComplexIOR;
+        this->mpDTerm = (MicrofacetDTerm *)rhs.mpDTerm->Clone();
+        this->mpFresnelOp = (FresnelTerm *)rhs.mpFresnelOp->Clone();
+        this->mAutoDel = rhs.mAutoDel;
+        this->mDirType = rhs.mDirType;
+    }
+    
+    inline void release_ptrs() {
         if (mAutoDel) {
             if (mpDTerm != nullptr) {
                 delete mpDTerm;
@@ -1300,36 +1516,20 @@ public:
         }
     }
 
-public:
-    virtual void *Clone() {
-        return (void *)(new MicrofacetBRDF(*this));
-    }
-
-public:
-    virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) const {
-        return Color3f(0.0f, 0.0f, 0.0f);
-    }
-    
-    virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
-        return Color3f(0.0f, 0.0f, 0.0f);
-    }
-    
-public:
-    virtual float Calc_D(const Vec3f& wm);
-    
-    virtual float Calc_G2(const Vec3f& wi, const Vec3f& wo);
-    
-    virtual Color3f Calc_Fresnel(float n, float cosTheta);
-
 private:
     float mRoughness;
 // The following two should be in Material
 //   Color3f mReflectance;
 //   Color3f mTransimitance;
+    // model setting parameters
     bool mIsComplexIOR;
+    float mEtaI;
+    float mEtaT;
     MicrofacetDTerm *mpDTerm;
     FresnelTerm *mpFresnelOp;
+    //
     bool mAutoDel;
+    DirType mDirType;
 };
 
 }

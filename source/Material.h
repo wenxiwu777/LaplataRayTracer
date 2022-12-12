@@ -171,12 +171,13 @@ namespace LaplataRayTracer
 		{
             if (mSigma > 0.0f) {
                 attenunation_albedo = mpAlbedo->GetTextureColor(hitRec);
-                OrenNayar orenNayarDiffuse(attenunation_albedo, mSigma);
+                OrenNayar orenNayarDiffuse(mSigma);
                 CoordinateSystem cs(hitRec.n);
                 Vec3f swi;
                 Vec3f swo = cs.To(-inRay.D());
                 float pdf;
-                attenunation_albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                attenunation_albedo *= orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                attenunation_albedo /= pdf;
                 Vec3f wi = cs.From(swi);
                 out_ray.Set(hitRec.wpt, wi, inRay.T());
             } else {
@@ -211,12 +212,12 @@ namespace LaplataRayTracer
 			scatterRec.is_specular = false;
             if (mSigma > 0.0f) {
                 scatterRec.albedo = mpAlbedo->GetTextureColor(hitRec);
-                OrenNayar orenNayarDiffuse(scatterRec.albedo, mSigma);
+                OrenNayar orenNayarDiffuse(mSigma);
                 CoordinateSystem cs(hitRec.n);
                 Vec3f swi;
                 Vec3f swo = cs.To(-inRay.D());
                 float pdf;
-                scatterRec.albedo = orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
+                scatterRec.albedo *= orenNayarDiffuse.Sample_f_pdf(hitRec, swo, swi, pdf);
                 Vec3f wi = cs.From(swi);
                 mpOrenNayarPDF->SetReturnedPDF(pdf);
                 mpOrenNayarPDF->SetReturnedDirection(wi);
@@ -637,7 +638,7 @@ namespace LaplataRayTracer
 		virtual Color3f AreaLightShade(const Ray& inRay, HitRecord& hitRec, SceneObjects& sceneObjects, SceneLights& sceneLights) {
 			Vec3f wo = -inRay.D();
 			Color3f L = mpAmbientBRDF->Rho(hitRec, wo) * sceneLights.GetAmbientLight()->Li(hitRec, sceneObjects);
-			static int nnn = 0;
+		//	static int nnn = 0;
 			int light_count = sceneLights.Count();
 			for (int i = 0; i < light_count; ++i) {
 				Light *light = sceneLights.GetLight(i);
@@ -2066,5 +2067,131 @@ namespace LaplataRayTracer
 		FresnelBlend *	mpFresnelBlend;
 
 	};
+
+    //
+    // rough conductor and rough glass materials using MicrofacetBRDF model.
+    //
+    class RoughConductor : public MaterialBase {
+    public:
+        RoughConductor() {
+            mpMicrofacetBRDF = nullptr;
+        }
+        RoughConductor(float roughness, float etaI, float etaT) {
+            mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
+            mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Conductor, etaI, etaT);
+            mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
+        }
+        RoughConductor(const RoughConductor& rhs) {
+            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+        }
+        RoughConductor& operator=(const RoughConductor& rhs) {
+            if (this == &rhs) {
+                return *this;
+            }
+            
+            release_brdf();
+            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            
+            return *this;
+        }
+        virtual ~RoughConductor() {
+            release_brdf();
+        }
+        
+    public:
+        virtual void *Clone() {
+            RoughConductor *roughConductor = new RoughConductor(*this);
+            return roughConductor;
+        }
+        
+    public:
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
+        {
+            return false;
+        }
+
+        virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
+        {
+            return 0.0f;
+        }
+
+        virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
+        {
+            return false;
+        }
+        
+    private:
+        inline void release_brdf() {
+            if (mpMicrofacetBRDF != nullptr) {
+                delete mpMicrofacetBRDF;
+                mpMicrofacetBRDF = nullptr;
+            }
+        }
+        
+    private:
+        MicrofacetBRDF *mpMicrofacetBRDF;
+        
+    };
+
+    class RoughGlass : public MaterialBase {
+    public:
+        RoughGlass() {
+            mpMicrofacetBRDF = nullptr;
+        }
+        RoughGlass(float roughness, float etaI, float etaT) {
+            mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
+            mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Dielectic, BLACK, BLACK);
+            mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
+        }
+        RoughGlass(const RoughGlass& rhs) {
+            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+        }
+        RoughGlass& operator=(const RoughGlass& rhs) {
+            if (this == &rhs) {
+                return *this;
+            }
+            
+            release_brdf();
+            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            
+            return *this;
+        }
+        virtual ~RoughGlass() {
+            release_brdf();
+        }
+        
+    public:
+        virtual void *Clone() {
+            RoughGlass *roughGlass = new RoughGlass(*this);
+            return roughGlass;
+        }
+        
+    public:
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
+        {
+            return false;
+        }
+
+        virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
+        {
+            return 0.0f;
+        }
+
+        virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
+        {
+            return false;
+        }
+        
+    private:
+        inline void release_brdf() {
+            if (mpMicrofacetBRDF != nullptr) {
+                delete mpMicrofacetBRDF;
+                mpMicrofacetBRDF = nullptr;
+            }
+        }
+        
+    private:
+        MicrofacetBRDF *mpMicrofacetBRDF;
+    };
 
 }
