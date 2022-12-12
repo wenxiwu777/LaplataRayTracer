@@ -36,13 +36,13 @@ namespace LaplataRayTracer {
 
 	};
 
-    // This PDF class is decomposed from OrenNayar brdf, the returned pdf and
+    // This PDF class is decomposed from OrenNayar/Microfacet model brdf, the returned pdf and
     // direction is acutally provied by OrenNayar brdf which is in the MatteMaterial
     // via the SetReturnedPDF and SetReturnedDirection method calls.
-    class OrenNayarPDF : public PDF {
+    class DummyPDF : public PDF {
     public:
-        OrenNayarPDF() { }
-        virtual ~OrenNayarPDF() { }
+        DummyPDF() { }
+        virtual ~DummyPDF() { }
 
     public:
         virtual float Value(Vec3f const& vec_direction) const {
@@ -59,6 +59,7 @@ namespace LaplataRayTracer {
         inline void SetReturnedPDF(float pdf) {
             mPDF = pdf;
         }
+        
         
     private:
         Vec3f mDirection;

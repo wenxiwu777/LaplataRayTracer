@@ -145,18 +145,18 @@ namespace LaplataRayTracer
 		MatteMaterial() {
             mpAlbedo = nullptr;
             mpCosinePDF = new CosinePDF;
-            mpOrenNayarPDF = new OrenNayarPDF;
+            mpOrenNayarPDF = new DummyPDF;
             mSigma = 0.0f; // 0.0 means OrenNayar is disabled by default
         }
 		MatteMaterial(Color3f const& albedo)
 		{
 			mpAlbedo = new ConstantTexture(albedo);
 			mpCosinePDF = new CosinePDF;
-            mpOrenNayarPDF = new OrenNayarPDF;
+            mpOrenNayarPDF = new DummyPDF;
 		}
 		MatteMaterial(Texture *albedo) : mpAlbedo(albedo) {
             mpCosinePDF = new CosinePDF;
-            mpOrenNayarPDF = new OrenNayarPDF;
+            mpOrenNayarPDF = new DummyPDF;
         }
 		virtual ~MatteMaterial()
 		{
@@ -197,14 +197,20 @@ namespace LaplataRayTracer
 
 		virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
 		{
-            Vec3f norm_scatter = outRay.D();
-			norm_scatter.MakeUnit();
-			float cosine_ = Dot(hitRec.n, norm_scatter);
-            if (cosine_ < 0.0f)
-			{
-				return 0.0f;
-			}
-			return cosine_ / PI_CONST;
+            float pdf = 0.0f;
+            if (mSigma > 0.0f) {
+                pdf = mpOrenNayarPDF->Value(inRay.D());
+            } else {
+                Vec3f norm_scatter = outRay.D();
+                norm_scatter.MakeUnit();
+                float cosine_ = Dot(hitRec.n, norm_scatter);
+                if (cosine_ < 0.0f)
+                {
+                    return 0.0f;
+                }
+                pdf = cosine_ / PI_CONST;
+            }
+            return pdf;
 		}
 
 		virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
@@ -292,7 +298,7 @@ namespace LaplataRayTracer
 	//	Color3f mAlbedo;
 		Texture *mpAlbedo;
 		CosinePDF *mpCosinePDF;
-        OrenNayarPDF *mpOrenNayarPDF;
+        DummyPDF *mpOrenNayarPDF;
         float mSigma; // For OrenNayar brdf
 
 	};
@@ -2075,14 +2081,17 @@ namespace LaplataRayTracer
     public:
         RoughConductor() {
             mpMicrofacetBRDF = nullptr;
+            mpMicrofacetPDF = nullptr;
         }
         RoughConductor(float roughness, float etaI, float etaT) {
             mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
             mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Conductor, etaI, etaT);
             mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
+            mpMicrofacetPDF = new DummyPDF;
         }
         RoughConductor(const RoughConductor& rhs) {
             mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            mpMicrofacetPDF = new DummyPDF;
         }
         RoughConductor& operator=(const RoughConductor& rhs) {
             if (this == &rhs) {
@@ -2091,6 +2100,7 @@ namespace LaplataRayTracer
             
             release_brdf();
             mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            mpMicrofacetPDF = new DummyPDF;
             
             return *this;
         }
@@ -2107,17 +2117,38 @@ namespace LaplataRayTracer
     public:
         virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
         {
-            return false;
+            CoordinateSystem cs(hitRec.n);
+            Vec3f swi;
+            Vec3f swo = cs.To(-inRay.D());
+            float pdf;
+            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            cr_brdf /= pdf;
+            Vec3f wi = cs.From(swi);
+            out_ray.Set(hitRec.wpt, wi, inRay.T());
+            
+            return true;
         }
 
         virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
         {
-            return 0.0f;
+            return mpMicrofacetPDF->Value(inRay.D());
         }
 
         virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
         {
-            return false;
+            scatterRec.is_specular = false;
+            
+            CoordinateSystem cs(hitRec.n);
+            Vec3f swi;
+            Vec3f swo = cs.To(-inRay.D());
+            float pdf;
+            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            Vec3f wi = cs.From(swi);
+            mpMicrofacetPDF->SetReturnedPDF(pdf);
+            mpMicrofacetPDF->SetReturnedDirection(wi);
+            scatterRec.pPDF = mpMicrofacetPDF;
+            
+            return true;
         }
         
     private:
@@ -2126,10 +2157,15 @@ namespace LaplataRayTracer
                 delete mpMicrofacetBRDF;
                 mpMicrofacetBRDF = nullptr;
             }
+            if (mpMicrofacetPDF != nullptr) {
+                delete mpMicrofacetPDF;
+                mpMicrofacetPDF = nullptr;
+            }
         }
         
     private:
         MicrofacetBRDF *mpMicrofacetBRDF;
+        DummyPDF *mpMicrofacetPDF;
         
     };
 
@@ -2137,14 +2173,19 @@ namespace LaplataRayTracer
     public:
         RoughGlass() {
             mpMicrofacetBRDF = nullptr;
+            mpMicrofacetPDF = nullptr;
         }
-        RoughGlass(float roughness, float etaI, float etaT) {
+        RoughGlass(float roughness, float etaI, float etaT, const Color3f& R, const Color3f& T) {
             mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
             mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Dielectic, BLACK, BLACK);
             mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
+            mpMicrofacetPDF = new DummyPDF;
+            mReflectance = R;
+            mTransmitance = T;
         }
         RoughGlass(const RoughGlass& rhs) {
             mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            mpMicrofacetPDF = new DummyPDF;
         }
         RoughGlass& operator=(const RoughGlass& rhs) {
             if (this == &rhs) {
@@ -2153,6 +2194,9 @@ namespace LaplataRayTracer
             
             release_brdf();
             mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
+            mpMicrofacetPDF = new DummyPDF;
+            mReflectance = rhs.mReflectance;
+            mTransmitance = rhs.mTransmitance;
             
             return *this;
         }
@@ -2169,17 +2213,48 @@ namespace LaplataRayTracer
     public:
         virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
         {
-            return false;
+            CoordinateSystem cs(hitRec.n);
+            Vec3f swi;
+            Vec3f swo = cs.To(-inRay.D());
+            float pdf;
+            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            if (Dot(swi, hitRec.n) > 0.0f) {
+                cr_brdf *= mReflectance;
+            } else {
+                cr_brdf *= mTransmitance;
+            }
+            cr_brdf /= pdf;
+            Vec3f wi = cs.From(swi);
+            out_ray.Set(hitRec.wpt, wi, inRay.T());
+            
+            return true;
         }
 
         virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
         {
-            return 0.0f;
+            return mpMicrofacetPDF->Value(inRay.D());
         }
 
         virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
         {
-            return false;
+            scatterRec.is_specular = false;
+            
+            CoordinateSystem cs(hitRec.n);
+            Vec3f swi;
+            Vec3f swo = cs.To(-inRay.D());
+            float pdf;
+            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
+            if (Dot(swi, hitRec.n) > 0.0f) {
+                cr_brdf *= mReflectance;
+            } else {
+                cr_brdf *= mTransmitance;
+            }
+            Vec3f wi = cs.From(swi);
+            mpMicrofacetPDF->SetReturnedPDF(pdf);
+            mpMicrofacetPDF->SetReturnedDirection(wi);
+            scatterRec.pPDF = mpMicrofacetPDF;
+            
+            return true;
         }
         
     private:
@@ -2188,10 +2263,17 @@ namespace LaplataRayTracer
                 delete mpMicrofacetBRDF;
                 mpMicrofacetBRDF = nullptr;
             }
+            if (mpMicrofacetPDF != nullptr) {
+                delete mpMicrofacetPDF;
+                mpMicrofacetPDF = nullptr;
+            }
         }
         
     private:
         MicrofacetBRDF *mpMicrofacetBRDF;
+        DummyPDF *mpMicrofacetPDF;
+        Color3f mReflectance;
+        Color3f mTransmitance;
     };
 
 }

@@ -1099,18 +1099,8 @@ public:
     
 public:
     virtual Vec3f Sample_wh(const Point2f& uv, float roughness) const = 0;
-<<<<<<< HEAD
     virtual float Pdf(const Vec3f& wh, float roughness) const = 0;
     virtual float D(const Vec3f& wh, float roughness) const = 0;
-=======
-<<<<<<< HEAD
-    virtual float Pdf(const Vec3f& wh, float roughness) const = 0;
-    virtual float D(const Vec3f& wh, float roughness) const = 0;
-=======
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const = 0;
-    virtual float D(const Vec3f& wh, float roughness) = 0;
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
     
 };
 
@@ -1132,7 +1122,6 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-<<<<<<< HEAD
     virtual float Pdf(const Vec3f& wh, float roughness) const {
         return D(wh, roughness) * wh.Z();
     }
@@ -1142,29 +1131,6 @@ public:
         float v = (r2 - 1.0f) * wh.Z() * wh.Z() + 1.0f;
         float DV = r2 / (PI_CONST * v * v);
         return DV;
-=======
-<<<<<<< HEAD
-    virtual float Pdf(const Vec3f& wh, float roughness) const {
-        return D(wh, roughness) * wh.Z();
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) const {
-        float r2 = roughness * roughness;
-        float v = (r2 - 1.0f) * wh.Z() * wh.Z() + 1.0f;
-        float DV = r2 / (PI_CONST * v * v);
-        return DV;
-=======
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        
-        
-        
-        return 0.0f;
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
     }
 };
 
@@ -1186,7 +1152,6 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-<<<<<<< HEAD
     virtual float Pdf(const Vec3f& wh, float roughness) const {
         float sinTheta = std::sqrt(1.0f - wh.Z() * wh.Z());
         return D(wh, roughness) * sinTheta * wh.Z();
@@ -1195,25 +1160,6 @@ public:
     virtual float D(const Vec3f& wh, float roughness) const {
         float DV = ((roughness + 2.0f) / TWO_PI_CONST) * std::pow(wh.Z(), roughness);
         return DV;
-=======
-<<<<<<< HEAD
-    virtual float Pdf(const Vec3f& wh, float roughness) const {
-        float sinTheta = std::sqrt(1.0f - wh.Z() * wh.Z());
-        return D(wh, roughness) * sinTheta * wh.Z();
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) const {
-        float DV = ((roughness + 2.0f) / TWO_PI_CONST) * std::pow(wh.Z(), roughness);
-        return DV;
-=======
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        return 0.0f;
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
     }
 };
 
@@ -1235,15 +1181,10 @@ public:
         return Vec3f(sinTheta*std::cos(phi), sinTheta*std::sin(phi), cosTheta);
     }
     
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
     virtual float Pdf(const Vec3f& wh, float roughness) const {
         float cosTheta = wh.Z();
         float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
         return D(wh, roughness) * 2.0f * PI_CONST * sinTheta * cosTheta;
-<<<<<<< HEAD
     }
     
     virtual float D(const Vec3f& wh, float roughness) const {
@@ -1254,26 +1195,6 @@ public:
         float r2 = roughness * roughness;
         float DV = (1.0f / (PI_CONST * r2 * cos4Theta)) * std::exp(-tan2Theta / r2);
         return DV;
-=======
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) const {
-        float cos2Theta = wh.Z() * wh.Z();
-        float sin2Theta = 1.0f - cos2Theta;
-        float cos4Theta = cos2Theta * cos2Theta;
-        float tan2Theta = sin2Theta / cos2Theta;
-        float r2 = roughness * roughness;
-        float DV = (1.0f / (PI_CONST * r2 * cos4Theta)) * std::exp(-tan2Theta / r2);
-        return DV;
-=======
-    virtual float Pdf(const Vec3f& wi, const Vec3f& wo, float roughness) const {
-        return 0.0f;
-    }
-    
-    virtual float D(const Vec3f& wh, float roughness) {
-        return 0.0f;
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
     }
 };
 
@@ -1595,47 +1516,6 @@ private:
         }
     }
 
-<<<<<<< HEAD
-=======
-public:
-    virtual void *Clone() {
-        return (void *)(new MicrofacetBRDF(*this));
-    }
-
-public:
-    virtual Color3f F(const HitRecord& hitRec, const Vec3f& wo, const Vec3f& wi) const {
-        return Color3f(0.0f, 0.0f, 0.0f);
-    }
-    
-    virtual Color3f Sample_f_pdf(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi, float& pdf) const {
-        return Color3f(0.0f, 0.0f, 0.0f);
-    }
-    
-public:
-<<<<<<< HEAD
-    virtual float Calc_D(const Vec3f& wh) {
-        return mpDTerm->D(wh, mRoughness);
-    }
-    
-    virtual float Calc_G2(const Vec3f& wi, const Vec3f& wo) {
-        float r2 = mRoughness * mRoughness;
-        auto lambda = [&](auto& w) { return std::sqrt(r2 + (1.0f - r2) * w.Z() * w.Z()); };
-        float G2 = (2.0f * wi.Z() * wo.Z()) / (wo.Z() * lambda(wi) + wi.Z() * lambda(wo));
-        return G2;
-    }
-    
-    virtual Color3f Calc_Fresnel(float n, float cosTheta) {
-        return mpFresnelOp->Evaluate(n, cosTheta);
-    }
-=======
-    virtual float Calc_D(const Vec3f& wm);
-    
-    virtual float Calc_G2(const Vec3f& wi, const Vec3f& wo);
-    
-    virtual Color3f Calc_Fresnel(float n, float cosTheta);
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
-
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
 private:
     float mRoughness;
 // The following two should be in Material

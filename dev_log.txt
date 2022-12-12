@@ -1315,16 +1315,11 @@ Working on the implementation of Microfacet related classes, added ComplexIOR/Fr
 
 2022-12-04
 1.Added D() pure virtual function to MicrofacetDTerm，modifled Sample_wh() and Pdf() paramters.
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
 2.implemented the Sample_wh()/Pdf()/D() function for GGXTerm/BlinTerm/BeckmannTerm.
 3.Extracted code from ConductorFresnel and DielectricFresnel 's Evaluate() to be static function: FrDielectric and FrConductor so that they can be called without class objects in some scenarios, like to randomly choose between the reflect or refract ray to be generated from the given wo vector.
 
 2022-12-05
 1.implemented Calc_D/Calc_G2/Calc_Fresnel functions for MicrofacetBRDF
-<<<<<<< HEAD
 
 2022-12-07
 1.implemented MicrofacetBRDF::F() for both reflect and refract ray.
@@ -1336,9 +1331,4 @@ Working on the implementation of Microfacet related classes, added ComplexIOR/Fr
 2022-12-12
 1.implemented RoughConductor and RoughGlass material, about 50%.
 2.modified MicrofacetBRDF, added SetFresnelFunc and SetDTermFunc to make the constructor parameters a bit neat.
-=======
-=======
-2.implemented the Sample_wh() function for GGXTerm/BlinTerm/BeckmannTerm.
-3.Extracted code from ConductorFresnel and DielectricFresnel 's Evaluate() to be static function: FrDielectric and FrConductor so that they can be called without class objects in some scenarios, like to randomly choose between the reflect or refract ray to be generated from the given wo vector.
->>>>>>> 8d94623fb1e2d258995c1d776d0f3473e9dd8309
->>>>>>> a809ebb7ab7de0dac729fccb57b1965b5232d242
+3. implemented RoughConductor and RoughGlass material, about 100%, ready for test.
