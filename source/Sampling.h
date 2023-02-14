@@ -135,17 +135,17 @@ namespace LaplataRayTracer
             Point2f temp = 2.0f * urand2;
             Point2f uOffset = temp - Point2f(1.0f, 1.0f);
             
-            if (uOffset.x == 0 && uOffset.y == 0)
+            if (uOffset.X() == 0 && uOffset.Y() == 0)
                 return Point2f(0.0f, 0.0f);
             
             float theta, r;
-            if (std::abs(uOffset.x) > std::abs(uOffset.y)) {
-                r = uOffset.x;
-                theta = PI_OVER_4 * (uOffset.y / uOffset.x);
+            if (std::abs(uOffset.X()) > std::abs(uOffset.Y())) {
+                r = uOffset.X();
+                theta = PI_OVER_4 * (uOffset.Y() / uOffset.X());
             }
             else {
-                r = uOffset.y;
-                theta = PI_HALF - PI_OVER_4 * (uOffset.x / uOffset.y);
+                r = uOffset.Y();
+                theta = PI_HALF - PI_OVER_4 * (uOffset.X() / uOffset.Y());
             }
             return Point2f(std::cos(theta), std::sin(theta)) * r;
         }

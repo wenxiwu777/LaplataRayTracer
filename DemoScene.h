@@ -33,7 +33,7 @@ public:
 		mpViewSampler = new MultiJitteredSampler(16);
 //		mpViewSampler->SetSetCount(1);
 
-        //  mpRayTracer = new RayCastTracer;
+        //mpRayTracer = new RayCastTracer;
         //    mpRayTracer = new AreaLightTracer;
 		//	mpRayTracer = new WhittedTracer;
 	 	//    mpRayTracer = new GlobalTracer;
@@ -90,7 +90,7 @@ public:
         //    buildup_test_noise_based_texture_scene();
         //     buildup_test_texture_mapping_scene();
         //     buildup_test_caustic_by_global_tracer_scene();
-             buildup_test_caustic_by_path_tracer_scene();
+        //     buildup_test_caustic_by_path_tracer_scene();
         //    buildup_test_dielectric_material_scene();
         //    buildup_test_dielectric_material_scene2();
         //buildup_test_glossy_reflective_scene();
@@ -104,6 +104,7 @@ public:
         //    buildup_random_sphere_scene();
         //    buildup_volume_test_scene();
         //    buildup_test_hdr_envrionment_scene();
+        buildup_test_cornellbox_with_microfacet_obj_scene();
 
 	}
 
@@ -160,8 +161,11 @@ private:
 
         //
         // Add a glass material ball in the middle of the box.
+    //    MaterialObject *pGlassBall = new MaterialObject(new MaxAngleSampledShpere(Vec3f(14, 15, 245), 10),
+    //                                                    new GlassMaterial(1.5, Color3f(1,1,1), Color3f(1, 1, 1)));
         MaterialObject *pGlassBall = new MaterialObject(new MaxAngleSampledShpere(Vec3f(14, 15, 245), 10),
-                                                        new GlassMaterial(1.5, Color3f(1,1,1), Color3f(1, 1, 1)));
+                                                        new RoughGlass(0.3f, 0.3f, true, Color3f(0.95,0.95,0.95),1.5f));
+
 //        MaterialObject *pMetalBall = new MaterialObject(new SimpleSphere(Vec3f(10, 50, 240), 5),
 //                                                        new MirrorMaterial(Color3f(0.7,0.7,0.8), 0.6));
 //        mvecObjects.push_back(pMetalBall);
@@ -1368,28 +1372,28 @@ private:
         pMatMaterial->SetCd2(1, 1, 0);
 
         //
-//        SimpleTorus *pTorus = new SimpleTorus(Vec3f(0,0,0), 2, 1);
-//        pTorus->SetPartParams(true, 0.0f, 270.0f, 90.0f, 360.0f);
-// 		MaterialObject *pMatTorus = new MaterialObject(pTorus, pMatMaterial);
-//		mvecObjects.push_back(pMatTorus);
+        SimpleTorus *pTorus = new SimpleTorus(Vec3f(0,0,0), 2, 1);
+        pTorus->SetPartParams(true, 0.0f, 270.0f, 90.0f, 360.0f);
+ 		MaterialObject *pMatTorus = new MaterialObject(pTorus, pMatMaterial);
+		mvecObjects.push_back(pMatTorus);
 
-//        SimpleSphere *pShpere = new SimpleSphere(Vec3f(-2,0,0), 2);
-//        pShpere->SetPartParams(true, 0, 360, 90, 180);
-//        MaterialObject *pShpereMat = new MaterialObject(pShpere, pMatMaterial);
-//        mvecObjects.push_back(pShpereMat);
+        SimpleSphere *pShpere = new SimpleSphere(Vec3f(-2,0,0), 2);
+        pShpere->SetPartParams(true, 0, 360, 90, 180);
+        MaterialObject *pShpereMat = new MaterialObject(pShpere, pMatMaterial);
+        mvecObjects.push_back(pShpereMat);
 
-//        float bottom 	= -1.0;
-//        float top 		=  1.0;
-//        float radius	=  7.0;
-//        SimpleCylinder *pCylinder = new SimpleCylinder(Vec3f(0,0,0), radius, bottom, top);
-//        pCylinder->SetPartParams(true, 0, 180);
-//        MaterialObject *pMatCylinder = new MaterialObject(pCylinder, pMatMaterial);
-//        mvecObjects.push_back(pMatCylinder);
+        float bottom 	= -1.0;
+        float top 		=  1.0;
+        float radius	=  7.0;
+        SimpleCylinder *pCylinder = new SimpleCylinder(Vec3f(0,0,0), radius, bottom, top);
+        pCylinder->SetPartParams(true, 0, 180);
+        MaterialObject *pMatCylinder = new MaterialObject(pCylinder, pMatMaterial);
+        mvecObjects.push_back(pMatCylinder);
 
-//        SimpleCone *pCone = new SimpleCone(Vec3f(0,-10,0), 6, -10, 10);
-//        pCone->SetPartParams(true, 0, 270, 12);
-//        MaterialObject *pMatCone = new MaterialObject(pCone, pMatMaterial);
-//        mvecObjects.push_back(pMatCone);
+        SimpleCone *pCone = new SimpleCone(Vec3f(0,-10,0), 6, -10, 10);
+        pCone->SetPartParams(true, 0, 270, 12);
+        MaterialObject *pMatCone = new MaterialObject(pCone, pMatMaterial);
+        mvecObjects.push_back(pMatCone);
 
         //
         AmbientLight *pAmbientLight = new AmbientLight;
@@ -1710,8 +1714,8 @@ private:
         model->SetMaterial(transparentMat);
         model->ReverseMeshNormals();
         model->EnableAcceleration(true);
- //       model->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/bunny/reconstruction/bun_zipper_res2.ply", EMeshType::SMOOTH_SHADING);
-		model->LoadFromFile("D:/workspace/CG/Ray Tracing/59739329PLYFiles.bak/PLYFiles.bak/ply/Bunny4K.ply", EMeshType::SMOOTH_SHADING);
+        model->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/bunny/reconstruction/bun_zipper_res2.ply", EMeshType::SMOOTH_SHADING);
+//		model->LoadFromFile("D:/workspace/CG/Ray Tracing/59739329PLYFiles.bak/PLYFiles.bak/ply/Bunny4K.ply", EMeshType::SMOOTH_SHADING);
         model->BuildupAccelerationStructure();
 
     //    mvecObjects.push_back(model);
@@ -2891,6 +2895,7 @@ private:
                     } else {
                         MaterialObject *temp = new MaterialObject(new SimpleSphere(center, 0.2),
                         new GlassMaterial(1.5, WHITE, WHITE));
+
                     //    mvecObjects.push_back(temp);
                         grid->AddObject(temp);
                     }
@@ -2898,13 +2903,17 @@ private:
             }
         }
 
+//        MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(4, 1, 0), 1),
+//        new GlassMaterial(1.5, WHITE, WHITE));
         MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(4, 1, 0), 1),
-        new GlassMaterial(1.5, WHITE, WHITE));
+                                                  new RoughGlass(0.2,0.2,true,WHITE,1.5));
 //        mvecObjects.push_back(big0);
         grid->AddObject(big0);
 
+ //       MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-4, 1, 0), 1),
+ //       new MirrorMaterial(Color3f(0.8, 0.8, 0.8), 0));
         MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-4, 1, 0), 1),
-        new MirrorMaterial(Color3f(0.8, 0.8, 0.8), 0));
+                                                  new RoughConductor(0.3,0.3,true,Color3f(0.9,0.9,0.3)));
 //        mvecObjects.push_back(big1);
         grid->AddObject(big1);
 
@@ -2950,8 +2959,87 @@ private:
         MaterialObject *big2 = new MaterialObject(new SimpleSphere(Vec3f(2.7, 16.0, 0), 1),
         new MirrorMaterial(Color3f(1,1,1), 0));
         mvecObjects.push_back(big2);
+    }
+    
+    void buildup_test_cornellbox_with_microfacet_obj_scene() {
+        //
+        //
+        mpBackground = new EmptyEnv(Color3f(0.9F, 0.9F, 0.9F));
 
+        mpCamera->SetViewPlane(mpViewPlane->Width(), mpViewPlane->Height());
+        mpCamera->SetEye(Vec3f(1, 41, 370));
+        mpCamera->SetLookAt(Vec3f(0, 40, 0));
+        mpCamera->SetUpVector(Vec3f(0, 1, 0));
+        ((PerspectiveCamera *)mpCamera)->SetDistance(500);
+        mpCamera->Update();
 
+        //
+        // back wall
+        MaterialObject *pBackWall = new MaterialObject(new XYRect(Vec3f(-40, 0, 200), false, 80, 80),
+                                                       new MatteMaterial(Color3f(0.73, 0.73, 0.73)));
+
+        // left wall
+        MaterialObject *pLeftWall = new MaterialObject(new YZRect(Vec3f(-40, 0, 200), false, 80, 80),
+                                                       new MatteMaterial(Color3f(0.12, 0.65, 0.15)));
+
+        // right wall
+        MaterialObject *pRightWall = new MaterialObject(new YZRect(Vec3f(40, 0, 200), true, 80, 80),
+                                                        new MatteMaterial(Color3f(0.65, 0.05, 0.05)));
+
+        // cell wall
+        MaterialObject *pCellWall = new MaterialObject(new XZRect(Vec3f(-40, 80, 200), true, 80, 80),
+                                                       new MatteMaterial(Color3f(0.73, 0.73, 0.73)));
+
+        // floor wall
+        MaterialObject *pFloorWall = new MaterialObject(new XZRect(Vec3f(-40, 0, 200), false, 80, 80),
+                                                        new MatteMaterial(Color3f(0.73, 0.73, 0.73)));
+        
+        //
+        mvecObjects.push_back(pBackWall);
+        mvecObjects.push_back(pLeftWall);
+        mvecObjects.push_back(pRightWall);
+        mvecObjects.push_back(pCellWall);
+        mvecObjects.push_back(pFloorWall);
+
+        //
+        // lighting set-up to light the scene up
+        AreaLightObject *pCellLight = new AreaLightObject(new XZRect(Vec3f(-10, 79.9, 228), true, 20, 20),
+                                                          new ConstantTexture(Color3f(10, 10, 10)),
+                                                          new ConstantTexture(Color3f(0.0f, 0.0f, 0.0f)));
+        
+        pCellLight->TurnON();
+
+        mvecObjects.push_back(pCellLight);
+
+        //
+//        MatteMaterial *pMatteMat = new MatteMaterial(Color3f(0.2F, 0.4F, 0.9F));
+//        RoughGlass *pRoughGlassMat = new RoughGlass(0.3f, 1.0f, 1.5f, Color3f(1.0f, 1.0f, 1.0f), Color3f(1.0f, 1.0f, 1.0f));
+        //RoughConductor *pRoughConductorMat = new RoughConductor(0.15f, 1.0f, 1.0f,
+        //                                                        Color3f(0.03344755, 0.36314684, 1.61295201),
+        //                                                        Color3f(3.90181846, 2.43300728, 1.79303367));
+//        MatteMaterial *pOrenNayarMat = new MatteMaterial(new ConstantTexture(0.2F, 0.4F, 0.9F));
+//        pOrenNayarMat->Set_sigma(90);
+
+        RoughConductor *pRoughConductorMat = new RoughConductor(0.5f, 0.5f, false, Color3f(0.9,0.9,0.3));
+        RoughGlass *pRoughGlassMat = new RoughGlass(0.2f, 0.2f, true, Color3f(0.9,0.9,0.9), 1.5f);
+        GlassMaterial *pGlassMat = new GlassMaterial(1.5f, Color3f(0.9,0.9,0.9), Color3f(0.9,0.9,0.9));
+
+//        SimpleSphere * pShpere = new SimpleSphere(Vec3f(2, 20, 240), 10);
+//        MaterialObject *pShpereMat = new MaterialObject(pShpere, pRoughGlassMat);
+//        mvecObjects.push_back(pShpereMat);
+        
+        RegularGridMeshObject *model = new RegularGridMeshObject;
+        model->SetMaterial(pRoughGlassMat);
+    //    model->ReverseMeshNormals();
+        model->EnableAcceleration(true);
+        model->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/bunny/reconstruction/bun_zipper_res2.ply",
+                            EMeshType::SMOOTH_SHADING, EModelType::MODEL_PLY);
+        model->BuildupAccelerationStructure();
+
+        Instance* model_inst = new Instance(model);
+        model_inst->Scale(260, 260, 260);
+        model_inst->Translate(2, 18, 240);
+        mvecObjects.push_back(model_inst);
     }
 
 private:

@@ -221,8 +221,8 @@ namespace LaplataRayTracer
 				float theta_ = r_ * mPsiPhi * PI_ON_180;
 				float sin_theta = std::sin(theta_);
 				float cos_theta = std::cos(theta_);
-				float sin_phi = pt_on_dev.y / r_;
-				float cos_phi = pt_on_dev.x / r_;
+				float sin_phi = pt_on_dev.Y() / r_;
+				float cos_phi = pt_on_dev.X() / r_;
 
 				Vec3f ray_dir = sin_theta * cos_phi * mU 
 					+ sin_theta * sin_phi * mV
@@ -278,9 +278,9 @@ namespace LaplataRayTracer
 			pt_lp = mLenDiskRadius * pt_dp;
 
 			//
-			Vec3f ray_o = mEye + pt_lp.x * mU + pt_lp.y * mV;
-			Vec3f ray_dir = (pt_focus_plane.x - pt_lp.x) * mU +
-				(pt_focus_plane.y - pt_lp.y) * mV - mFocusPlaneLen * mW;
+			Vec3f ray_o = mEye + pt_lp.X() * mU + pt_lp.Y() * mV;
+			Vec3f ray_dir = (pt_focus_plane.X() - pt_lp.X()) * mU +
+				(pt_focus_plane.Y() - pt_lp.Y()) * mV - mFocusPlaneLen * mW;
 			ray_dir.MakeUnit();
 
 			ray.Set(ray_o, ray_dir, genRayTime());
@@ -337,8 +337,8 @@ namespace LaplataRayTracer
             ndc.x = 2.0f / (mZoomFactor * mWidth) * x;
             ndc.y = 2.0f / (mZoomFactor * mHeight) * y;
 
-            float lambda = ndc.x * mLambdaMax * PI_ON_180;
-            float psi = ndc.y * mPsiMax * PI_ON_180;
+            float lambda = ndc.X() * mLambdaMax * PI_ON_180;
+            float psi = ndc.Y() * mPsiMax * PI_ON_180;
 
             float phi = PI_CONST - lambda;
             float theta = 0.5f * PI_CONST - psi;

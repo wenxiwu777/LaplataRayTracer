@@ -10,7 +10,8 @@
 #include <iostream>
 
 //#define PLATFORM_WIN
-#define PLATFORM_MACOSX
+#define PLATFORM_LINUX
+//#define PLATFORM_MACOSX
 
 //#define TEXTURE_STREAM_RAW
 

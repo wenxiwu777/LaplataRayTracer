@@ -6,6 +6,7 @@
 #include "Random.h"
 #include "Texture.h"
 #include "BRDF.h"
+#include "MicrofacetBRDF.h"
 #include "BTDF.h"
 #include "PDF.h"
 #include "Reflection.h"
@@ -2074,207 +2075,249 @@ namespace LaplataRayTracer
 
 	};
 
-    //
-    // rough conductor and rough glass materials using MicrofacetBRDF model.
-    //
+    // RoughConductor
     class RoughConductor : public MaterialBase {
     public:
-        RoughConductor() {
-            mpMicrofacetBRDF = nullptr;
-            mpMicrofacetPDF = nullptr;
+        RoughConductor(float alphax, float alphay, bool sampleVisible, const Color3f& reflectance) {
+#if defined(USE_GGX_MICROFACET)
+    mpMicrofacetBRDF = new GGXDistribution(alphax, alphay, sampleVisible);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(alphax, alphay, sampleVisible);
+#endif // USE_GGX_MICROFACET
+            mReflectance = reflectance;
         }
-        RoughConductor(float roughness, float etaI, float etaT) {
-            mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
-            mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Conductor, etaI, etaT);
-            mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
-            mpMicrofacetPDF = new DummyPDF;
-        }
+
         RoughConductor(const RoughConductor& rhs) {
-            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
-            mpMicrofacetPDF = new DummyPDF;
+#if defined(USE_GGX_MICROFACET)
+            mpMicrofacetBRDF = new GGXDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#endif // USE_GGX_MICROFACET
+            mReflectance = rhs.mReflectance;
         }
+
         RoughConductor& operator=(const RoughConductor& rhs) {
             if (this == &rhs) {
                 return *this;
             }
-            
-            release_brdf();
-            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
-            mpMicrofacetPDF = new DummyPDF;
-            
+
+            release();
+#if defined(USE_GGX_MICROFACET)
+            mpMicrofacetBRDF = new GGXDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#endif // USE_GGX_MICROFACET
+            mReflectance = rhs.mReflectance;
+
             return *this;
         }
+
         virtual ~RoughConductor() {
-            release_brdf();
+            release();
         }
-        
+
     public:
         virtual void *Clone() {
-            RoughConductor *roughConductor = new RoughConductor(*this);
-            return roughConductor;
+            return (void *)(new RoughConductor(*this));
         }
-        
+
     public:
-        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
-        {
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray) {
             CoordinateSystem cs(hitRec.n);
-            Vec3f swi;
-            Vec3f swo = cs.To(-inRay.D());
-            float pdf;
-            attenunation_albedo = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
-            attenunation_albedo /= pdf;
-            Vec3f wi = cs.From(swi);
+            Vec3f woLocal = cs.To(-inRay.D());
+
+            woLocal.MakeUnit();
+            Vec3f wmLocal = mpMicrofacetBRDF->SampleWm(woLocal);
+            Vec3f wiLocal = wmLocal * 2.0f * Dot(wmLocal, woLocal) - woLocal;
+
+            if (wiLocal.Z() * woLocal.Z() < 0.0f) {
+                attenunation_albedo = BLACK;
+            } else {
+                float weight = mpMicrofacetBRDF->Weight(wiLocal, woLocal, wmLocal);
+                attenunation_albedo = mReflectance * Color3f(weight, weight, weight);
+            }
+
+            Vec3f wi = cs.From(wiLocal);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
-            
+
             return true;
         }
 
-        virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
-        {
-            return mpMicrofacetPDF->Value(inRay.D());
+        bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec) {
+            Color3f alebdo;
+            Ray out_ray;
+            bool ret = this->PathShade(inRay, hitRec, alebdo, out_ray);
+
+            scatterRec.is_specular = true;
+            scatterRec.albedo = alebdo;
+            scatterRec.specular_ray = out_ray;
+            scatterRec.pPDF = NULL;
+
+            return ret;
         }
 
-        virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
-        {
-            scatterRec.is_specular = false;
-            
-            CoordinateSystem cs(hitRec.n);
-            Vec3f swi;
-            Vec3f swo = cs.To(-inRay.D());
-            float pdf;
-            scatterRec.albedo = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
-            Vec3f wi = cs.From(swi);
-            mpMicrofacetPDF->SetReturnedPDF(pdf);
-            mpMicrofacetPDF->SetReturnedDirection(wi);
-            scatterRec.pPDF = mpMicrofacetPDF;
-            
-            return true;
-        }
-        
     private:
-        inline void release_brdf() {
-            if (mpMicrofacetBRDF != nullptr) {
+        void release() {
+            if (mpMicrofacetBRDF) {
                 delete mpMicrofacetBRDF;
-                mpMicrofacetBRDF = nullptr;
-            }
-            if (mpMicrofacetPDF != nullptr) {
-                delete mpMicrofacetPDF;
-                mpMicrofacetPDF = nullptr;
+                mpMicrofacetBRDF = NULL;
             }
         }
-        
+
     private:
-        MicrofacetBRDF *mpMicrofacetBRDF;
-        DummyPDF *mpMicrofacetPDF;
-        
+        MicrofacetDistribution *mpMicrofacetBRDF;
+        Color3f  mReflectance;
+
     };
 
+    // RoughGlass
     class RoughGlass : public MaterialBase {
     public:
-        RoughGlass() {
-            mpMicrofacetBRDF = nullptr;
-            mpMicrofacetPDF = nullptr;
+        RoughGlass(float alphax, float alphay, bool sampleVisible, const Color3f& reflectance, float refIdx) {
+#if defined(USE_GGX_MICROFACET)
+            mpMicrofacetBRDF = new GGXDistribution(alphax, alphay, sampleVisible);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(alphax, alphay, sampleVisible);
+#endif // USE_GGX_MICROFACET
+            mReflectance = reflectance;
+            mRefIdx = refIdx;
         }
-        RoughGlass(float roughness, float etaI, float etaT, const Color3f& R, const Color3f& T) {
-            mpMicrofacetBRDF = new MicrofacetBRDF(roughness, etaI, etaT, true);
-            mpMicrofacetBRDF->SetFresnelFunc(MicrofacetBRDF::FresnelType::Dielectic, BLACK, BLACK);
-            mpMicrofacetBRDF->SetDTermFunc(MicrofacetBRDF::DFuncType::GGX);
-            mpMicrofacetPDF = new DummyPDF;
-            mReflectance = R;
-            mTransmitance = T;
-        }
+
         RoughGlass(const RoughGlass& rhs) {
-            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
-            mpMicrofacetPDF = new DummyPDF;
+#if defined(USE_GGX_MICROFACET)
+            mpMicrofacetBRDF = new GGXDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#endif // USE_GGX_MICROFACET
+            mReflectance = rhs.mReflectance;
+            mRefIdx = rhs.mRefIdx;
         }
+
         RoughGlass& operator=(const RoughGlass& rhs) {
             if (this == &rhs) {
                 return *this;
             }
-            
-            release_brdf();
-            mpMicrofacetBRDF = (MicrofacetBRDF *)rhs.mpMicrofacetBRDF->Clone();
-            mpMicrofacetPDF = new DummyPDF;
+
+            release();
+#if defined(USE_GGX_MICROFACET)
+            mpMicrofacetBRDF = new GGXDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#elif defined(USE_BECKMANN_MICROFACET)
+            mpMicrofacetBRDF = new BeckmannDistribution(rhs.mpMicrofacetBRDF->alphax_,
+                                                   rhs.mpMicrofacetBRDF->alphay_,
+                                                   rhs.mpMicrofacetBRDF->sampleVisible_);
+#endif // USE_GGX_MICROFACET
             mReflectance = rhs.mReflectance;
-            mTransmitance = rhs.mTransmitance;
-            
+            mRefIdx = rhs.mRefIdx;
+
             return *this;
         }
+
         virtual ~RoughGlass() {
-            release_brdf();
+            release();
         }
-        
+
     public:
         virtual void *Clone() {
-            RoughGlass *roughGlass = new RoughGlass(*this);
-            return roughGlass;
+            return (void *)(new RoughGlass(*this));
         }
-        
+
     public:
-        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray)
-        {
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray) {
             CoordinateSystem cs(hitRec.n);
-            Vec3f swi;
-            Vec3f swo = cs.To(-inRay.D());
-            float pdf;
-            attenunation_albedo= mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
-            if (Dot(swi, hitRec.n) > 0.0f) {
-                attenunation_albedo *= mReflectance;
-            } else {
-                attenunation_albedo *= mTransmitance;
+            Vec3f  woLocal = cs.To(-inRay.D());
+            woLocal.MakeUnit();
+
+            Vec3f wmLocal = mpMicrofacetBRDF->SampleWm(woLocal);
+
+            //
+            Vec3f outfaced_normal;
+            Vec3f reflected = Surface::Reflect(-woLocal, wmLocal);
+            float ni_over_nt;
+            Vec3f refracted;
+            float reflected_prob;
+            float consine;
+
+            if (Dot(inRay.D(), hitRec.n) > 0.0f)
+            {
+                outfaced_normal = -wmLocal;
+                ni_over_nt = mRefIdx;
+                consine = Dot(inRay.D(), hitRec.n) / inRay.D().Length();
             }
-            attenunation_albedo /= pdf;
-            Vec3f wi = cs.From(swi);
+            else
+            {
+                outfaced_normal = wmLocal;
+                ni_over_nt = 1.0f / mRefIdx;
+                consine = -Dot(inRay.D(), hitRec.n) / inRay.D().Length();
+            }
+
+            if (Surface::Refract(-woLocal, outfaced_normal, ni_over_nt, refracted))
+            {
+                reflected_prob = Surface::Schlick(consine, mRefIdx);
+            }
+            else
+            {
+                //	out_ray.Set(hitRec.pt, reflected);
+                reflected_prob = 1.0f;
+            }
+
+            float prob_value = Random::frand48();
+            Vec3f wiLocal;
+            if (prob_value < reflected_prob)
+            {
+                wiLocal = reflected;
+            }
+            else
+            {
+                wiLocal = refracted;
+            }
+
+            Vec3f wi = cs.From(wiLocal);
+            attenunation_albedo = mReflectance * mpMicrofacetBRDF->Weight(wiLocal, woLocal, outfaced_normal);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
-            
+
+            //
             return true;
         }
 
-        virtual float PathShade2_pdf(Ray const& inRay, const HitRecord& hitRec, const Ray& outRay)
-        {
-            return mpMicrofacetPDF->Value(inRay.D());
+        bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec) {
+            Color3f alebdo;
+            Ray out_ray;
+            bool ret = this->PathShade(inRay, hitRec, alebdo, out_ray);
+
+            scatterRec.is_specular = true;
+            scatterRec.albedo = alebdo;
+            scatterRec.specular_ray = out_ray;
+            scatterRec.pPDF = NULL;
+
+            return ret;
         }
 
-        virtual bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec)
-        {
-            scatterRec.is_specular = false;
-            
-            CoordinateSystem cs(hitRec.n);
-            Vec3f swi;
-            Vec3f swo = cs.To(-inRay.D());
-            float pdf;
-            Color3f cr_brdf = mpMicrofacetBRDF->Sample_f_pdf(hitRec, swo, swi, pdf);
-            if (Dot(swi, hitRec.n) > 0.0f) {
-                cr_brdf *= mReflectance;
-            } else {
-                cr_brdf *= mTransmitance;
-            }
-            scatterRec.albedo = cr_brdf;
-            Vec3f wi = cs.From(swi);
-            mpMicrofacetPDF->SetReturnedPDF(pdf);
-            mpMicrofacetPDF->SetReturnedDirection(wi);
-            scatterRec.pPDF = mpMicrofacetPDF;
-            
-            return true;
-        }
-        
     private:
-        inline void release_brdf() {
-            if (mpMicrofacetBRDF != nullptr) {
+        void release() {
+            if (mpMicrofacetBRDF) {
                 delete mpMicrofacetBRDF;
-                mpMicrofacetBRDF = nullptr;
-            }
-            if (mpMicrofacetPDF != nullptr) {
-                delete mpMicrofacetPDF;
-                mpMicrofacetPDF = nullptr;
+                mpMicrofacetBRDF = NULL;
             }
         }
-        
-    private:
-        MicrofacetBRDF *mpMicrofacetBRDF;
-        DummyPDF *mpMicrofacetPDF;
-        Color3f mReflectance;
-        Color3f mTransmitance;
-    };
 
+    private:
+        MicrofacetDistribution *mpMicrofacetBRDF;
+        Color3f mReflectance;
+        float mRefIdx;
+
+    };
 }

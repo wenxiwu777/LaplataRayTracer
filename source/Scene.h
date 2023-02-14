@@ -6,9 +6,9 @@
 #include "../stdafx.h"
 #endif // PLATFORM_WIN
 
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
 #include "../ext/img/tgaimage.h"
-#endif // PLATFORM_MACOSX
+#endif
 
 #include <stdlib.h>
 #include <vector>
@@ -67,9 +67,9 @@ namespace LaplataRayTracer
 	public:
 		virtual void Setup(int w = 400, int h = 400)
         {
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
 		    mpSurface = new TGAImage(w, h, TGAImage::RGB);
-#endif // PLATFORM_MACOSX
+#endif
         }
 		virtual void UpdateScene(float fElapse) { }
 		virtual void BuildScene() { }
@@ -178,10 +178,10 @@ namespace LaplataRayTracer
 					mpSurface->SetPixel(col, h - row - 1, RGB(r, g, b));
 #endif // PLATFORM_WIN
 
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
                     TGAColor pixel_color(r, g, b);
                     mpSurface->set(col, h - row - 1, pixel_color);
-#endif // PLATFORM_MACOSX
+#endif
 				}
 
 				//
@@ -224,10 +224,10 @@ namespace LaplataRayTracer
 						mpSurface->SetPixel(x + i, y + j, RGB(r,g,b));
 #endif // PLATFORM_WIN
 
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
                         TGAColor pixel_color(r, g, b);
                         mpSurface->set(x + i, y + j, pixel_color);
-#endif // PLATFORM_MACOSX
+#endif
 					}
 				}
 			}
@@ -235,9 +235,9 @@ namespace LaplataRayTracer
 
 		virtual void SaveScene(const char *resultPath)
         {
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
             mpSurface->write_tga_file(resultPath);
-#endif // PLATFORM_MACOSX
+#endif
 
         }
 
@@ -253,9 +253,9 @@ namespace LaplataRayTracer
 			if (mpRayTracer) { delete mpRayTracer; mpRayTracer = nullptr; }
 			if (mpBackground) { delete mpBackground; mpBackground = nullptr; }
 
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
 			if (mpSurface) { delete mpSurface; mpSurface = nullptr; }
-#endif // PLATFORM_MACOSX
+#endif
 		}
 
 		virtual void ClearScene()
@@ -289,9 +289,9 @@ namespace LaplataRayTracer
 		OutputConsole * mpConsole;
 #endif // PLATFORM_WIN
 
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
 		TGAImage *mpSurface;
-#endif // PLATFORM_MACOSX
+#endif
 
 		IRenderWindowSink *mpRenderWndSink;
 

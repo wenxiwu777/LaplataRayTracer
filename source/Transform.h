@@ -137,6 +137,11 @@ namespace LaplataRayTracer
             float x = Dot(mU, v); // mU.X() * v.X() + mU.Y() * v.Y() + mU.Z() * v.Z();
             float y = Dot(mV, v); //mV.X() * v.X() + mV.Y() * v.Y() + mV.Z() * v.Z();
             float z = Dot(mW, v); //mW.X() * v.X() + mW.Y() * v.Y() + mW.Z() * v.Z();
+            
+        //    float x = mU.X() * v.X() + mV.X() * v.Y() + mW.X() * v.Z();
+        //    float y = mU.Y() * v.X() + mV.Y() * v.Y() + mW.Y() * v.Z();
+        //    float z = mU.Z() * v.X() + mV.Z() * v.Y() + mW.Z() * v.Z();
+            
             Vec3f vTo(x, y, z);
             return vTo;
         }
@@ -144,6 +149,11 @@ namespace LaplataRayTracer
             float x = mU.X() * v.X() + mV.X() * v.Y() + mW.X() * v.Z();
             float y = mU.Y() * v.X() + mV.Y() * v.Y() + mW.Y() * v.Z();
             float z = mU.Z() * v.X() + mV.Z() * v.Y() + mW.Z() * v.Z();
+            
+        //    float x = Dot(mU, v); // mU.X() * v.X() + mU.Y() * v.Y() + mU.Z() * v.Z();
+        //    float y = Dot(mV, v); //mV.X() * v.X() + mV.Y() * v.Y() + mV.Z() * v.Z();
+        //    float z = Dot(mW, v); //mW.X() * v.X() + mW.Y() * v.Y() + mW.Z() * v.Z();
+            
             Vec3f vFrom(x, y, z);
             return vFrom;
         }

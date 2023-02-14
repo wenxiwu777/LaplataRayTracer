@@ -26,7 +26,7 @@ namespace LaplataRayTracer
 			{
 				refracted = ni_over_nt * (v - n * vndotn) - n * std::sqrt(cos_theta_t_square);
 				return true;
-			}
+            }
 
 			return false;
 		}
@@ -63,7 +63,7 @@ namespace LaplataRayTracer
         }
 
 		inline static Color3f SchlickFresnel(Color3f const& rs, float costheta) {
-			return rs + std::powf(1 - costheta, 5.0f) * (WHITE - rs);
+			return rs + std::pow(1 - costheta, 5.0f) * (WHITE - rs);
 		}
 	};
 

@@ -76,8 +76,8 @@ namespace LaplataRayTracer
 		for (int p = 0; p < mnSets; p++)
 			for (int i = 0; i < mnSampleCount - 1; i++) {
 				int target = Random::RandInt() % mnSampleCount + p * mnSampleCount;
-				float temp = mvecSamples_UnitSquare[i + p * mnSampleCount + 1].x;
-				mvecSamples_UnitSquare[i + p * mnSampleCount + 1].x = mvecSamples_UnitSquare[target].x;
+				float temp = mvecSamples_UnitSquare[i + p * mnSampleCount + 1].X();
+				mvecSamples_UnitSquare[i + p * mnSampleCount + 1].x = mvecSamples_UnitSquare[target].X();
 				mvecSamples_UnitSquare[target].x = temp;
 			}
 	}
@@ -86,8 +86,8 @@ namespace LaplataRayTracer
 		for (int p = 0; p < mnSets; p++)
 			for (int i = 0; i < mnSampleCount - 1; i++) {
 				int target = Random::RandInt() % mnSampleCount + p * mnSampleCount;
-				float temp = mvecSamples_UnitSquare[i + p * mnSampleCount + 1].y;
-				mvecSamples_UnitSquare[i + p * mnSampleCount + 1].y = mvecSamples_UnitSquare[target].y;
+				float temp = mvecSamples_UnitSquare[i + p * mnSampleCount + 1].Y();
+				mvecSamples_UnitSquare[i + p * mnSampleCount + 1].y = mvecSamples_UnitSquare[target].Y();
 				mvecSamples_UnitSquare[target].y = temp;
 			}
 	}

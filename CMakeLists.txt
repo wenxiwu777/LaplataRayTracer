@@ -11,6 +11,7 @@ file(GLOB SOURCES
         ext/img/tgaimage.cpp
         source/AABB.h
         source/BRDF.h
+        source/MicrofacetBRDF.h
         source/BTDF.h
         source/Camera.h
         source/Common.h

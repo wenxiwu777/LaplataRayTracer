@@ -6,18 +6,23 @@ namespace LaplataRayTracer
 	class Point2
 	{
 	public:
-		T x, y;
+        T x;
+        T y;
 
 	public:
-		Point2(void) : x(T(0)), y(T(0)) { }
-		Point2(const T a) : x(a), y(a) { }
-		Point2(const T a, const T b) : x(a), y(b) { }
-		Point2(Point2<T> const& o) : x(o.x), y(o.y) { }
+        Point2(void) : x(0), y(0) { }
+        Point2(const T a) : x(a), y(a) { }
+        Point2(const T a, const T b) : x(a), y(b) { }
+        Point2(Point2<T> const& o) : x(o.x), y(o.y) { }
 		~Point2() = default;
 
 		inline T X() const { return x; }
 		inline T Y() const { return y; }
-		inline T operator[](const int n) const { return (*this)[n]; }
+        inline T operator[](const int n) const {
+            if (n == 0) { return x; }
+            if (n == 1) { return y; }
+            return 0;
+        }
 
 		Point2<T>& operator=(Point2<T> const& rhs)
 		{
@@ -43,7 +48,7 @@ namespace LaplataRayTracer
 
 		inline float SquareDistance(const Point2<T>& rhs) const
 		{
-			return ((x - rhs.X()) * (x - rhs.X()) + (y - rhs.Y()) * (y - rhs.Y()));
+			return ((x - rhs.x) * (x - rhs.x) + (y - rhs.y) * (y - rhs.y));
 		}
 
 		inline float Distance(const Point2<T>& rhs) const
@@ -54,12 +59,12 @@ namespace LaplataRayTracer
 		// the following two may be help for sampling statistic
 		inline float DeltaX(const Point2<T>& rhs) const
 		{
-			return abs(x - rhs.X());
+			return abs(x - rhs.x);
 		}
 
 		inline float DeltaY(const Point2<T>& rhs) const
 		{
-			return abs(y - rhs.Y());
+			return abs(y - rhs.y);
 		}
 
 	};
@@ -67,13 +72,13 @@ namespace LaplataRayTracer
 	template<typename T>
 	inline Point2<T> operator*(const T a, Point2<T> const p)
 	{
-		return Point2<T>(a * p.X(), a * p.Y());
+		return Point2<T>(a * p.x, a * p.y);
 	}
 
     template<typename T>
     inline Point2<T> operator-(Point2<T> const a, Point2<T> const b)
     {
-        return Point2<T>(a.X() - b.X(), a.Y() - b.Y());
+        return Point2<T>(a.x - b.x, a.y - b.y);
     }
 
 	typedef Point2<float>	Point2f;

@@ -22,11 +22,11 @@ namespace LaplataRayTracer
 		mBin = bin;
 
 		FILE *fp = nullptr;
-#ifdef PLATFORM_MACOSX
+#if defined(PLATFORM_MACOSX) || defined(PLATFORM_LINUX)
 		fp = fopen(fileName, "r");
 #else
 		fopen_s(&fp, fileName, "rb");
-#endif // PLATFORM_MACOSX
+#endif
 		if (fp == nullptr) {
 			return -1;
 		}
