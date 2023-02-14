@@ -13,6 +13,10 @@ DemoScene.h shows how to use it.
 
 The following images are rendered by this ray tracer:
 
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/RandomSphereScene.png)
+
+![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/RoughGlass_Bunny.png)
+
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/aluminum_like_teapot.png)
 
 ![Image text](https://github.com/wenxiwu777/LaplataRayTracer/blob/master/ShowCaseOfScreenShoot/teapot_full.png)
