@@ -2181,13 +2181,15 @@ namespace LaplataRayTracer
     // RoughGlass
     class RoughGlass : public MaterialBase {
     public:
-        RoughGlass(float alphax, float alphay, bool sampleVisible, const Color3f& reflectance, float refIdx) {
+        RoughGlass(float alphax, float alphay, bool sampleVisible,
+                   const Color3f& reflectance, const Color3f& transmittance, float refIdx) {
 #if defined(USE_GGX_MICROFACET)
             mpMicrofacetBRDF = new GGXDistribution(alphax, alphay, sampleVisible);
 #elif defined(USE_BECKMANN_MICROFACET)
             mpMicrofacetBRDF = new BeckmannDistribution(alphax, alphay, sampleVisible);
 #endif // USE_GGX_MICROFACET
             mReflectance = reflectance;
+            mTransmittance = transmittance;
             mRefIdx = refIdx;
         }
 
@@ -2202,6 +2204,7 @@ namespace LaplataRayTracer
                                                    rhs.mpMicrofacetBRDF->sampleVisible_);
 #endif // USE_GGX_MICROFACET
             mReflectance = rhs.mReflectance;
+            mTransmittance = rhs.mTransmittance;
             mRefIdx = rhs.mRefIdx;
         }
 
@@ -2221,6 +2224,7 @@ namespace LaplataRayTracer
                                                    rhs.mpMicrofacetBRDF->sampleVisible_);
 #endif // USE_GGX_MICROFACET
             mReflectance = rhs.mReflectance;
+            mTransmittance = rhs.mTransmittance;
             mRefIdx = rhs.mRefIdx;
 
             return *this;
@@ -2279,14 +2283,16 @@ namespace LaplataRayTracer
             if (prob_value < reflected_prob)
             {
                 wiLocal = reflected;
+                attenunation_albedo = mReflectance;
             }
             else
             {
                 wiLocal = refracted;
+                attenunation_albedo = mTransmittance;
             }
 
             Vec3f wi = cs.From(wiLocal);
-            attenunation_albedo = mReflectance * mpMicrofacetBRDF->Weight(wiLocal, woLocal, outfaced_normal);
+            attenunation_albedo *= mpMicrofacetBRDF->Weight(wiLocal, woLocal, outfaced_normal);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
 
             //
@@ -2317,6 +2323,7 @@ namespace LaplataRayTracer
     private:
         MicrofacetDistribution *mpMicrofacetBRDF;
         Color3f mReflectance;
+        Color3f mTransmittance;
         float mRefIdx;
 
     };

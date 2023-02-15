@@ -1336,3 +1336,6 @@ Working on the implementation of Microfacet related classes, added ComplexIOR/Fr
 2023-2-14
 1.Added PLATFORM_LINUX and tested it on Linux(Debian/UOS), actually there is nothing special for Linux, and nothing needs to change, which means you can use PLATFORM_MACOSX to compile it on Linux and vice versa.
 2.Rewrote RoughConductor and RoughGlass material classes and introduced MicrofacetBRDF.h to handle the SampleWM() and Weight() procedures for sampling through rough surface, and now it works well for rough glass effect especially when samples from visible normal，but it doesn't use MIS integrator to sample between the light and material and without introducing the PDF term. This Should leave to be implemented later.
+
+2023-2-15
+1.added mTransmittance to RoughGlass material, so that the inner and outer radiance can be different.
