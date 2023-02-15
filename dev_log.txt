@@ -1340,3 +1340,6 @@ Working on the implementation of Microfacet related classes, added ComplexIOR/Fr
 2023-2-15
 1.added mTransmittance to RoughGlass material, so that the inner and outer radiance can be different.
 2.added GGX_BRDF class to handle PDF calculation for further weighted MIS path integrator and did the test on it. It uses the standard Microfacet calculation, including F/G/D terms and divide the PDF term.
+3.added RoughConductor2 and RoughGlass2 materials to use GGX_BRDF.
+4.added Surface::FresnelConductor for RoughConductor.
+5.modified Surface::Fresnel to FresnelDielectric.
