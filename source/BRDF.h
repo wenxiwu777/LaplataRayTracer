@@ -565,7 +565,7 @@ namespace LaplataRayTracer
 		virtual Color3f Sample_f(const HitRecord& hitRec, const Vec3f& wo, Vec3f& wi) const {
 			Color3f L;
 			wi = Surface::Reflect(-wo, hitRec.n);
-			float kr = Surface::Fresnel(hitRec.n, wo, mEtaIn, mEtaOut);
+			float kr = Surface::FresnelDielectric(hitRec.n, wo, mEtaIn, mEtaOut);
 			L = kr * WHITE / std::fabs(Dot(hitRec.n, wi));
 			return L;
 		}

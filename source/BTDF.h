@@ -77,7 +77,7 @@ namespace LaplataRayTracer {
             float temp = 1.0f - (1.0f - cos_theta_i * cos_theta_i) / (eta * eta);
             float cos_theta2 = std::sqrt(temp);
             wi = -wo / eta - (cos_theta2 - cos_theta_i / eta) * n;
-            float kr = Surface::Fresnel(hitRec.n, wo, mEtaIn, mEtaOut);
+            float kr = Surface::FresnelDielectric(hitRec.n, wo, mEtaIn, mEtaOut);
             L = (1.0f - kr) / (eta * eta) * WHITE / std::fabs(Dot(hitRec.n, wi));
 
 			return L;

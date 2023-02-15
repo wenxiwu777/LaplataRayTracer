@@ -32,7 +32,7 @@ namespace LaplataRayTracer {
     }
 
     static inline float Cos2Phi(const Vec3f& w) {
-        double c = CosPhi(w);
+        float c = CosPhi(w);
         return c * c;
     }
 
@@ -447,6 +447,73 @@ namespace LaplataRayTracer {
             float alpha = std::sqrt(Cos2Phi(wo) * alphax_ * alphax_ + Sin2Phi(wo) * alphay_ * alphay_);
             float alpha2Tan2Theta = (alpha * absTanThetaO) * (alpha * absTanThetaO);
             return (-1.0f + std::sqrt(1.0f + alpha2Tan2Theta)) / 2.0f;
+        }
+    };
+
+    //--------------------------------------------------------------
+    // GGX with PDF
+    //--------------------------------------------------------------
+    class GGX_BRDF {
+    public:
+        static float D(const Vec3f& m, float alphax, float alphay) {
+            return 1.0f / (PI_CONST * alphax * alphay * std::pow(std::pow(m.X() / alphax, 2.0f) + std::pow(m.Y() / alphay, 2.0f) + std::pow(m.Z(), 2.0f), 2.0f));
+        }
+
+        static float DV(const Vec3f& m, const Vec3f& wo, float alphax, float alphay) {
+            return SmithG1(wo, alphax, alphay) * Dot(wo, m) * D(m, alphax, alphay) / wo.Z();
+        }
+
+        static float Lambda(const Vec3f& wo, float alphax, float alphay) {
+            return (-1.0f + std::sqrt(1.0f + (std::pow(alphax * wo.X(), 2.0f) + std::pow(alphay * wo.Y(), 2.0f)) / (std::pow(wo.Z(), 2.0f)))) / 2.0f;
+        }
+
+        static float SmithG1(const Vec3f& wo, float alphax, float alphay) {
+            return 1.0f / (1.0f + Lambda(wo, alphax, alphay));
+        }
+
+        static float SmithG2(const Vec3f& wi, const Vec3f& wo, float alphax, float alphay) {
+            return 1.0f / (1.0f + Lambda(wo, alphax, alphay) + Lambda(wi, alphax, alphay));
+        }
+
+        static float Reflection(const Vec3f& wi, const Vec3f& wo, float alphax, float alphay, float& PDF) {
+            Vec3f m = MakeUnit(wo + wi);
+            PDF = DV(m, wo, alphax, alphay) / (4.0f * Dot(m, wo));
+            return D(m, alphax, alphay) * SmithG2(wi, wo, alphax, alphay) / (4.0f * wo.Z() * wi.Z());
+        }
+
+        static float Transmission(const Vec3f& wi, const Vec3f& wo, float n1, float n2, float alphax, float alphay, float& PDF) {
+            Vec3f m = wo * n1 + wi * n2;
+            float m_length2 = Dot(m, m);
+            m /= std::sqrt(m_length2);
+            if (n1 < n2) m = -m;
+
+            float dm_dwi = std::pow(n2, 2.0f) * std::abs(Dot(wi, m)) / m_length2;
+
+            PDF = DV(m, wo, alphax, alphay) * dm_dwi;
+            return std::abs(SmithG2(wi, wo, alphax, alphay) * D(m, alphax, alphay) * Dot(wo, m) * dm_dwi / (wo.Z() * wi.Z()));
+        }
+
+        static Vec3f VisibleMicrofacet(float u, float v, const Vec3f& wo, float alphax, float alphay) {
+            Vec3f Vh = MakeUnit(Vec3f(alphax * wo.X(), alphay * wo.Y(), wo.Z()));
+
+            // Section 4.1: orthonormal basis (with special case if cross product is zero)
+            float len2 = std::pow(Vh.X(), 2.0f) + std::pow(Vh.Y(), 2.0f);
+            Vec3f T1 = len2 > 0.0 ? Vec3f (-Vh.Y(), Vh.X(), 0.0f) * (1.0f / std::sqrt(len2)) : Vec3f(1.0f, 0.0f, 0.0f);
+            Vec3f T2 = Cross(Vh, T1);
+
+            // Section 4.2: parameterization of the projected area
+            float r = std::sqrt(u);
+            float phi = v * PI_CONST;
+            float t1 = r * std::cos(phi);
+            float t2 = r * std::sin(phi);
+            float s = 0.5 * (1.0 + Vh.Z());
+            t2 = (1.0f - s) * std::sqrt(1.0 - std::pow(t1, 2.0f)) + s * t2;
+
+            // Section 4.3: reprojection onto hemisphere
+            Vec3f Nh = t1 * T1 + t2 * T2 + std::sqrt(std::max(0.0f, 1.0f - std::pow(t1, 2.0f) - std::pow(t2, 2.0f))) * Vh;
+
+            // Section 3.4: transforming the normal back to the ellipsoid configuration
+            return MakeUnit(Vec3f(alphax * Nh.X(), alphay * Nh.Y(), std::max(0.0f, Nh.Z())));
         }
     };
 

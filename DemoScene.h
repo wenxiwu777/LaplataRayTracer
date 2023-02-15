@@ -161,10 +161,8 @@ private:
 
         //
         // Add a glass material ball in the middle of the box.
-    //    MaterialObject *pGlassBall = new MaterialObject(new MaxAngleSampledShpere(Vec3f(14, 15, 245), 10),
-    //                                                    new GlassMaterial(1.5, Color3f(1,1,1), Color3f(1, 1, 1)));
         MaterialObject *pGlassBall = new MaterialObject(new MaxAngleSampledShpere(Vec3f(14, 15, 245), 10),
-                                                        new RoughGlass(0.3f, 0.3f, true, Color3f(0.95,0.95,0.95),Color3f(0.95,0.95,0.95),1.5f));
+                                                        new GlassMaterial(1.5, Color3f(1,1,1), Color3f(1, 1, 1)));
 
 //        MaterialObject *pMetalBall = new MaterialObject(new SimpleSphere(Vec3f(10, 50, 240), 5),
 //                                                        new MirrorMaterial(Color3f(0.7,0.7,0.8), 0.6));
@@ -2903,17 +2901,13 @@ private:
             }
         }
 
-//        MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(4, 1, 0), 1),
-//        new GlassMaterial(1.5, WHITE, WHITE));
         MaterialObject *big0 = new MaterialObject(new SimpleSphere(Vec3f(4, 1, 0), 1),
-                                                  new RoughGlass(0.2,0.2,true,WHITE,WHITE,1.5));
+        new GlassMaterial(1.5, WHITE, WHITE));
 //        mvecObjects.push_back(big0);
         grid->AddObject(big0);
 
- //       MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-4, 1, 0), 1),
- //       new MirrorMaterial(Color3f(0.8, 0.8, 0.8), 0));
         MaterialObject *big1 = new MaterialObject(new SimpleSphere(Vec3f(-4, 1, 0), 1),
-                                                  new RoughConductor(0.3,0.3,true,Color3f(0.9,0.9,0.3)));
+        new MirrorMaterial(Color3f(0.8, 0.8, 0.8), 0));
 //        mvecObjects.push_back(big1);
         grid->AddObject(big1);
 
@@ -3021,24 +3015,26 @@ private:
 //        pOrenNayarMat->Set_sigma(90);
 
         RoughConductor *pRoughConductorMat = new RoughConductor(0.5f, 0.5f, false, Color3f(0.9,0.9,0.3));
-        RoughGlass *pRoughGlassMat = new RoughGlass(0.2f, 0.2f, true, Color3f(0.9,0.9,0.9), Color3f(0.9,0.9,0.6),1.5f);
+        RoughGlass *pRoughGlassMat = new RoughGlass(0.2f, 0.2f, false, Color3f(0.9,0.9,0.9), Color3f(0.9,0.9,0.9), 1.5f);
+        RoughGlass2 *pRoughGlass2Mat = new RoughGlass2(0.2,0.2,1.5,1.0,Color3f(0.9,0.9,0.9),Color3f(0.9,0.9,0.9));
+        RoughConductor2 *pRoughConductor2Mat = new RoughConductor2(0.17, 0.17, Color3f(0.75,0.75,0.75));
         GlassMaterial *pGlassMat = new GlassMaterial(1.5f, Color3f(0.9,0.9,0.9), Color3f(0.9,0.9,0.9));
 
 //        SimpleSphere * pShpere = new SimpleSphere(Vec3f(2, 20, 240), 10);
-//        MaterialObject *pShpereMat = new MaterialObject(pShpere, pRoughGlassMat);
+//        MaterialObject *pShpereMat = new MaterialObject(pShpere, pRoughGlass2Mat);
 //        mvecObjects.push_back(pShpereMat);
         
         RegularGridMeshObject *model = new RegularGridMeshObject;
-        model->SetMaterial(pRoughGlassMat);
-    //    model->ReverseMeshNormals();
+        model->SetMaterial(pRoughGlass2Mat);
+//        model->ReverseMeshNormals();
         model->EnableAcceleration(true);
         model->LoadFromFile("/Users/wuwenxi/workspace/CG/Models_Materials/bunny/reconstruction/bun_zipper_res2.ply",
                             EMeshType::SMOOTH_SHADING, EModelType::MODEL_PLY);
         model->BuildupAccelerationStructure();
 
         Instance* model_inst = new Instance(model);
-        model_inst->Scale(260, 260, 260);
-        model_inst->Translate(2, 18, 240);
+        model_inst->Scale(250, 250, 250);
+        model_inst->Translate(2, 20, 240);
         mvecObjects.push_back(model_inst);
     }
 

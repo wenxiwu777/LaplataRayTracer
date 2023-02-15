@@ -2191,6 +2191,9 @@ namespace LaplataRayTracer
             mReflectance = reflectance;
             mTransmittance = transmittance;
             mRefIdx = refIdx;
+
+            mAlphaX = alphax;
+            mAlphaY = alphay;
         }
 
         RoughGlass(const RoughGlass& rhs) {
@@ -2274,7 +2277,6 @@ namespace LaplataRayTracer
             }
             else
             {
-                //	out_ray.Set(hitRec.pt, reflected);
                 reflected_prob = 1.0f;
             }
 
@@ -2292,7 +2294,7 @@ namespace LaplataRayTracer
             }
 
             Vec3f wi = cs.From(wiLocal);
-            attenunation_albedo *= mpMicrofacetBRDF->Weight(wiLocal, woLocal, outfaced_normal);
+            attenunation_albedo *= mReflectance * mpMicrofacetBRDF->Weight(wiLocal, woLocal, wmLocal);
             out_ray.Set(hitRec.wpt, wi, inRay.T());
 
             //
@@ -2325,6 +2327,187 @@ namespace LaplataRayTracer
         Color3f mReflectance;
         Color3f mTransmittance;
         float mRefIdx;
+
+        float mAlphaX, mAlphaY;
+
+    };
+
+    //
+    class RoughConductor2 : public MaterialBase {
+    public:
+        RoughConductor2(float alphax, float alphay, const Color3f& reflectance) {
+            mAlphaX = alphax;
+            mAlphaY = alphay;
+            mReflectance = reflectance;
+            mUseConductorTerm = false; // conductor term is disabled by default.
+        }
+        virtual ~RoughConductor2() {
+
+        }
+
+    public:
+        virtual void *Clone() {
+            return (void *)(new RoughConductor2(*this));
+        }
+
+    public:
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray) {
+            CoordinateSystem cs(hitRec.n);
+            Vec3f  woLocal = cs.To(-inRay.D());
+            woLocal.MakeUnit();
+
+            Vec3f wmLocal = GGX_BRDF::VisibleMicrofacet(Random::frand48(), Random::frand48(), woLocal, mAlphaX, mAlphaY);
+
+            //
+            Vec3f wiLocal = Surface::Reflect(-woLocal, wmLocal);
+            float PDF;
+            attenunation_albedo = GGX_BRDF::Reflection(wiLocal, -woLocal, mAlphaX, mAlphaY, PDF);
+            attenunation_albedo /= PDF;
+            attenunation_albedo *= std::abs(wiLocal.Z());
+            if (mUseConductorTerm) {
+                attenunation_albedo *= Surface::FresnelConductor(mReal, mImaginary, 1.0f, std::abs(wiLocal.Z()));
+            } else {
+                attenunation_albedo *= mReflectance;
+            }
+
+            Vec3f wi = cs.From(wiLocal);
+            out_ray.Set(hitRec.wpt, wi, inRay.T());
+            //
+            return true;
+        }
+
+        bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec) {
+            Color3f alebdo;
+            Ray out_ray;
+            bool ret = this->PathShade(inRay, hitRec, alebdo, out_ray);
+
+            scatterRec.is_specular = true;
+            scatterRec.albedo = alebdo;
+            scatterRec.specular_ray = out_ray;
+            scatterRec.pPDF = NULL;
+
+            return ret;
+        }
+
+    public:
+        inline void EnableConductorTerm(const Color3f& realPart, const Color3f& imaginaryPart) {
+            mUseConductorTerm = true;
+            mReal = realPart;
+            mImaginary = imaginaryPart;
+        }
+
+    private:
+        float mAlphaX, mAlphaY;
+        Color3f  mReflectance;
+        Color3f  mReal, mImaginary;
+        bool mUseConductorTerm;
+
+    };
+
+    class RoughGlass2 : public MaterialBase {
+    public:
+        RoughGlass2(float alphax, float alphay,
+                    float refIdxIn, float refIdxOut,
+                    const Color3f& reflectance, const Color3f& transmittance) {
+            mAlphaX = alphax;
+            mAlphaY = alphay;
+            mRefIdx_In = refIdxIn;
+            mRefIdx_Out = refIdxOut;
+            mReflectance = reflectance;
+            mTransmittance = transmittance;
+        }
+
+        virtual ~RoughGlass2() {
+
+        }
+
+    public:
+        virtual void *Clone() {
+            return (void *)(new RoughGlass2(*this));
+        }
+
+    public:
+        virtual bool PathShade(Ray const& inRay, HitRecord& hitRec, Color3f& attenunation_albedo, Ray& out_ray) {
+            CoordinateSystem cs(hitRec.n);
+            Vec3f  woLocal = cs.To(-inRay.D());
+            woLocal.MakeUnit();
+
+            Vec3f wmLocal = GGX_BRDF::VisibleMicrofacet(Random::frand48(), Random::frand48(), woLocal, mAlphaX, mAlphaY);
+
+            //
+            Vec3f outfaced_normal;
+            Vec3f reflected = Surface::Reflect(-woLocal, wmLocal);
+            float ni_over_nt;
+            Vec3f refracted;
+            float reflected_prob;
+            float consine;
+
+            float refIdx = mRefIdx_In / mRefIdx_Out;
+            if (Dot(inRay.D(), hitRec.n) > 0.0f)
+            {
+                outfaced_normal = -wmLocal;
+                ni_over_nt = refIdx;
+                consine = Dot(inRay.D(), hitRec.n) / inRay.D().Length();
+            }
+            else
+            {
+                outfaced_normal = wmLocal;
+                ni_over_nt = 1.0f / refIdx;
+                consine = -Dot(inRay.D(), hitRec.n) / inRay.D().Length();
+            }
+
+            if (Surface::Refract(-woLocal, outfaced_normal, ni_over_nt, refracted))
+            {
+                reflected_prob = Surface::Schlick(consine, refIdx);
+            }
+            else
+            {
+                reflected_prob = 1.0f;
+            }
+
+            float prob_value = Random::frand48();
+            Vec3f wiLocal;
+            if (prob_value < reflected_prob)
+            {
+                wiLocal = reflected;
+                float PDF;
+                attenunation_albedo = mReflectance * GGX_BRDF::Reflection(wiLocal, -woLocal, mAlphaX, mAlphaY, PDF);
+                attenunation_albedo /= PDF;
+                attenunation_albedo *= std::abs(wiLocal.Z());
+            }
+            else
+            {
+                wiLocal = refracted;
+                float PDF;
+                attenunation_albedo = mTransmittance * GGX_BRDF::Transmission(wiLocal, woLocal, mRefIdx_In, mRefIdx_Out, mAlphaX, mAlphaY, PDF);
+                attenunation_albedo /= PDF;
+                attenunation_albedo *= std::abs(wiLocal.Z());
+            }
+
+            Vec3f wi = cs.From(wiLocal);
+            out_ray.Set(hitRec.wpt, wi, inRay.T());
+            //
+            return true;
+        }
+
+        bool PathShade2(Ray const& inRay, HitRecord& hitRec, ScatterRecord& scatterRec) {
+            Color3f alebdo;
+            Ray out_ray;
+            bool ret = this->PathShade(inRay, hitRec, alebdo, out_ray);
+
+            scatterRec.is_specular = true;
+            scatterRec.albedo = alebdo;
+            scatterRec.specular_ray = out_ray;
+            scatterRec.pPDF = NULL;
+
+            return ret;
+        }
+
+    private:
+        float mAlphaX, mAlphaY;
+        float mRefIdx_In, mRefIdx_Out;
+        Color3f mReflectance;
+        Color3f mTransmittance;
 
     };
 }
